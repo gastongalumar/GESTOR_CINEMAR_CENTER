@@ -1,6 +1,8 @@
 package GESTOR_CINEMAR_CENTER.DEV.model;
 
 
+import GESTOR_CINEMAR_CENTER.DEV.enums.EstadoPago;
+import GESTOR_CINEMAR_CENTER.DEV.enums.MetodoPago;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -28,11 +30,11 @@ public class Pago {
     private Double monto;
 
     @Column(nullable = false)
-    private String metodoPago;
+    private MetodoPago metodoPago;
 
     private LocalDateTime fechaPago;
 
-    private String estado = "COMPLETADO"; // COMPLETADO, PENDIENTE, RECHAZADO
+    private EstadoPago estadoPago = EstadoPago.COMPLETADO;
 
     private String transaccionId;
 

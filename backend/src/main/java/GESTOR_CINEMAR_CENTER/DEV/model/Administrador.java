@@ -6,8 +6,6 @@ import lombok.*;
 @Entity
 @Getter
 @Setter
-@NoArgsConstructor
-@AllArgsConstructor
 @ToString
 
 public class Administrador extends Usuario {
