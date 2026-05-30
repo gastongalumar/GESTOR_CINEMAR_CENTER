@@ -4,6 +4,7 @@ import GESTOR_CINEMAR_CENTER.DEV.enums.EstadoUsuario;
 import GESTOR_CINEMAR_CENTER.DEV.enums.TipoUsuario;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
+import jakarta.persistence.MappedSuperclass;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
@@ -11,7 +12,7 @@ import java.time.LocalDateTime;
 
 @Getter
 @Setter
-
+@MappedSuperclass
 @AllArgsConstructor
 @NoArgsConstructor
 @ToString
