@@ -1,5 +1,6 @@
-package GESTOR_CINEMAR_CENTER.DEV.dto.response;
+package GESTOR_CINEMAR_CENTER.DEV.dto.response.reserva;
 
+import GESTOR_CINEMAR_CENTER.DEV.enums.EstadoReserva;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -49,12 +50,15 @@ public class ReservaResponseDTO {
     @Schema(description = "Fecha de emisión de la reserva")
     private LocalDateTime fechaEmision;
 
+    @Schema(description = "Fecha de validación de la reserva")
+    private LocalDateTime fechaValidacion;
+
+    @Schema(description = "Estado de la reserva")
+    private EstadoReserva estadoReserva;
+
     @Schema(
             description = "Asientos seleccionados",
             example = "[\"A1\", \"A2\", \"A3\"]"
     )
     private List<String> asientosSeleccionados;
-
-    @Schema(description = "Indica si la reserva ya fue utilizada", example = "false")
-    private boolean usado;
 }

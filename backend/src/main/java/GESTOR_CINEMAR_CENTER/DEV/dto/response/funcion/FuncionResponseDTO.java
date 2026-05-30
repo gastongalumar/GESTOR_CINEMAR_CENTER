@@ -1,4 +1,4 @@
-package GESTOR_CINEMAR_CENTER.DEV.dto.response;
+package GESTOR_CINEMAR_CENTER.DEV.dto.response.funcion;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
