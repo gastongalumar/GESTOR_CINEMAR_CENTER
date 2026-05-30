@@ -21,7 +21,7 @@ public interface PeliculaMapper {
     Pelicula toEntity(CrearPeliculaRequestDTO request);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-    void updateEntity(ActualizarPeliculaRequestDTO request, @MappingTarget Pelicula pelicula);
+    void actualizarEntity(ActualizarPeliculaRequestDTO request, @MappingTarget Pelicula pelicula);
 
     PeliculaResponseDTO toResponse(Pelicula pelicula);
 
