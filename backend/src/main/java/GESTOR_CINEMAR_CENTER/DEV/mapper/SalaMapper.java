@@ -1,6 +1,7 @@
 package GESTOR_CINEMAR_CENTER.DEV.mapper;
 
 
+import GESTOR_CINEMAR_CENTER.DEV.dto.request.ActualizarSalaRequestDTO;
 import GESTOR_CINEMAR_CENTER.DEV.dto.request.CrearSalaRequestDTO;
 import GESTOR_CINEMAR_CENTER.DEV.dto.response.SalaResponseDTO;
 import GESTOR_CINEMAR_CENTER.DEV.model.Sala;
@@ -22,4 +23,5 @@ public interface SalaMapper {
     List<SalaResponseDTO> toDTOList(List<Sala> salas);
 
 
+    void updateEntity(ActualizarSalaRequestDTO request, Sala existente);
 }
