@@ -9,8 +9,6 @@ import lombok.*;
 @Entity
 @Getter
 @Setter
-@AllArgsConstructor
-@NoArgsConstructor
 @ToString
 public class Cliente extends  Usuario{
     private Integer puntosFidelidad = 0;
