@@ -1,9 +1,10 @@
-package GESTOR_CINEMAR_CENTER.DEV.dto.request;
+package GESTOR_CINEMAR_CENTER.DEV.dto.request.pelicula;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -16,10 +17,11 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 @Schema(description = "DTO para crear o editar una película")
-public class PeliculaRequestDTO {
+public class CrearPeliculaRequestDTO {
 
     @Schema(description = "Nombre de la película", example = "Interstellar")
     @NotBlank(message = "El nombre es obligatorio")
+    @Size(max = 200, message = "El nombre no puede superar 200 caracteres")
     private String nombre;
 
     @Schema(description = "Ruta o URL de la imagen", example = "/imagenes/interstellar.jpg")

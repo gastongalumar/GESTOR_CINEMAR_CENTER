@@ -1,5 +1,6 @@
 package GESTOR_CINEMAR_CENTER.DEV.model;
 
+import GESTOR_CINEMAR_CENTER.DEV.enums.EstadoReserva;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -11,6 +12,7 @@ import lombok.Setter;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Getter
@@ -41,12 +43,22 @@ public class Reserva {
     private Double montoTotal;
     private String metodoPago;
     private LocalDateTime fechaEmision;
+    private LocalDateTime fechaValidacion;
 
-    @ElementCollection
-    private List<String> asientosSeleccionados;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private boolean usado = false;
+    private EstadoReserva estadoReserva = EstadoReserva.CONFIRMADA;
+
+    @ManyToMany
+    @JoinTable(
+            name = "reserva_asiento",
+            joinColumns = @JoinColumn(name = "reserva_id"),
+            inverseJoinColumns = @JoinColumn(name = "asiento_id"),
+            uniqueConstraints = @UniqueConstraint(columnNames = {"reserva_id", "asiento_id"})
+    )
+    private List<Asiento> asientos = new ArrayList<>();
+
 
 
     //tendria que mover esta logica al service

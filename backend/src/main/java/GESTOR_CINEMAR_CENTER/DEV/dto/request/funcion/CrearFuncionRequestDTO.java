@@ -1,4 +1,4 @@
-package GESTOR_CINEMAR_CENTER.DEV.dto.request;
+package GESTOR_CINEMAR_CENTER.DEV.dto.request.funcion;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Future;
@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Schema(description = "DTO para crear una función")
-public class FuncionRequestDTO {
+public class CrearFuncionRequestDTO {
 
     @Schema(description = "ID de la sala", example = "1")
     @NotNull(message = "La sala es obligatoria")
