@@ -1,4 +1,4 @@
-package GESTOR_CINEMAR_CENTER.DEV.dto.request;
+package GESTOR_CINEMAR_CENTER.DEV.dto.request.reserva;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
@@ -6,7 +6,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-@Getter @Setter
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 public class ActualizarMetodoPagoRequestDTO {
