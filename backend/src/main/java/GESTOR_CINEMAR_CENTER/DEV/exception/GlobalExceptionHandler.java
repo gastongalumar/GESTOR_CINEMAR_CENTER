@@ -22,9 +22,6 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import java.time.LocalDateTime;
 import java.util.List;
 
-@Getter
-@Setter
-
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
