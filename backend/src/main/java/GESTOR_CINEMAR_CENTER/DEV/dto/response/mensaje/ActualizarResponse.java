@@ -10,9 +10,10 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 
-public class MessageResponse {
+public class ActualizarResponse {
 
-    private String message;
+    private String ruta;
+    private String url;
 
 
 }

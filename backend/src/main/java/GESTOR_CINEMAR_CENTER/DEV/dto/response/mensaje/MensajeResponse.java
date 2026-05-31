@@ -10,10 +10,9 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 
-public class UploadResponse {
+public class MensajeResponse {
 
-    private String ruta;
-    private String url;
+    private String message;
 
 
 }

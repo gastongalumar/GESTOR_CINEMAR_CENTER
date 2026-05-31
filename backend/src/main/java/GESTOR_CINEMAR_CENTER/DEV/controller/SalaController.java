@@ -4,7 +4,7 @@ import GESTOR_CINEMAR_CENTER.DEV.dto.request.ActualizarSalaRequestDTO;
 import GESTOR_CINEMAR_CENTER.DEV.dto.request.CrearSalaRequestDTO;
 import GESTOR_CINEMAR_CENTER.DEV.dto.response.AsientoResponseDTO;
 import GESTOR_CINEMAR_CENTER.DEV.dto.response.SalaResponseDTO;
-import GESTOR_CINEMAR_CENTER.DEV.dto.response.mensaje.MessageResponse;
+import GESTOR_CINEMAR_CENTER.DEV.dto.response.mensaje.MensajeResponse;
 import GESTOR_CINEMAR_CENTER.DEV.service.SalaService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -51,8 +51,8 @@ public class SalaController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<MessageResponse> eliminar(@PathVariable Long id) {
+    public ResponseEntity<MensajeResponse> eliminar(@PathVariable Long id) {
         salaService.eliminar(id);
-        return ResponseEntity.ok(new MessageResponse("Sala eliminada correctamente"));
+        return ResponseEntity.ok(new MensajeResponse("Sala eliminada correctamente"));
     }
 }
