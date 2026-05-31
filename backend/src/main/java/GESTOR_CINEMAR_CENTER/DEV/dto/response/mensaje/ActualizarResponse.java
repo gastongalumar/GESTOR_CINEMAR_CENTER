@@ -1,4 +1,4 @@
-package GESTOR_CINEMAR_CENTER.DEV;
+package GESTOR_CINEMAR_CENTER.DEV.dto.response.mensaje;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -7,12 +7,13 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
+
 public class ActualizarResponse {
 
-        private String ruta;
-        private String url;
+    private String ruta;
+    private String url;
+
 
 }
-

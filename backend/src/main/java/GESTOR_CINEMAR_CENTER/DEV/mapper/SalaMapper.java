@@ -20,5 +20,5 @@ public interface SalaMapper {
     List<SalaResponseDTO> toDTOList(List<Sala> salas);
 
 
-    void updateEntity(ActualizarSalaRequestDTO request, Sala existente);
+
 }
