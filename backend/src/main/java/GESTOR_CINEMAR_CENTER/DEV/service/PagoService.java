@@ -2,10 +2,12 @@ package GESTOR_CINEMAR_CENTER.DEV.service;
 
 
 import GESTOR_CINEMAR_CENTER.DEV.dto.response.PagoResponseDTO;
+import GESTOR_CINEMAR_CENTER.DEV.exception.RecursoNoEncontradoException;
 import GESTOR_CINEMAR_CENTER.DEV.mapper.PagoMapper;
 import GESTOR_CINEMAR_CENTER.DEV.model.Pago;
 import GESTOR_CINEMAR_CENTER.DEV.model.Reserva;
 import GESTOR_CINEMAR_CENTER.DEV.repository.PagoRepository;
+import GESTOR_CINEMAR_CENTER.DEV.repository.ReservaRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,14 +39,14 @@ public class PagoService {
 
     public PagoResponseDTO buscarPorReserva(String numeroTicket) {
         Reserva reserva = reservaRepository.findByNumeroTicket(numeroTicket)
-                .orElseThrow(() -> new ResourceNotFoundException("Reserva", "ticket", numeroTicket));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Reserva", "ticket", numeroTicket));
         Pago pago = pagoRepository.findByReserva(reserva)
-                .orElseThrow(() -> new ResourceNotFoundException("Pago", "ticket", numeroTicket));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Pago", "ticket", numeroTicket));
         return pagoMapper.toDTO(pago);
     }
 
     private Pago obtenerEntidad(Long id) {
         return pagoRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Pago", id));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Pago", id));
     }
 }

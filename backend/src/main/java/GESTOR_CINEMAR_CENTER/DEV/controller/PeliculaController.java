@@ -1,9 +1,9 @@
 package GESTOR_CINEMAR_CENTER.DEV.controller;
 
-import GESTOR_CINEMAR_CENTER.DEV.ActualizarResponse;
-import GESTOR_CINEMAR_CENTER.DEV.MensajeResponse;
 import GESTOR_CINEMAR_CENTER.DEV.dto.request.pelicula.ActualizarPeliculaRequestDTO;
 import GESTOR_CINEMAR_CENTER.DEV.dto.request.pelicula.CrearPeliculaRequestDTO;
+import GESTOR_CINEMAR_CENTER.DEV.dto.response.mensaje.ActualizarResponse;
+import GESTOR_CINEMAR_CENTER.DEV.dto.response.mensaje.MensajeResponse;
 import GESTOR_CINEMAR_CENTER.DEV.dto.response.pelicula.PeliculaPageResponse;
 import GESTOR_CINEMAR_CENTER.DEV.dto.response.pelicula.PeliculaResponseDTO;
 import GESTOR_CINEMAR_CENTER.DEV.service.PeliculaService;

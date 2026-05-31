@@ -17,7 +17,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-@AllArgsConstructor
+
 public class FuncionService {
 
     private final FuncionRepository funcionRepository;
