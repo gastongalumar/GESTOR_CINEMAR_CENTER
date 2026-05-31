@@ -6,7 +6,7 @@ import GESTOR_CINEMAR_CENTER.DEV.dto.response.AsientoResponseDTO;
 import GESTOR_CINEMAR_CENTER.DEV.dto.response.SalaResponseDTO;
 
 import GESTOR_CINEMAR_CENTER.DEV.exception.BusinessException;
-import GESTOR_CINEMAR_CENTER.DEV.exception.ResourceNotFoundException;
+import GESTOR_CINEMAR_CENTER.DEV.exception.RecursoNoEncontradoException;
 import GESTOR_CINEMAR_CENTER.DEV.mapper.AsientoMapper;
 import GESTOR_CINEMAR_CENTER.DEV.mapper.SalaMapper;
 import GESTOR_CINEMAR_CENTER.DEV.model.Asiento;
@@ -47,7 +47,7 @@ public class SalaService {
 
     public SalaResponseDTO buscarPorNombre(String nombre) {
         Sala sala = salaRepository.findByNombre(nombre)
-                .orElseThrow(() -> new ResourceNotFoundException("Sala", "nombre", nombre));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Sala", "nombre", nombre));
         return salaMapper.toDTO(sala);
     }
 
@@ -105,7 +105,7 @@ public class SalaService {
 
     public Sala obtenerEntidad(Long id) {
         return salaRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Sala", id));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Sala", id));
     }
 
     private void generarAsientos(Sala sala) {
