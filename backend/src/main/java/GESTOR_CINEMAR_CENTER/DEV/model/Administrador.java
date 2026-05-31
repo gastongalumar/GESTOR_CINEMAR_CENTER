@@ -7,6 +7,9 @@ import lombok.*;
 @Getter
 @Setter
 @ToString
+@NoArgsConstructor
+@AllArgsConstructor
+@RequiredArgsConstructor
 
 public class Administrador extends Usuario {
 //    private String nivelAcceso = "AVANZADO";
