@@ -1,10 +1,7 @@
 package GESTOR_CINEMAR_CENTER.DEV.dto.request.pelicula;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -30,10 +27,12 @@ public class CrearPeliculaRequestDTO {
 
     @Schema(description = "Fecha de estreno", example = "2026-05-20")
     @NotNull(message = "La fecha de estreno es obligatoria")
+    @Future(message = "La fecha de estreno debe ser futura")
     private LocalDate fechaEstreno;
 
     @Schema(description = "Fecha de salida", example = "2026-06-20")
     @NotNull(message = "La fecha de salida es obligatoria")
+    @Future(message = "La fecha de salida debe ser futura")
     private LocalDate fechaSalida;
 
     @Schema(description = "Duración en minutos", example = "169")
