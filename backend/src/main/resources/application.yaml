@@ -15,6 +15,10 @@ spring:
 server:
   port: 8080
 
+jwt:
+  secret: "tu_clave_secreta_muy_segura_minimo_32_caracteres_para_hs256"
+  expiration: 86400000  # 24 horas en milisegundos
+
 springdoc:
   api-docs:
     path: /v3/api-docs

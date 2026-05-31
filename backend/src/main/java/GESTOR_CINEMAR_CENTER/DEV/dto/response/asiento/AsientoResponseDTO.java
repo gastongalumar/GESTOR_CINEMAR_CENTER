@@ -1,4 +1,4 @@
-package GESTOR_CINEMAR_CENTER.DEV.dto.response;
+package GESTOR_CINEMAR_CENTER.DEV.dto.response.asiento;
 
 
 import lombok.AllArgsConstructor;

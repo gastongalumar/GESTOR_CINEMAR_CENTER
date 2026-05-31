@@ -46,6 +46,14 @@ public abstract class Usuario {
     private LocalDateTime fechaUltimoAcceso;
     private Integer intentosFallidos = 0;
 
+    public Usuario(String nombre, String apellido, String email, String password, String telefono, TipoUsuario tipo) {
+        this.nombre = nombre;
+        this.apellido = apellido;
+        this.email = email;
+        this.password = password;
+        this.telefono = telefono;
+        this.tipo = tipo;
+    }
 
     @PrePersist
     protected void onCreate() {

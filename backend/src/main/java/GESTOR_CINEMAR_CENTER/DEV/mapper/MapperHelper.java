@@ -1,8 +1,12 @@
 package GESTOR_CINEMAR_CENTER.DEV.mapper;
 
 import GESTOR_CINEMAR_CENTER.DEV.enums.MetodoPago;
+import GESTOR_CINEMAR_CENTER.DEV.model.Asiento;
 import GESTOR_CINEMAR_CENTER.DEV.model.Usuario;
 import org.mapstruct.Named;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 public final class MapperHelper {
 
@@ -30,5 +34,15 @@ public final class MapperHelper {
             throw new IllegalArgumentException("Método de pago no permitido: " + metodoPago);
         }
         return MetodoPago.fromString(metodoPago).name();
+    }
+
+    @Named("asientosAEtiquetas")
+    public static String asientosAEtiquetas(List<Asiento> asientos) {
+        if (asientos == null || asientos.isEmpty()) {
+            return null;
+        }
+        return asientos.stream()
+                .map(Asiento::getEtiqueta)
+                .collect(Collectors.joining(", "));
     }
 }

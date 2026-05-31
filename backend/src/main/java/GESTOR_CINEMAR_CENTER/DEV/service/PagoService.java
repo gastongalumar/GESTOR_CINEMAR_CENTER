@@ -1,7 +1,7 @@
 package GESTOR_CINEMAR_CENTER.DEV.service;
 
 
-import GESTOR_CINEMAR_CENTER.DEV.dto.response.PagoResponseDTO;
+import GESTOR_CINEMAR_CENTER.DEV.dto.response.pago.PagoResponseDTO;
 import GESTOR_CINEMAR_CENTER.DEV.exception.RecursoNoEncontradoException;
 import GESTOR_CINEMAR_CENTER.DEV.mapper.PagoMapper;
 import GESTOR_CINEMAR_CENTER.DEV.model.Pago;

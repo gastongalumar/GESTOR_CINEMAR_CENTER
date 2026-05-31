@@ -23,7 +23,7 @@ public interface ReservaMapper {
     @Mapping(source = "funcion.pelicula.nombre", target = "peliculaNombre")
     @Mapping(source = "funcion.sala.nombre", target = "salaNombre")
     @Mapping(source = "funcion.horario", target = "horarioFuncion")
-    @Mapping(source = "asientos.etiqueta", target = "asientosSeleccionados")
+    @Mapping(source = "asientos", target = "asientosSeleccionados", qualifiedByName = "asientosAEtiquetas")
     @Mapping(source = "estadoReserva", target = "estadoReserva", qualifiedByName = "enumName")
     ReservaResponseDTO toResponse(Reserva reserva);
 

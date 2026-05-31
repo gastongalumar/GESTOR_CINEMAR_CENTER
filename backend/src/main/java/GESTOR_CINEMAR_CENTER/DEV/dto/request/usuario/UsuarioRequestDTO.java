@@ -1,4 +1,4 @@
-package GESTOR_CINEMAR_CENTER.DEV.dto.request;
+package GESTOR_CINEMAR_CENTER.DEV.dto.request.usuario;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;

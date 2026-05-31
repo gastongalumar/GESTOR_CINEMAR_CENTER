@@ -1,7 +1,8 @@
 package GESTOR_CINEMAR_CENTER.DEV.service;
 
-import com.cinebackendspring.model.Usuario;
-import com.cinebackendspring.repository.UsuarioRepository;
+
+import GESTOR_CINEMAR_CENTER.DEV.model.Usuario;
+import GESTOR_CINEMAR_CENTER.DEV.repository.UsuarioRepository;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;

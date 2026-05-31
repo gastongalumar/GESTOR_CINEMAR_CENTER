@@ -1,9 +1,9 @@
 package GESTOR_CINEMAR_CENTER.DEV.service;
 
-import GESTOR_CINEMAR_CENTER.DEV.dto.request.ActualizarSalaRequestDTO;
-import GESTOR_CINEMAR_CENTER.DEV.dto.request.CrearSalaRequestDTO;
-import GESTOR_CINEMAR_CENTER.DEV.dto.response.AsientoResponseDTO;
-import GESTOR_CINEMAR_CENTER.DEV.dto.response.SalaResponseDTO;
+import GESTOR_CINEMAR_CENTER.DEV.dto.request.sala.ActualizarSalaRequestDTO;
+import GESTOR_CINEMAR_CENTER.DEV.dto.request.sala.CrearSalaRequestDTO;
+import GESTOR_CINEMAR_CENTER.DEV.dto.response.asiento.AsientoResponseDTO;
+import GESTOR_CINEMAR_CENTER.DEV.dto.response.sala.SalaResponseDTO;
 
 import GESTOR_CINEMAR_CENTER.DEV.exception.ReglaNegocioException;
 import GESTOR_CINEMAR_CENTER.DEV.exception.RecursoNoEncontradoException;

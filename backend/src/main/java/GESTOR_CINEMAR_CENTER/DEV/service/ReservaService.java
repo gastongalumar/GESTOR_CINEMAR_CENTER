@@ -2,7 +2,7 @@ package GESTOR_CINEMAR_CENTER.DEV.service;
 
 import GESTOR_CINEMAR_CENTER.DEV.dto.request.reserva.ActualizarMetodoPagoRequestDTO;
 import GESTOR_CINEMAR_CENTER.DEV.dto.request.reserva.CrearReservaRequestDTO;
-import GESTOR_CINEMAR_CENTER.DEV.dto.response.PagoResponseDTO;
+import GESTOR_CINEMAR_CENTER.DEV.dto.response.pago.PagoResponseDTO;
 import GESTOR_CINEMAR_CENTER.DEV.dto.response.reserva.ReservaResponseDTO;
 import DEV.model.*;
 import GESTOR_CINEMAR_CENTER.DEV.dto.response.reserva.ValidacionTicketResponseDTO;
