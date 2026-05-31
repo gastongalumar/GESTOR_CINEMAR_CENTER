@@ -38,4 +38,6 @@ public class Asiento {
     private String etiqueta;
 
 
+    public Asiento(Sala sala, int f, int c, String etiqueta) {
+    }
 }

@@ -5,7 +5,7 @@ import GESTOR_CINEMAR_CENTER.DEV.dto.request.CrearSalaRequestDTO;
 import GESTOR_CINEMAR_CENTER.DEV.dto.response.AsientoResponseDTO;
 import GESTOR_CINEMAR_CENTER.DEV.dto.response.SalaResponseDTO;
 
-import GESTOR_CINEMAR_CENTER.DEV.exception.BusinessException;
+import GESTOR_CINEMAR_CENTER.DEV.exception.ReglaNegocioException;
 import GESTOR_CINEMAR_CENTER.DEV.exception.RecursoNoEncontradoException;
 import GESTOR_CINEMAR_CENTER.DEV.mapper.AsientoMapper;
 import GESTOR_CINEMAR_CENTER.DEV.mapper.SalaMapper;
@@ -54,7 +54,7 @@ public class SalaService {
     @Transactional
     public SalaResponseDTO crear(CrearSalaRequestDTO request) {
         if (salaRepository.existsByNombre(request.getNombre())) {
-            throw new BusinessException("Ya existe una sala con el nombre: " + request.getNombre());
+            throw new ReglaNegocioException("Ya existe una sala con el nombre: " + request.getNombre());
         }
         Sala sala = salaMapper.toEntity(request);
         sala = salaRepository.save(sala);
@@ -68,7 +68,7 @@ public class SalaService {
         if (request.getNombre() != null
                 && !existente.getNombre().equals(request.getNombre())
                 && salaRepository.existsByNombre(request.getNombre())) {
-            throw new BusinessException("Ya existe una sala con el nombre: " + request.getNombre());
+            throw new ReglaNegocioException("Ya existe una sala con el nombre: " + request.getNombre());
         }
 
         boolean layoutCambio = request.getFilas() != null && request.getColumnas() != null

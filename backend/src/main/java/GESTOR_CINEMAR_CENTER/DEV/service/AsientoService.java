@@ -1,14 +1,13 @@
 package GESTOR_CINEMAR_CENTER.DEV.service;
 
 
-import GESTOR_CINEMAR_CENTER.DEV.enums.EstadoReserva;
 import GESTOR_CINEMAR_CENTER.DEV.exception.RecursoNoEncontradoException;
 import GESTOR_CINEMAR_CENTER.DEV.exception.ReglaNegocioException;
 import GESTOR_CINEMAR_CENTER.DEV.model.Asiento;
 import GESTOR_CINEMAR_CENTER.DEV.model.Funcion;
 import GESTOR_CINEMAR_CENTER.DEV.model.Sala;
 import GESTOR_CINEMAR_CENTER.DEV.repository.AsientoRepository;
-import GESTOR_CINEMAR_CENTER.DEV.repository.ReservaRepository;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

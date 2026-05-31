@@ -1,6 +1,12 @@
 package GESTOR_CINEMAR_CENTER.DEV.exception;
 
+
+import GESTOR_CINEMAR_CENTER.DEV.dto.response.mensaje.FieldErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -15,11 +21,14 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import java.time.LocalDateTime;
 import java.util.List;
 
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    ///////////reemplazar errorresponse por la clase y no por la interfaz///////////
-    ///
     @ExceptionHandler(ReglaNegocioException.class)
     public ResponseEntity<ErrorResponse> handleBusiness(
             ReglaNegocioException ex, HttpServletRequest request) {
