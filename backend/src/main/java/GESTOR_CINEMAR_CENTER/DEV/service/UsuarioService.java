@@ -1,15 +1,16 @@
 package GESTOR_CINEMAR_CENTER.DEV.service;
 
-
 import GESTOR_CINEMAR_CENTER.DEV.dto.request.auth.RegistroRequest;
 import GESTOR_CINEMAR_CENTER.DEV.dto.response.auth.AuthResponse;
+import GESTOR_CINEMAR_CENTER.DEV.enums.TipoUsuario;
+import GESTOR_CINEMAR_CENTER.DEV.exception.ResourceNotFoundException;
+import GESTOR_CINEMAR_CENTER.DEV.exception.ReglaNegocioException;
 import GESTOR_CINEMAR_CENTER.DEV.mapper.UsuarioMapper;
 import GESTOR_CINEMAR_CENTER.DEV.model.Administrador;
 import GESTOR_CINEMAR_CENTER.DEV.model.Cliente;
 import GESTOR_CINEMAR_CENTER.DEV.model.Usuario;
-import GESTOR_CINEMAR_CENTER.repository.UsuarioRepository;
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
+import GESTOR_CINEMAR_CENTER.DEV.security.JwtUtil;
+import GESTOR_CINEMAR_CENTER.DEV.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -20,9 +21,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
-@AllArgsConstructor
 @RequiredArgsConstructor
-
 public class UsuarioService {
 
     private final UsuarioRepository usuarioRepository;
@@ -30,8 +29,6 @@ public class UsuarioService {
     private final JwtUtil jwtUtil;
     private final AuthenticationManager authenticationManager;
     private final UsuarioMapper usuarioMapper;
-
-
 
     public AuthResponse login(String email, String password) {
         authenticationManager.authenticate(
@@ -47,27 +44,29 @@ public class UsuarioService {
 
     public AuthResponse registrar(RegistroRequest request) {
         if (usuarioRepository.existsByEmail(request.getEmail())) {
-            throw new BusinessException("El email ya está registrado");
+            throw new ReglaNegocioException("El email ya está registrado");
         }
 
         String passwordHash = passwordEncoder.encode(request.getPassword());
         Usuario usuario;
         if (request.isEsAdministrador()) {
-            usuario = new Administrador(
-                    request.getNombre(),
-                    request.getApellido(),
-                    request.getEmail(),
-                    passwordHash,
-                    request.getTelefono()
-            );
+            Administrador admin = new Administrador();
+            admin.setNombre(request.getNombre());
+            admin.setApellido(request.getApellido());
+            admin.setEmail(request.getEmail());
+            admin.setPassword(passwordHash);
+            admin.setTelefono(request.getTelefono());
+            admin.setTipo(TipoUsuario.ADMINISTRADOR);
+            usuario = admin;
         } else {
-            usuario = new Cliente(
-                    request.getNombre(),
-                    request.getApellido(),
-                    request.getEmail(),
-                    passwordHash,
-                    request.getTelefono()
-            );
+            Cliente cliente = new Cliente();
+            cliente.setNombre(request.getNombre());
+            cliente.setApellido(request.getApellido());
+            cliente.setEmail(request.getEmail());
+            cliente.setPassword(passwordHash);
+            cliente.setTelefono(request.getTelefono());
+            cliente.setTipo(TipoUsuario.CLIENTE);
+            usuario = cliente;
         }
 
         usuario = usuarioRepository.save(usuario);

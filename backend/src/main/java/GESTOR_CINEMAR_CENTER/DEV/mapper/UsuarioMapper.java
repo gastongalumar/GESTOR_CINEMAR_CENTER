@@ -1,7 +1,7 @@
 package GESTOR_CINEMAR_CENTER.DEV.mapper;
 
-import com.cinebackendspring.dto.response.auth.AuthResponse;
-import com.cinebackendspring.model.Usuario;
+import GESTOR_CINEMAR_CENTER.DEV.dto.response.auth.AuthResponse;
+import GESTOR_CINEMAR_CENTER.DEV.model.Usuario;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
