@@ -1,4 +1,4 @@
-package com.cinebackendspring.exception;
+package GESTOR_CINEMAR_CENTER.DEV.exception;
 
 public class ResourceNotFoundException extends RuntimeException {
 
