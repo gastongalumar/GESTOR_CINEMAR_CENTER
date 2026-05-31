@@ -1,7 +1,7 @@
-package GESTOR_CINEMAR_CENTER.DEV.repository.repository;
+package GESTOR_CINEMAR_CENTER.DEV.repository;
 
-import com.cinebackendspring.enums.EstadoUsuario;
-import com.cinebackendspring.model.Usuario;
+import GESTOR_CINEMAR_CENTER.DEV.enums.EstadoUsuario;
+import GESTOR_CINEMAR_CENTER.DEV.model.Usuario;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
