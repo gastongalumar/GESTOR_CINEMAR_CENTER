@@ -1,4 +1,4 @@
-package GESTOR_CINEMAR_CENTER.DEV.config;
+package GESTOR_CINEMAR_CENTER.config;
 
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
