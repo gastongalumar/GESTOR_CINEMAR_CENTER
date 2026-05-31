@@ -1,7 +1,7 @@
 package GESTOR_CINEMAR_CENTER.DEV.controller;
 
 
-import GESTOR_CINEMAR_CENTER.DEV.dto.response.PagoResponseDTO;
+import GESTOR_CINEMAR_CENTER.DEV.dto.response.pago.PagoResponseDTO;
 import GESTOR_CINEMAR_CENTER.DEV.service.PagoService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

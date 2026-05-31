@@ -1,6 +1,6 @@
 package GESTOR_CINEMAR_CENTER.DEV.mapper;
 
-import GESTOR_CINEMAR_CENTER.DEV.dto.response.PagoResponseDTO;
+import GESTOR_CINEMAR_CENTER.DEV.dto.response.pago.PagoResponseDTO;
 import GESTOR_CINEMAR_CENTER.DEV.model.Pago;
 import org.mapstruct.Mapper;
 

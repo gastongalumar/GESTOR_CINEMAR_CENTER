@@ -4,7 +4,9 @@ package GESTOR_CINEMAR_CENTER.DEV.dto.request.auth;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import lombok.Getter;
 
+@Getter
 public class RegistroRequest {
 
     @NotBlank(message = "El nombre es obligatorio")

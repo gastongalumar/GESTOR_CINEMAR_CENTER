@@ -1,14 +1,10 @@
 package GESTOR_CINEMAR_CENTER.DEV.mapper;
 
 
-import GESTOR_CINEMAR_CENTER.DEV.dto.request.ActualizarSalaRequestDTO;
-import GESTOR_CINEMAR_CENTER.DEV.dto.request.CrearSalaRequestDTO;
-import GESTOR_CINEMAR_CENTER.DEV.dto.response.SalaResponseDTO;
+import GESTOR_CINEMAR_CENTER.DEV.dto.request.sala.CrearSalaRequestDTO;
+import GESTOR_CINEMAR_CENTER.DEV.dto.response.sala.SalaResponseDTO;
 import GESTOR_CINEMAR_CENTER.DEV.model.Sala;
-import org.mapstruct.BeanMapping;
 import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.MappingTarget;
 
 import java.util.List;
 

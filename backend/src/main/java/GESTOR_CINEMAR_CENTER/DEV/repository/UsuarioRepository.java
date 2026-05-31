@@ -1,4 +1,5 @@
 package GESTOR_CINEMAR_CENTER.DEV.repository;
+
 import GESTOR_CINEMAR_CENTER.DEV.enums.EstadoUsuario;
 import GESTOR_CINEMAR_CENTER.DEV.model.Usuario;
 import org.springframework.data.jpa.repository.JpaRepository;
