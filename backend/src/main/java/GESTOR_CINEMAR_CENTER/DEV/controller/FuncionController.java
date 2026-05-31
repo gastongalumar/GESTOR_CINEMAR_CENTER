@@ -4,6 +4,14 @@ import GESTOR_CINEMAR_CENTER.DEV.dto.response.mensaje.MensajeResponse;
 import GESTOR_CINEMAR_CENTER.DEV.dto.request.funcion.CrearFuncionRequestDTO;
 import GESTOR_CINEMAR_CENTER.DEV.dto.response.funcion.FuncionResponseDTO;
 import GESTOR_CINEMAR_CENTER.DEV.service.FuncionService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -22,39 +30,76 @@ import java.util.List;
 @RequestMapping("/api/funciones")
 @CrossOrigin(origins = "http://localhost:4200")
 @RequiredArgsConstructor
+@Tag(name = "Funciones", description = "Operaciones de consulta y gestión de funciones de proyección")
 public class FuncionController {
 
     private final FuncionService funcionService;
 
+    @Operation(summary = "Listar todas las funciones", description = "Retorna todas las funciones registradas en el sistema")
+    @ApiResponse(responseCode = "200", description = "Listado obtenido correctamente",
+            content = @Content(array = @ArraySchema(schema = @Schema(implementation = FuncionResponseDTO.class))))
     @GetMapping
     public ResponseEntity<List<FuncionResponseDTO>> listarFunciones() {
         return ResponseEntity.ok(funcionService.listarTodas());
     }
 
+    @Operation(summary = "Listar funciones vigentes", description = "Retorna solo las funciones con fecha futura o en curso")
+    @ApiResponse(responseCode = "200", description = "Listado obtenido correctamente",
+            content = @Content(array = @ArraySchema(schema = @Schema(implementation = FuncionResponseDTO.class))))
     @GetMapping("/vigentes")
     public ResponseEntity<List<FuncionResponseDTO>> listarVigentes() {
         return ResponseEntity.ok(funcionService.listarVigentes());
     }
 
+    @Operation(summary = "Listar funciones por película", description = "Retorna las funciones asociadas a una película específica")
+    @ApiResponse(responseCode = "200", description = "Listado obtenido correctamente",
+            content = @Content(array = @ArraySchema(schema = @Schema(implementation = FuncionResponseDTO.class))))
     @GetMapping("/pelicula/{peliculaId}")
-    public ResponseEntity<List<FuncionResponseDTO>> listarPorPelicula(@PathVariable Long peliculaId) {
+    public ResponseEntity<List<FuncionResponseDTO>> listarPorPelicula(
+            @Parameter(description = "ID de la película", required = true) @PathVariable Long peliculaId) {
         return ResponseEntity.ok(funcionService.listarPorPelicula(peliculaId));
     }
 
+    @Operation(summary = "Obtener función por ID", description = "Busca una función específica por su identificador")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Función encontrada",
+                    content = @Content(schema = @Schema(implementation = FuncionResponseDTO.class))),
+            @ApiResponse(responseCode = "404", description = "Función no encontrada")
+    })
     @GetMapping("/{id}")
-    public ResponseEntity<FuncionResponseDTO> obtenerPorId(@PathVariable Long id) {
+    public ResponseEntity<FuncionResponseDTO> obtenerPorId(
+            @Parameter(description = "ID de la función", required = true) @PathVariable Long id) {
         return ResponseEntity.ok(funcionService.buscarPorId(id));
     }
 
+    @Operation(
+            summary = "Crear una nueva función",
+            description = "Programa una nueva función de proyección en una sala",
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    required = true,
+                    content = @Content(schema = @Schema(implementation = CrearFuncionRequestDTO.class))
+            )
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Función creada correctamente",
+                    content = @Content(schema = @Schema(implementation = FuncionResponseDTO.class))),
+            @ApiResponse(responseCode = "400", description = "Datos inválidos")
+    })
     @PostMapping
     public ResponseEntity<FuncionResponseDTO> crear(@Valid @RequestBody CrearFuncionRequestDTO request) {
         return ResponseEntity.ok(funcionService.crear(request));
     }
 
+    @Operation(summary = "Eliminar una función", description = "Elimina una función de proyección del sistema")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Función eliminada correctamente",
+                    content = @Content(schema = @Schema(implementation = MensajeResponse.class))),
+            @ApiResponse(responseCode = "404", description = "Función no encontrada")
+    })
     @DeleteMapping("/{id}")
-    public ResponseEntity<MensajeResponse> eliminar(@PathVariable Long id) {
+    public ResponseEntity<MensajeResponse> eliminar(
+            @Parameter(description = "ID de la función", required = true) @PathVariable Long id) {
         funcionService.eliminar(id);
         return ResponseEntity.ok(new MensajeResponse("Función eliminada correctamente"));
     }
 }
-

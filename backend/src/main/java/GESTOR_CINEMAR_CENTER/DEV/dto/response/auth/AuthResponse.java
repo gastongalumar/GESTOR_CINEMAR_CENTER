@@ -1,14 +1,25 @@
 package GESTOR_CINEMAR_CENTER.DEV.dto.response.auth;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 
 @Getter
+@Schema(description = "Respuesta de autenticación con token JWT")
 public class AuthResponse {
 
+    @Schema(description = "Token JWT para autenticación", example = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...")
     private String token;
+
+    @Schema(description = "Tipo de token", example = "Bearer")
     private String tipo;
+
+    @Schema(description = "Email del usuario autenticado", example = "cliente@email.com")
     private String email;
+
+    @Schema(description = "Nombre del usuario autenticado", example = "Juan Pérez")
     private String nombre;
+
+    @Schema(description = "ID del usuario autenticado", example = "1")
     private Long id;
 
     public AuthResponse() {}
