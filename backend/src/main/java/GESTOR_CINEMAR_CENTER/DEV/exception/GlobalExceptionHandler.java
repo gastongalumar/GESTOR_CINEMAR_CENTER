@@ -1,6 +1,7 @@
 package GESTOR_CINEMAR_CENTER.DEV.exception;
 
 
+import GESTOR_CINEMAR_CENTER.DEV.dto.response.mensaje.ErrorResponse;
 import GESTOR_CINEMAR_CENTER.DEV.dto.response.mensaje.FieldErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
@@ -13,7 +14,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.InsufficientAuthenticationException;
 import org.springframework.validation.FieldError;
-import org.springframework.web.ErrorResponse;
+
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
