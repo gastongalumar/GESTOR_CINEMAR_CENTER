@@ -21,11 +21,11 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-
 public class PeliculaService {
 
     private final PeliculaRepository peliculaRepository;
     private final PeliculaMapper peliculaMapper;
+    private final ImagenesService imagenesService;
 
 
     public List<Pelicula> listarPeliculasEntity(){
@@ -51,5 +51,74 @@ public class PeliculaService {
 
     public PeliculaResponseDTO buscarPorId(Long id) {
         return peliculaMapper.toResponse(obtenerPelicula(id));
+    }
+
+    public PeliculaPageResponse listarVigentesPaginado(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Pelicula> result = peliculaRepository.findVigentesEnFecha(LocalDate.now(), pageable);
+        return peliculaMapper.toPageResponse(result);
+    }
+
+
+    public void validarNombreDisponible(String nombre) {
+        if (peliculaRepository.existsByNombre(nombre)) {
+            throw new ReglaNegocioException("Ya existe una película con ese nombre");
+        }
+    }
+
+    public void validarFechas(LocalDate fechaEstreno, LocalDate fechaSalida) {
+        if (!fechaSalida.isAfter(fechaEstreno)) {
+            throw new ReglaNegocioException("La fecha de salida de cartelera debe ser al menos un día posterior a la fecha de estreno");
+        }
+    }
+
+    public PeliculaResponseDTO crear(CrearPeliculaRequestDTO request) {
+
+        validarNombreDisponible(request.getNombre());
+        validarFechas(request.getFechaEstreno(), request.getFechaSalida());
+
+        Pelicula pelicula = peliculaMapper.toEntity(request);
+
+        return peliculaMapper.toResponse(peliculaRepository.save(pelicula));
+    }
+
+
+
+    public PeliculaResponseDTO actualizar(Long id, ActualizarPeliculaRequestDTO request) {
+
+        Pelicula existente = obtenerPelicula(id);
+
+        if (request.getNombre() != null && !existente.getNombre().equals(request.getNombre())) {
+            validarNombreDisponible(request.getNombre());
+        }
+
+        LocalDate fechaEstreno = request.getFechaEstreno() != null ? request.getFechaEstreno() : existente.getFechaEstreno();
+
+        LocalDate fechaSalida = request.getFechaSalida() != null ? request.getFechaSalida() : existente.getFechaSalida();
+
+        validarFechas(fechaEstreno, fechaSalida);
+
+        peliculaMapper.actualizarEntity(request, existente);
+
+        return peliculaMapper.toResponse(peliculaRepository.save(existente));
+    }
+
+    public void eliminarImagenDePelicula(Long id) {
+
+        Pelicula pelicula = obtenerPelicula(id);
+
+        imagenesService.eliminarImagen(pelicula.getRutaImagen());
+
+        pelicula.setRutaImagen(null);
+
+        peliculaRepository.save(pelicula);
+    }
+
+    public String guardarImagen(MultipartFile file) {
+        return imagenesService.guardarImagenPelicula(file);
+    }
+
+    public void eliminar(Long id) {
+        peliculaRepository.delete(obtenerPelicula(id));
     }
 }
