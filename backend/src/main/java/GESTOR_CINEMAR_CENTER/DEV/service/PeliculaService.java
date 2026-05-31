@@ -4,7 +4,7 @@ import GESTOR_CINEMAR_CENTER.DEV.dto.request.pelicula.ActualizarPeliculaRequestD
 import GESTOR_CINEMAR_CENTER.DEV.dto.request.pelicula.CrearPeliculaRequestDTO;
 import GESTOR_CINEMAR_CENTER.DEV.dto.response.pelicula.PeliculaPageResponse;
 import GESTOR_CINEMAR_CENTER.DEV.dto.response.pelicula.PeliculaResponseDTO;
-import GESTOR_CINEMAR_CENTER.DEV.exception.RecursoNoEncontrado;
+import GESTOR_CINEMAR_CENTER.DEV.exception.RecursoNoEncontradoException;
 import GESTOR_CINEMAR_CENTER.DEV.exception.ReglaNegocioException;
 import GESTOR_CINEMAR_CENTER.DEV.mapper.PeliculaMapper;
 import GESTOR_CINEMAR_CENTER.DEV.model.Pelicula;
@@ -46,7 +46,7 @@ public class PeliculaService {
 
     public Pelicula obtenerPelicula(Long id) {
         return peliculaRepository.findById(id)
-                .orElseThrow(() -> new RecursoNoEncontrado("Película: " + id));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Película: " + id));
     }
 
     public PeliculaResponseDTO buscarPorId(Long id) {
