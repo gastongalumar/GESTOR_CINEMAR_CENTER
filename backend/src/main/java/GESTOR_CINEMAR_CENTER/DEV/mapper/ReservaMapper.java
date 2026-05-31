@@ -13,6 +13,8 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.NullValuePropertyMappingStrategy;
+import org.mapstruct.AfterMapping;
+import GESTOR_CINEMAR_CENTER.DEV.enums.EstadoReserva;
 
 @Mapper(componentModel = "spring", uses = MapperHelper.class)
 public interface ReservaMapper {
@@ -24,7 +26,7 @@ public interface ReservaMapper {
     @Mapping(source = "funcion.sala.nombre", target = "salaNombre")
     @Mapping(source = "funcion.horario", target = "horarioFuncion")
     @Mapping(source = "asientos", target = "asientosSeleccionados", qualifiedByName = "asientosAEtiquetas")
-    @Mapping(source = "estadoReserva", target = "estadoReserva", qualifiedByName = "enumName")
+    @Mapping(source = "estadoReserva", target = "estadoReserva")
     ReservaResponseDTO toResponse(Reserva reserva);
 
     @Mapping(target = "id", ignore = true)
@@ -42,10 +44,27 @@ public interface ReservaMapper {
 
     @Mapping(source = "numeroTicket", target = "numeroTicket")
     @Mapping(source = "montoTotal", target = "montoTotal")
-    @Mapping(source = "asientosSeleccionados", target = "asientos")
+    @Mapping(source = "asientos", target = "asientos", qualifiedByName = "asientosAEtiquetas")
     @Mapping(target = "estado", ignore = true)
     @Mapping(target = "mensaje", ignore = true)
     ValidacionTicketResponseDTO toValidacionTicket(Reserva reserva, @Context boolean marcarUsadoAhora);
+
+    @AfterMapping
+    default void configurarMensaje(Reserva reserva, @Context boolean marcarUsadoAhora, @MappingTarget ValidacionTicketResponseDTO target) {
+        if (marcarUsadoAhora) {
+            target.setEstado("VALIDADO_AHORA");
+            target.setMensaje("El ticket ha sido validado y marcado como usado exitosamente.");
+        } else if (reserva.getEstadoReserva() == EstadoReserva.VALIDADA) {
+            target.setEstado("YA_VALIDADO");
+            target.setMensaje("El ticket ya fue validado anteriormente.");
+        } else if (reserva.getEstadoReserva() == EstadoReserva.CANCELADA) {
+            target.setEstado("CANCELADA");
+            target.setMensaje("La reserva asociada a este ticket ha sido cancelada.");
+        } else {
+            target.setEstado("VALIDO");
+            target.setMensaje("El ticket es válido.");
+        }
+    }
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     @Mapping(target = "metodoPago", ignore = true)

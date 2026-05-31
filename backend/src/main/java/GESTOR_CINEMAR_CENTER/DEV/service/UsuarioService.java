@@ -3,7 +3,7 @@ package GESTOR_CINEMAR_CENTER.DEV.service;
 import GESTOR_CINEMAR_CENTER.DEV.dto.request.auth.RegistroRequest;
 import GESTOR_CINEMAR_CENTER.DEV.dto.response.auth.AuthResponse;
 import GESTOR_CINEMAR_CENTER.DEV.enums.TipoUsuario;
-import GESTOR_CINEMAR_CENTER.DEV.exception.ResourceNotFoundException;
+import GESTOR_CINEMAR_CENTER.DEV.exception.RecursoNoEncontradoException;
 import GESTOR_CINEMAR_CENTER.DEV.exception.ReglaNegocioException;
 import GESTOR_CINEMAR_CENTER.DEV.mapper.UsuarioMapper;
 import GESTOR_CINEMAR_CENTER.DEV.model.Administrador;
@@ -35,7 +35,7 @@ public class UsuarioService {
                 new UsernamePasswordAuthenticationToken(email, password)
         );
         Usuario usuario = usuarioRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("Usuario", "email", email));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Usuario", "email", email));
         usuario.setFechaUltimoAcceso(LocalDateTime.now());
         usuario.setIntentosFallidos(0);
         usuarioRepository.save(usuario);
@@ -83,7 +83,7 @@ public class UsuarioService {
 
     public Usuario findByEmail(String email) {
         return usuarioRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("Usuario", "email", email));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Usuario", "email", email));
     }
 
     public List<Usuario> listarTodos() {
@@ -92,7 +92,12 @@ public class UsuarioService {
 
     public void eliminarUsuario(Long id) {
         Usuario usuario = usuarioRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Usuario", id));
+                .orElseThrow(() -> new RecursoNoEncontradoException("Usuario", id));
         usuarioRepository.delete(usuario);
+    }
+
+    public Usuario findById(Long id) {
+        return usuarioRepository.findById(id)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Usuario", id));
     }
 }

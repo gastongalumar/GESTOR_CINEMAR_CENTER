@@ -39,5 +39,9 @@ public class Asiento {
 
 
     public Asiento(Sala sala, int f, int c, String etiqueta) {
+        this.sala = sala;
+        this.fila = f;
+        this.columna = c;
+        this.etiqueta = etiqueta;
     }
 }

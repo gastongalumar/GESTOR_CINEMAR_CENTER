@@ -1,17 +1,16 @@
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/cine_db?createDatabaseIfNotExist=true
+    url: jdbc:mysql://localhost:3306/cine_db2?createDatabaseIfNotExist=true
     username: root
-    password: pass
+    password: hpto1capo
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
-    hibernate:  # ← Agrega esta línea
-      ddl-auto: update  # ← Ahora está dentro de hibernate
+    hibernate:
+      ddl-auto: update
     show-sql: true
     properties:
       hibernate:
         format_sql: true
-        dialect: org.hibernate.dialect.MySQLDialect
 server:
   port: 8080
 
@@ -28,3 +27,6 @@ springdoc:
     show-common-extensions: true
     show-extensions: true
   use-fqn: true
+
+file:
+  upload-dir: uploads

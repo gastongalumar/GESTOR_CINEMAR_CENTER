@@ -1,11 +1,11 @@
 package GESTOR_CINEMAR_CENTER.DEV.service;
 
-import com.cinebackendspring.dto.request.customizacion.CustomizacionRequest;
-import com.cinebackendspring.dto.response.customizacion.CustomizacionResponse;
-import com.cinebackendspring.exception.BusinessException;
-import com.cinebackendspring.mapper.CustomizacionMapper;
-import com.cinebackendspring.model.Customizacion;
-import com.cinebackendspring.repository.CustomizacionRepository;
+import GESTOR_CINEMAR_CENTER.DEV.dto.request.customizacion.CustomizacionRequest;
+import GESTOR_CINEMAR_CENTER.DEV.dto.response.customizacion.CustomizacionResponse;
+import GESTOR_CINEMAR_CENTER.DEV.exception.ReglaNegocioException;
+import GESTOR_CINEMAR_CENTER.DEV.mapper.CustomizacionMapper;
+import GESTOR_CINEMAR_CENTER.DEV.model.Customizacion;
+import GESTOR_CINEMAR_CENTER.DEV.repository.CustomizacionRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -49,17 +49,17 @@ public class CustomizacionService {
 
     public String guardarImagen(MultipartFile file, String tipo) throws IOException {
         if (file == null || file.isEmpty()) {
-            throw new BusinessException("No se recibió ningún archivo");
+            throw new ReglaNegocioException("No se recibió ningún archivo");
         }
         if (file.getSize() > MAX_FILE_SIZE) {
-            throw new BusinessException("El archivo supera el tamaño máximo permitido (5MB)");
+            throw new ReglaNegocioException("El archivo supera el tamaño máximo permitido (5MB)");
         }
         String contentType = file.getContentType();
         if (contentType == null
                 || (!contentType.equals("image/jpeg")
                 && !contentType.equals("image/png")
                 && !contentType.equals("image/webp"))) {
-            throw new BusinessException("Tipo de archivo no permitido. Solo se aceptan JPEG, PNG o WEBP");
+            throw new ReglaNegocioException("Tipo de archivo no permitido. Solo se aceptan JPEG, PNG o WEBP");
         }
 
         String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();

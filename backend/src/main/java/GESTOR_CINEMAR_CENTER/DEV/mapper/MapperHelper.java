@@ -4,13 +4,14 @@ import GESTOR_CINEMAR_CENTER.DEV.enums.MetodoPago;
 import GESTOR_CINEMAR_CENTER.DEV.model.Asiento;
 import GESTOR_CINEMAR_CENTER.DEV.model.Usuario;
 import org.mapstruct.Named;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
-public final class MapperHelper {
+@Component
+public class MapperHelper {
 
-    private MapperHelper() {}
 
     @Named("nombreCompleto")
     public static String nombreCompleto(Usuario usuario) {
@@ -31,18 +32,18 @@ public final class MapperHelper {
             return null;
         }
         if (!MetodoPago.esValido(metodoPago)) {
-            throw new IllegalArgumentException("Método de pago no permitido: " + metodoPago);
+            throw new IllegalArgumentException("Método de pago no permitido: " + metodoPago + "  ");
         }
         return MetodoPago.fromString(metodoPago).name();
     }
 
     @Named("asientosAEtiquetas")
-    public static String asientosAEtiquetas(List<Asiento> asientos) {
-        if (asientos == null || asientos.isEmpty()) {
+    public static List<String> asientosAEtiquetas(List<Asiento> asientos) {
+        if (asientos == null) {
             return null;
         }
         return asientos.stream()
                 .map(Asiento::getEtiqueta)
-                .collect(Collectors.joining(", "));
+                .collect(Collectors.toList());
     }
 }

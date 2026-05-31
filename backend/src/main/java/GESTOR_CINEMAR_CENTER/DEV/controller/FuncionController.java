@@ -1,6 +1,6 @@
 package GESTOR_CINEMAR_CENTER.DEV.controller;
 
-import GESTOR_CINEMAR_CENTER.DEV.MensajeResponse;
+import GESTOR_CINEMAR_CENTER.DEV.dto.response.mensaje.MensajeResponse;
 import GESTOR_CINEMAR_CENTER.DEV.dto.request.funcion.CrearFuncionRequestDTO;
 import GESTOR_CINEMAR_CENTER.DEV.dto.response.funcion.FuncionResponseDTO;
 import GESTOR_CINEMAR_CENTER.DEV.service.FuncionService;

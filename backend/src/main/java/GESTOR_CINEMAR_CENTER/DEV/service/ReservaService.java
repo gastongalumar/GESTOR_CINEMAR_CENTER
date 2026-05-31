@@ -4,7 +4,6 @@ import GESTOR_CINEMAR_CENTER.DEV.dto.request.reserva.ActualizarMetodoPagoRequest
 import GESTOR_CINEMAR_CENTER.DEV.dto.request.reserva.CrearReservaRequestDTO;
 import GESTOR_CINEMAR_CENTER.DEV.dto.response.pago.PagoResponseDTO;
 import GESTOR_CINEMAR_CENTER.DEV.dto.response.reserva.ReservaResponseDTO;
-import DEV.model.*;
 import GESTOR_CINEMAR_CENTER.DEV.dto.response.reserva.ValidacionTicketResponseDTO;
 import GESTOR_CINEMAR_CENTER.DEV.enums.EstadoReserva;
 import GESTOR_CINEMAR_CENTER.DEV.enums.MetodoPago;
@@ -35,6 +34,8 @@ public class ReservaService {
     private final FuncionService funcionService;
    /* private final UsuarioRepository usuarioRepository;
     private final PagoRepository pagoRepository;*/
+    private final PagoService pagoService;
+    private final UsuarioService usuarioService;
     private final SalaService salaService;
     private final AsientoService asientoService;
     private final ReservaMapper reservaMapper;
@@ -43,8 +44,7 @@ public class ReservaService {
     @Transactional
     public ReservaResponseDTO crear(CrearReservaRequestDTO request) {
 
-        Usuario usuario = usuarioRepository.findById(request.getClienteId())
-                .orElseThrow(() -> new RecursoNoEncontrado("Usuario", request.getClienteId()));
+        Usuario usuario = usuarioService.findById(request.getClienteId());
 
         if (!(usuario instanceof Cliente cliente)) {
             throw new ReglaNegocioException("Solo los clientes pueden realizar reservas");
@@ -89,7 +89,7 @@ public class ReservaService {
 
         reserva = reservaRepository.save(reserva);
 
-        pagoRepository.save(new Pago(reserva, reserva.getMontoTotal(), metodoPago));
+        pagoService.crearPago(reserva, reserva.getMontoTotal(), reserva.getMetodoPago());
 
         return reservaMapper.toResponse(reserva);
     }
@@ -97,8 +97,7 @@ public class ReservaService {
     @Transactional(readOnly = true)
     public List<ReservaResponseDTO> listarPorCliente(Long clienteId) {
 
-        Usuario usuario = usuarioRepository.findById(clienteId)
-                .orElseThrow(() -> new RecursoNoEncontrado("Usuario", clienteId));
+        Usuario usuario = usuarioService.findById(clienteId);
 
         if (!(usuario instanceof Cliente cliente)) {
             return List.of();
@@ -127,10 +126,9 @@ public class ReservaService {
 
         Reserva reserva = findByTicketEntity(numeroTicket);
 
-        Pago pago = pagoRepository.findByReserva(reserva)
-                .orElseThrow(() -> new RecursoNoEncontradoException("Pago", "ticket", numeroTicket));
+        Pago pago = pagoService.buscarPagoPorReserva(reserva);
 
-        return pagoMapper.toResponse(pago);
+        return pagoMapper.toDTO(pago);
     }
 
     @Transactional

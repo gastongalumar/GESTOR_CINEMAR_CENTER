@@ -38,6 +38,9 @@ public class ReservaResponseDTO {
     @Schema(description = "Nombre de la película", example = "Interstellar")
     private String peliculaNombre;
 
+    @Schema(description = "Nombre de la sala", example = "Sala 1")
+    private String salaNombre;
+
     @Schema(description = "Horario de la función")
     private LocalDateTime horarioFuncion;
 

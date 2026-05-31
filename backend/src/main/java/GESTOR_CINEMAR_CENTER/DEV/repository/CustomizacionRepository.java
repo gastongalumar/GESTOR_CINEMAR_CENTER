@@ -1,6 +1,6 @@
 package GESTOR_CINEMAR_CENTER.DEV.repository;
 
-import com.cinebackendspring.model.Customizacion;
+import GESTOR_CINEMAR_CENTER.DEV.model.Customizacion;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

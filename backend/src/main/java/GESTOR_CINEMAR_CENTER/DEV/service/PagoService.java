@@ -2,6 +2,7 @@ package GESTOR_CINEMAR_CENTER.DEV.service;
 
 
 import GESTOR_CINEMAR_CENTER.DEV.dto.response.pago.PagoResponseDTO;
+import GESTOR_CINEMAR_CENTER.DEV.enums.MetodoPago;
 import GESTOR_CINEMAR_CENTER.DEV.exception.RecursoNoEncontradoException;
 import GESTOR_CINEMAR_CENTER.DEV.mapper.PagoMapper;
 import GESTOR_CINEMAR_CENTER.DEV.model.Pago;
@@ -40,13 +41,25 @@ public class PagoService {
     public PagoResponseDTO buscarPorReserva(String numeroTicket) {
         Reserva reserva = reservaRepository.findByNumeroTicket(numeroTicket)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Reserva", "ticket", numeroTicket));
-        Pago pago = pagoRepository.findByReserva(reserva)
-                .orElseThrow(() -> new RecursoNoEncontradoException("Pago", "ticket", numeroTicket));
+        Pago pago = buscarPagoPorReserva(reserva);
         return pagoMapper.toDTO(pago);
+    }
+
+    public Pago buscarPagoPorReserva(Reserva reserva) {
+        return pagoRepository.findByReserva(reserva)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Pago", "ticket", reserva.getNumeroTicket()));
     }
 
     private Pago obtenerEntidad(Long id) {
         return pagoRepository.findById(id)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Pago", id));
+    }
+
+    public Pago crearPago(Reserva reserva, double monto, String metodoPago) {
+        Pago pago = new Pago();
+        pago.setReserva(reserva);
+        pago.setMetodoPago(MetodoPago.fromString(metodoPago));
+        pago.setMonto(monto);
+        return pagoRepository.save(pago);
     }
 }

@@ -1,6 +1,5 @@
 package GESTOR_CINEMAR_CENTER.DEV.mapper;
 
-import GESTOR_CINEMAR_CENTER.DEV.dto.response.AuthResponse;
 import GESTOR_CINEMAR_CENTER.DEV.dto.response.auth.AuthResponse;
 import GESTOR_CINEMAR_CENTER.DEV.model.Usuario;
 import org.mapstruct.Mapper;

@@ -4,20 +4,21 @@ import GESTOR_CINEMAR_CENTER.DEV.enums.EstadoUsuario;
 import GESTOR_CINEMAR_CENTER.DEV.enums.TipoUsuario;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
-import jakarta.persistence.MappedSuperclass;
+
 import lombok.*;
 
 import java.time.LocalDateTime;
 
 @Getter
 @Setter
-@MappedSuperclass
+@Entity
+@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
 @AllArgsConstructor
 @NoArgsConstructor
 @ToString
 public abstract class Usuario {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
     @Column(nullable = false)
@@ -61,18 +62,7 @@ public abstract class Usuario {
         fechaUltimoAcceso = LocalDateTime.now();
     }
 
-    // Constructor con campos principales
-    public Usuario(String nombre, String apellido, String email,
-                   String password, String telefono, TipoUsuario tipo) {
-        this.nombre = nombre;
-        this.apellido = apellido;
-        this.email = email;
-        this.password = password;
-        this.telefono = telefono;
-        this.tipo = tipo;
-        this.fechaRegistro = LocalDateTime.now();
-        this.fechaUltimoAcceso = LocalDateTime.now();
-    }
+
 
 
 
