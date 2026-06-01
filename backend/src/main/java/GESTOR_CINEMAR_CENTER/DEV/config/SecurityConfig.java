@@ -51,7 +51,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/funciones", "/api/funciones/", "/api/funciones/vigentes",
                                 "/api/funciones/pelicula/**", "/api/funciones/**").permitAll()
                         .requestMatchers("/api/peliculas", "/api/peliculas/", "/api/peliculas/vigentes",
-                                "/api/peliculas/vigentes/**", "/api/peliculas/**").permitAll()
+                                "/api/peliculas/vigentes/**", "/api/peliculas/**").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/salas", "/api/salas/**").permitAll()
                         .requestMatchers("/uploads/**").permitAll()
                         .requestMatchers("/api/reservas/funcion/**").permitAll()
@@ -62,7 +62,7 @@ public class SecurityConfig {
                         .requestMatchers("/actuator/**").hasAuthority("ADMINISTRADOR")
                         .requestMatchers("/api/pagos/**").hasAuthority("ADMINISTRADOR")
                         .requestMatchers("/api/admin/**").hasAuthority("ADMINISTRADOR")
-                        .anyRequest().authenticated()
+                        .anyRequest().denyAll()
                 )
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);

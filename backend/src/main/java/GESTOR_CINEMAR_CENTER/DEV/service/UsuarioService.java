@@ -72,7 +72,7 @@ public class UsuarioService {
         usuario = usuarioRepository.save(usuario);
         return usuarioMapper.toAuthResponse(usuario, generarToken(usuario));
     }
-
+/// esto va private
     public String generarToken(Usuario usuario) {
         return jwtUtil.generateToken(
                 usuario.getEmail(),
