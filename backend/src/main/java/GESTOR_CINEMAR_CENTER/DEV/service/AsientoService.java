@@ -46,4 +46,9 @@ public class AsientoService {
     public void eliminarPorSala(Sala sala) {
         asientoRepository.deleteBySala(sala);
     }
+
+    @Transactional
+    public void guardarTodos(List<Asiento> asientos) {
+        asientoRepository.saveAll(asientos);
+    }
 }

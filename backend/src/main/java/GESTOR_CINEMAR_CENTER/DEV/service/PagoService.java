@@ -1,6 +1,5 @@
 package GESTOR_CINEMAR_CENTER.DEV.service;
 
-
 import GESTOR_CINEMAR_CENTER.DEV.dto.response.pago.PagoResponseDTO;
 import GESTOR_CINEMAR_CENTER.DEV.enums.MetodoPago;
 import GESTOR_CINEMAR_CENTER.DEV.exception.RecursoNoEncontradoException;
@@ -8,7 +7,7 @@ import GESTOR_CINEMAR_CENTER.DEV.mapper.PagoMapper;
 import GESTOR_CINEMAR_CENTER.DEV.model.Pago;
 import GESTOR_CINEMAR_CENTER.DEV.model.Reserva;
 import GESTOR_CINEMAR_CENTER.DEV.repository.PagoRepository;
-import GESTOR_CINEMAR_CENTER.DEV.repository.ReservaRepository;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,14 +18,14 @@ import java.util.List;
 public class PagoService {
 
     private final PagoRepository pagoRepository;
-    private final ReservaRepository reservaRepository;
+    private final ReservaService reservaService;
     private final PagoMapper pagoMapper;
 
     public PagoService(PagoRepository pagoRepository,
-                       ReservaRepository reservaRepository,
+                       @Lazy ReservaService reservaService,
                        PagoMapper pagoMapper) {
         this.pagoRepository = pagoRepository;
-        this.reservaRepository = reservaRepository;
+        this.reservaService = reservaService;
         this.pagoMapper = pagoMapper;
     }
 
@@ -39,10 +38,8 @@ public class PagoService {
     }
 
     public PagoResponseDTO buscarPorReserva(String numeroTicket) {
-        Reserva reserva = reservaRepository.findByNumeroTicket(numeroTicket)
-                .orElseThrow(() -> new RecursoNoEncontradoException("Reserva", "ticket", numeroTicket));
-        Pago pago = buscarPagoPorReserva(reserva);
-        return pagoMapper.toDTO(pago);
+        Reserva reserva = reservaService.findByTicketEntity(numeroTicket);
+        return pagoMapper.toDTO(buscarPagoPorReserva(reserva));
     }
 
     public Pago buscarPagoPorReserva(Reserva reserva) {
@@ -55,6 +52,7 @@ public class PagoService {
                 .orElseThrow(() -> new RecursoNoEncontradoException("Pago", id));
     }
 
+    @Transactional
     public Pago crearPago(Reserva reserva, double monto, String metodoPago) {
         Pago pago = new Pago();
         pago.setReserva(reserva);
