@@ -2,7 +2,9 @@ package GESTOR_CINEMAR_CENTER.DEV.model;
 
 
 import GESTOR_CINEMAR_CENTER.DEV.enums.TipoUsuario;
+import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -11,6 +13,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
+@DiscriminatorValue("ADMINISTRADOR")
 public class Administrador extends Usuario {
     private String nivelAcceso = "AVANZADO";
 

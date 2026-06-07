@@ -1,7 +1,9 @@
 package GESTOR_CINEMAR_CENTER.DEV.model;
 
 import GESTOR_CINEMAR_CENTER.DEV.enums.TipoUsuario;
+import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 import lombok.*;
 
 @Entity
@@ -9,6 +11,7 @@ import lombok.*;
 @Setter
 @ToString
 @NoArgsConstructor
+@DiscriminatorValue("CLIENTE")
 public class Cliente extends  Usuario{
     private Integer puntosFidelidad = 0;
 
