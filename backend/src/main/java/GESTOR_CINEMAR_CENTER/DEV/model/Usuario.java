@@ -12,13 +12,15 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @Entity
-@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
+@Table(name = "usuario")
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+@DiscriminatorColumn(name = "disc_tipo", discriminatorType = DiscriminatorType.STRING)
 @AllArgsConstructor
 @NoArgsConstructor
 @ToString
 public abstract class Usuario {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(nullable = false)
@@ -36,6 +38,8 @@ public abstract class Usuario {
 
     private String telefono;
 
+    // Mantengo el campo tipo (enum) si lo necesitas a nivel de modelo.
+    // NOTA: no está ligado al discriminator; son dos columnas distintas.
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private TipoUsuario tipo;
@@ -61,10 +65,4 @@ public abstract class Usuario {
         fechaRegistro = LocalDateTime.now();
         fechaUltimoAcceso = LocalDateTime.now();
     }
-
-
-
-
-
-
 }
