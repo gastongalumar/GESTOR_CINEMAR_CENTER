@@ -11,6 +11,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
+
 public class Administrador extends Usuario {
     private String nivelAcceso = "AVANZADO";
 

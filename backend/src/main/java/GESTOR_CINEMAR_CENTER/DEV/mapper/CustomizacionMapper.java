@@ -12,5 +12,7 @@ public interface CustomizacionMapper {
     CustomizacionResponse toResponse(Customizacion entity);
 
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "logoUrl", ignore = true)
+    @Mapping(target = "fondoUrl", ignore = true)
     void updateEntity(CustomizacionRequest request, @MappingTarget Customizacion entity);
 }

@@ -1,6 +1,7 @@
 package GESTOR_CINEMAR_CENTER.DEV.repository;
 
 import GESTOR_CINEMAR_CENTER.DEV.enums.EstadoUsuario;
+import GESTOR_CINEMAR_CENTER.DEV.enums.TipoUsuario;
 import GESTOR_CINEMAR_CENTER.DEV.model.Administrador;
 import GESTOR_CINEMAR_CENTER.DEV.model.Cliente;
 import GESTOR_CINEMAR_CENTER.DEV.model.Usuario;
@@ -24,4 +25,8 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
 
     @Query("SELECT u FROM Usuario u WHERE u.estado = :estado")
     List<Usuario> findByEstado(@Param("estado") EstadoUsuario estado);
+
+    List<Usuario> findByNombreContainingIgnoreCaseOrApellidoContainingIgnoreCase(String nombre, String apellido);
+
+    List<Usuario> findByTipo(TipoUsuario tipo);
 }

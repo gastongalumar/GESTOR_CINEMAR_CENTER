@@ -45,23 +45,58 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        // Autenticación y Documentación (Público)
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
-                        .requestMatchers("/api/customizacion", "/api/customizacion/", "/api/customizacion/**").permitAll()
-                        .requestMatchers("/api/funciones", "/api/funciones/", "/api/funciones/vigentes",
-                                "/api/funciones/pelicula/**", "/api/funciones/**").permitAll()
-                        .requestMatchers("/api/peliculas", "/api/peliculas/", "/api/peliculas/vigentes",
-                                "/api/peliculas/vigentes/**", "/api/peliculas/**").authenticated()
+
+                        // Customización (Lectura pública, Escritura Admin)
+                        .requestMatchers(HttpMethod.GET, "/api/customizacion", "/api/customizacion/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/customizacion/**").hasAuthority("ADMINISTRADOR")
+                        .requestMatchers(HttpMethod.DELETE, "/api/customizacion/**").hasAuthority("ADMINISTRADOR")
+
+                        // Funciones (Lectura pública, Escritura/Eliminación Admin)
+                        .requestMatchers(HttpMethod.GET, "/api/funciones", "/api/funciones/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/funciones/**").hasAuthority("ADMINISTRADOR")
+                        .requestMatchers(HttpMethod.DELETE, "/api/funciones/**").hasAuthority("ADMINISTRADOR")
+
+                        // Películas (Lectura Autenticada, Escritura Admin)
+                        .requestMatchers(HttpMethod.GET, "/api/peliculas", "/api/peliculas/**").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/peliculas/**").hasAuthority("ADMINISTRADOR")
+                        .requestMatchers(HttpMethod.PUT, "/api/peliculas/**").hasAuthority("ADMINISTRADOR")
+                        .requestMatchers(HttpMethod.DELETE, "/api/peliculas/**").hasAuthority("ADMINISTRADOR")
+
+                        // Salas y Asientos (Lectura pública, Escritura Admin)
                         .requestMatchers(HttpMethod.GET, "/api/salas", "/api/salas/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/salas/**").hasAuthority("ADMINISTRADOR")
+                        .requestMatchers(HttpMethod.PUT, "/api/salas/**").hasAuthority("ADMINISTRADOR")
+                        .requestMatchers(HttpMethod.DELETE, "/api/salas/**").hasAuthority("ADMINISTRADOR")
+
+                        // Recursos estáticos (Imágenes subidas)
                         .requestMatchers("/uploads/**").permitAll()
-                        .requestMatchers("/api/reservas/funcion/**").permitAll()
-                        .requestMatchers("/api/reservas/*/pdf").permitAll()
-                        .requestMatchers("/api/reservas/validar/**").permitAll()
-                        .requestMatchers("/api/reservas/ticket/**").permitAll()
+
+                        // Reservas
+                        .requestMatchers("/api/reservas/funcion/**").permitAll() // Consulta de asientos libres
+                        .requestMatchers("/api/reservas/*/pdf").permitAll() // Descarga de PDF
+                        .requestMatchers(HttpMethod.POST, "/api/reservas").hasAuthority("CLIENTE") // Crear reserva (Cliente)
+                        .requestMatchers(HttpMethod.PUT, "/api/reservas/ticket/*/pago").hasAuthority("CLIENTE") // Cambiar método pago (Cliente)
+                        .requestMatchers(HttpMethod.DELETE, "/api/reservas/ticket/*").hasAnyAuthority("CLIENTE", "ADMINISTRADOR") // Cancelar reserva
+                        .requestMatchers("/api/reservas/validar/**").hasAuthority("ADMINISTRADOR") // Validar ticket (Admin)
+                        .requestMatchers("/api/reservas/cliente/**").hasAnyAuthority("CLIENTE", "ADMINISTRADOR") // Ver historial
+                        .requestMatchers("/api/reservas/ticket/**").authenticated() // Ver detalles de ticket
+
+                        // Pagos
+                        .requestMatchers("/api/pagos/**").hasAuthority("ADMINISTRADOR")
+
+                        // Usuarios
+                        .requestMatchers("/api/usuarios/**").hasAuthority("ADMINISTRADOR")
+
+                        // Administración
+                        .requestMatchers("/api/admin/**").hasAuthority("ADMINISTRADOR")
+
+                        // Actuator / Monitoreo
                         .requestMatchers("/actuator/health", "/actuator/info").permitAll()
                         .requestMatchers("/actuator/**").hasAuthority("ADMINISTRADOR")
-                        .requestMatchers("/api/pagos/**").hasAuthority("ADMINISTRADOR")
-                        .requestMatchers("/api/admin/**").hasAuthority("ADMINISTRADOR")
+
                         .anyRequest().denyAll()
                 )
                 .authenticationProvider(authenticationProvider())
