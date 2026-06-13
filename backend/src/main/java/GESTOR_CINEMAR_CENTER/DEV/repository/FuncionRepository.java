@@ -18,6 +18,7 @@ public interface FuncionRepository extends JpaRepository<Funcion, Long> {
     List<Funcion> findByHorarioAfter(LocalDateTime fecha);
     List<Funcion> findByHorarioBetween(LocalDateTime inicio, LocalDateTime fin);
     boolean existsBySalaAndHorario(Sala sala, LocalDateTime horario);
+    boolean existsBySalaAndHorarioAfter(Sala sala, LocalDateTime horario);
 
     @Query("SELECT f FROM Funcion f WHERE f.pelicula.id = :peliculaId AND f.horario > :fecha")
     List<Funcion> findVigentesPorPelicula(@Param("peliculaId") Long peliculaId, @Param("fecha") LocalDateTime fecha);

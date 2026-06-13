@@ -10,15 +10,20 @@ import GESTOR_CINEMAR_CENTER.DEV.mapper.AsientoMapper;
 import GESTOR_CINEMAR_CENTER.DEV.mapper.SalaMapper;
 import GESTOR_CINEMAR_CENTER.DEV.model.Asiento;
 import GESTOR_CINEMAR_CENTER.DEV.model.Sala;
+import GESTOR_CINEMAR_CENTER.DEV.repository.FuncionRepository;
 import GESTOR_CINEMAR_CENTER.DEV.repository.SalaRepository;
 import GESTOR_CINEMAR_CENTER.DEV.service.AsientoService;
+import GESTOR_CINEMAR_CENTER.DEV.service.FuncionService;
 import GESTOR_CINEMAR_CENTER.DEV.service.SalaService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+@RequiredArgsConstructor
 @Service("salaService")
 public class SalaServiceImpl implements SalaService {
 
@@ -26,16 +31,7 @@ public class SalaServiceImpl implements SalaService {
     private final AsientoService asientoService;
     private final SalaMapper salaMapper;
     private final AsientoMapper asientoMapper;
-
-    public SalaServiceImpl(SalaRepository salaRepository,
-                           AsientoService asientoService,
-                           SalaMapper salaMapper,
-                           AsientoMapper asientoMapper) {
-        this.salaRepository = salaRepository;
-        this.asientoService = asientoService;
-        this.salaMapper = salaMapper;
-        this.asientoMapper = asientoMapper;
-    }
+    private final FuncionRepository funcionRepository;
 
     @Override
     public List<SalaResponseDTO> listarTodas() {
@@ -157,8 +153,16 @@ public class SalaServiceImpl implements SalaService {
 
         Sala sala = obtenerEntidadActiva(id);
 
-        sala.setActiva(false);
+        boolean tieneFuncionesFuturas =
+                funcionRepository.existsBySalaAndHorarioAfter(sala, LocalDateTime.now().plusDays(1));
 
+        if (tieneFuncionesFuturas) {
+            throw new ReglaNegocioException(
+                    "No se puede desactivar la sala porque tiene funciones futuras asociadas"
+            );
+        }
+
+        sala.setActiva(false);
         salaRepository.save(sala);
     }
 

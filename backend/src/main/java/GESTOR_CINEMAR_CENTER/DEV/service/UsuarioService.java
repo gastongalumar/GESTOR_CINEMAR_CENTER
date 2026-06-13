@@ -11,6 +11,7 @@ import java.util.List;
 public interface UsuarioService {
     AuthResponse login(String email, String password);
     AuthResponse registrar(RegistroRequest request);
+    AuthResponse registrarAdministrador(RegistroRequest request);
     Usuario findByEmail(String email);
     List<UsuarioResponseDTO> listarTodos();
     void eliminarUsuario(Long id);

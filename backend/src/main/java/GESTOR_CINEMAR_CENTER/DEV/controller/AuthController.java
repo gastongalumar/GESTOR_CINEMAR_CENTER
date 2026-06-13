@@ -26,9 +26,9 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "Authentication", description = "Operaciones de autenticación y registro de usuarios")
 public class AuthController {
 
-    private final UsuarioServiceImpl usuarioService;
+    private final UsuarioService usuarioService;
 
-    public AuthController(UsuarioServiceImpl usuarioService) {
+    public AuthController(UsuarioService usuarioService) {
         this.usuarioService = usuarioService;
     }
 

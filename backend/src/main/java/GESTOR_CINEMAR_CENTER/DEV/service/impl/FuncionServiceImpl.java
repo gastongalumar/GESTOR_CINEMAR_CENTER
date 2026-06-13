@@ -110,4 +110,12 @@ public class FuncionServiceImpl implements FuncionService {
     public void eliminar(Long id) {
         funcionRepository.delete(obtenerFuncion(id));
     }
+
+    @Override
+    public boolean existeFuncionFuturaPorSala(Sala sala) {
+
+        return funcionRepository.findBySala(sala)
+                .stream()
+                .anyMatch(f -> f.getHorario().isAfter(LocalDateTime.now()));
+    }
 }
