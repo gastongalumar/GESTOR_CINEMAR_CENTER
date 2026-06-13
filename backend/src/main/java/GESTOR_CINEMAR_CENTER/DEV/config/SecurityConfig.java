@@ -44,44 +44,66 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // ──────────────────────────────────────────────
-                        // 🔓 ENDPOINTS 100% PÚBLICOS (sin token)
-                        // ──────────────────────────────────────────────
 
-                        // Swagger / OpenAPI
+                        // 🔓 ENDPOINTS PÚBLICOS
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
-                        // Error handler por defecto
                         .requestMatchers("/error").permitAll()
-                        // Archivos estáticos subidos (imágenes de películas, logos, fondos)
                         .requestMatchers("/uploads/**").permitAll()
-                        // Autenticación: login y registro (no requieren token)
-                        .requestMatchers("/api/auth/**").permitAll()
-                        // Customización: consultar configuración pública (GET)
                         .requestMatchers(HttpMethod.GET, "/api/customizacion").permitAll()
-                        // Películas: consultas GET públicas (cartelera, detalles)
-                        .requestMatchers(HttpMethod.GET, "/api/peliculas/**").permitAll()
-                        // Funciones: consultas GET públicas (horarios, disponibilidad)
-                        .requestMatchers(HttpMethod.GET, "/api/funciones/**").permitAll()
-                        // Salas: consultas GET públicas
-                        .requestMatchers(HttpMethod.GET, "/api/salas/**").permitAll()
-                        // Reservas: consultar ticket, pago asociado, validar ticket
-                        // y asientos ocupados NO requieren autenticación
-                        .requestMatchers(HttpMethod.GET, "/api/reservas/ticket/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/reservas/validar/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/reservas/funcion/*/ocupados").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/auth/register").permitAll()
 
-                        // ──────────────────────────────────────────────
-                        // 🔒 ENDPOINTS SOLO PARA ADMINISTRADORES
-                        // ──────────────────────────────────────────────
-                        .requestMatchers("/api/pagos/**").hasAuthority("ADMINISTRADOR")
-                        .requestMatchers("/api/usuarios/**").hasAuthority("ADMINISTRADOR")
+                        // 👥 CUALQUIER USUARIO AUTENTICADO
+                        .requestMatchers(HttpMethod.GET, "/api/peliculas/**").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/funciones/**").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/salas/**").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/reservas/funcion/*/ocupados").authenticated()
 
-                        // ──────────────────────────────────────────────
-                        // 🛡️ CUALQUIER OTRA COSA → Requiere autenticación
-                        //     (sin importar el rol). Si no hay token JWT
-                        //     válido, Spring retorna 401 automáticamente.
-                        // ──────────────────────────────────────────────
-                        .anyRequest().authenticated()
+                        // 👤 SOLO CLIENTE
+                        .requestMatchers(HttpMethod.POST, "/api/reservas").hasAuthority("CLIENTE")
+                        .requestMatchers(HttpMethod.POST, "/api/pagos/**").hasAuthority("CLIENTE")
+                        .requestMatchers(HttpMethod.GET, "/api/reservas/mis").hasAuthority("CLIENTE")
+                        .requestMatchers(HttpMethod.GET, "/api/reservas/ticket/**").hasAuthority("CLIENTE")
+
+                        // 👑 SOLO ADMIN - CRUD
+                        .requestMatchers(HttpMethod.POST, "/api/peliculas/**").hasAuthority("ADMINISTRADOR")
+                        .requestMatchers(HttpMethod.PUT, "/api/peliculas/**").hasAuthority("ADMINISTRADOR")
+                        .requestMatchers(HttpMethod.DELETE, "/api/peliculas/**").hasAuthority("ADMINISTRADOR")
+
+                        .requestMatchers(HttpMethod.POST, "/api/funciones/**").hasAuthority("ADMINISTRADOR")
+                        .requestMatchers(HttpMethod.PUT, "/api/funciones/**").hasAuthority("ADMINISTRADOR")
+                        .requestMatchers(HttpMethod.DELETE, "/api/funciones/**").hasAuthority("ADMINISTRADOR")
+
+                        .requestMatchers(HttpMethod.POST, "/api/salas/**").hasAuthority("ADMINISTRADOR")
+                        .requestMatchers(HttpMethod.PUT, "/api/salas/**").hasAuthority("ADMINISTRADOR")
+                        .requestMatchers(HttpMethod.DELETE, "/api/salas/**").hasAuthority("ADMINISTRADOR")
+
+                        .requestMatchers(HttpMethod.POST, "/api/customizacion/**").hasAuthority("ADMINISTRADOR")
+                        .requestMatchers(HttpMethod.PUT, "/api/customizacion/**").hasAuthority("ADMINISTRADOR")
+                        .requestMatchers(HttpMethod.DELETE, "/api/customizacion/**").hasAuthority("ADMINISTRADOR")
+
+                        // 👑 SOLO ADMIN - MODERACIÓN
+                        .requestMatchers(HttpMethod.GET, "/api/reservas/admin/todas").hasAuthority("ADMINISTRADOR")
+                        .requestMatchers(HttpMethod.GET, "/api/reservas/cliente/**").hasAuthority("ADMINISTRADOR")
+                        .requestMatchers(HttpMethod.GET, "/api/reservas/**").hasAuthority("ADMINISTRADOR")
+
+                        .requestMatchers(HttpMethod.GET, "/api/estadisticas/ocupacion/sala/**").hasAuthority("ADMINISTRADOR")
+                        .requestMatchers(HttpMethod.GET, "/api/estadisticas/ocupacion/funcion/**").hasAuthority("ADMINISTRADOR")
+                        .requestMatchers(HttpMethod.GET, "/api/estadisticas/ocupacion/pelicula/**").hasAuthority("ADMINISTRADOR")
+                        .requestMatchers(HttpMethod.GET, "/api/estadisticas/reservas/por-fecha").hasAuthority("ADMINISTRADOR")
+                        .requestMatchers(HttpMethod.GET, "/api/estadisticas/ingresos/**").hasAuthority("ADMINISTRADOR")
+                        .requestMatchers(HttpMethod.GET, "/api/estadisticas/dashboard/resumen").hasAuthority("ADMINISTRADOR")
+
+                        .requestMatchers(HttpMethod.POST, "/api/reservas/validar/**").hasAuthority("ADMINISTRADOR")
+
+                        // 👑 SOLO ADMIN - USUARIOS
+                        .requestMatchers(HttpMethod.GET, "/api/usuarios/**").hasAuthority("ADMINISTRADOR")
+                        .requestMatchers(HttpMethod.POST, "/api/usuarios/**").hasAuthority("ADMINISTRADOR")
+                        .requestMatchers(HttpMethod.PUT, "/api/usuarios/**").hasAuthority("ADMINISTRADOR")
+                        .requestMatchers(HttpMethod.DELETE, "/api/usuarios/**").hasAuthority("ADMINISTRADOR")
+
+                        // 🚫 CUALQUIER OTRA RUTA
+                        .anyRequest().denyAll()
                 )
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
