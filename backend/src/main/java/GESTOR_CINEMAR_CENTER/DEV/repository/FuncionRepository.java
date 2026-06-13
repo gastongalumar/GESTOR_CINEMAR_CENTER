@@ -21,4 +21,11 @@ public interface FuncionRepository extends JpaRepository<Funcion, Long> {
 
     @Query("SELECT f FROM Funcion f WHERE f.pelicula.id = :peliculaId AND f.horario > :fecha")
     List<Funcion> findVigentesPorPelicula(@Param("peliculaId") Long peliculaId, @Param("fecha") LocalDateTime fecha);
+
+    // ---------------------------
+    // Método agregado para estadísticas
+    // ---------------------------
+
+    @Query("SELECT COUNT(f) FROM Funcion f WHERE f.horario > CURRENT_TIMESTAMP")
+    Long countVigentes();
 }

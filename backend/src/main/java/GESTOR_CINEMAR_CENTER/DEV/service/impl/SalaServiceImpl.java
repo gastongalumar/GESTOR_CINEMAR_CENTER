@@ -67,16 +67,16 @@ public class SalaServiceImpl implements SalaService {
 
     private void validarDimensiones(Integer filas, Integer columnas) {
 
-        if (filas != null && filas > 26) {
-            throw new ReglaNegocioException("La sala no puede tener más de 26 filas");
+        if (filas != null && filas > 20) {
+            throw new ReglaNegocioException("La sala no puede tener más de 20 filas");
         }
 
-        if (columnas != null && columnas > 15) {
-            throw new ReglaNegocioException("La sala no puede tener más de 15 columnas");
+        if (columnas != null && columnas > 16) {
+            throw new ReglaNegocioException("La sala no puede tener más de 16 columnas");
         }
 
-        if (filas != null && columnas != null && (filas * columnas) > 390) {
-            throw new ReglaNegocioException("La capacidad máxima de la sala es de 390 asientos");
+        if (filas != null && columnas != null && (filas * columnas) > 320) {
+            throw new ReglaNegocioException("La capacidad máxima de la sala es de 320 asientos");
         }
     }
 
