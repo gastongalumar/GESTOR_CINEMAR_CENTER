@@ -9,17 +9,42 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface FuncionRepository extends JpaRepository<Funcion, Long> {
-    List<Funcion> findByPelicula(Pelicula pelicula);
-    List<Funcion> findBySala(Sala sala);
-    List<Funcion> findBySalaAndHorarioBetween(Sala sala, LocalDateTime inicio, LocalDateTime fin);
-    List<Funcion> findByHorarioAfter(LocalDateTime fecha);
-    List<Funcion> findByHorarioBetween(LocalDateTime inicio, LocalDateTime fin);
-    boolean existsBySalaAndHorario(Sala sala, LocalDateTime horario);
+
+    // Buscar función activa por id
+    Optional<Funcion> findByIdAndActivaTrue(Long id);
+
+    // Listados filtrados por activa
+    List<Funcion> findByActivaTrueAndPelicula(Pelicula pelicula);
+    List<Funcion> findByActivaTrueAndSala(Sala sala);
+    List<Funcion> findByActivaTrue();
+
+    // Vigentes: activas con horario futuro
+    List<Funcion> findByActivaTrueAndHorarioAfter(LocalDateTime fecha);
+
+    // Búsqueda por rango de horario (solo activas) — para solapamiento
+    List<Funcion> findByActivaTrueAndSalaAndHorarioBetween(Sala sala, LocalDateTime inicio, LocalDateTime fin);
+
+    // Para verificar funciones futuras de una sala (borrado lógico de sala)
     boolean existsBySalaAndHorarioAfter(Sala sala, LocalDateTime horario);
 
-    @Query("SELECT f FROM Funcion f WHERE f.pelicula.id = :peliculaId AND f.horario > :fecha")
+    // Solo activas con horario futuro para sala (al eliminar pelicula)
+    @Query("SELECT COUNT(f) > 0 FROM Funcion f WHERE f.pelicula = :pelicula AND f.activa = true AND f.horario > :ahora")
+    boolean existsByPeliculaActivaFutura(@Param("pelicula") Pelicula pelicula, @Param("ahora") LocalDateTime ahora);
+
+    // Colisión exacta de horario (solo activas)
+    boolean existsBySalaAndHorarioAndActivaTrue(Sala sala, LocalDateTime horario);
+
+    // Para filtros admin
+    List<Funcion> findByHorarioBetween(LocalDateTime inicio, LocalDateTime fin);
+
+    @Query("SELECT f FROM Funcion f WHERE f.pelicula.id = :peliculaId AND f.activa = true AND f.horario > :fecha")
     List<Funcion> findVigentesPorPelicula(@Param("peliculaId") Long peliculaId, @Param("fecha") LocalDateTime fecha);
+
+    // Compatibilidad con SalaServiceImpl (chequeo funciones futuras)
+    @Query("SELECT COUNT(f) > 0 FROM Funcion f WHERE f.sala = :sala AND f.activa = true AND f.horario > :horario")
+    boolean existsActivaBySalaAndHorarioAfter(@Param("sala") Sala sala, @Param("horario") LocalDateTime horario);
 }

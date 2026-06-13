@@ -18,6 +18,7 @@ import java.util.List;
 public interface PeliculaMapper {
 
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "activa", ignore = true)
     Pelicula toEntity(CrearPeliculaRequestDTO request);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)

@@ -51,7 +51,7 @@ public class SecurityConfig {
                         .requestMatchers("/uploads/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/customizacion").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/auth/register").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/auth/registro").permitAll()
 
                         // 👥 CUALQUIER USUARIO AUTENTICADO
                         .requestMatchers(HttpMethod.GET, "/api/peliculas/**").authenticated()

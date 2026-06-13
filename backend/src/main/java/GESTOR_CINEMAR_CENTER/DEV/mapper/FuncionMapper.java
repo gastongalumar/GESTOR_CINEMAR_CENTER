@@ -15,6 +15,7 @@ import java.util.List;
 public interface FuncionMapper {
 
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "activa", ignore = true)
     Funcion toEntity(CrearFuncionRequestDTO request, Sala sala, Pelicula pelicula);
 
     @Mapping(source = "sala.id", target = "salaId")

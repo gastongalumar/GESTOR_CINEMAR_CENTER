@@ -30,4 +30,7 @@ public class Funcion {
     private LocalDateTime horario;
 
     private Double precio = 5000.0;
+
+    @Column(nullable = false)
+    private boolean activa = true;
 }
