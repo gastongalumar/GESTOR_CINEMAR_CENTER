@@ -22,8 +22,6 @@ public class Pelicula {
     @Column(nullable = false, unique = true)
     private String nombre;
 
-    private String rutaImagen;
-
     @Column(nullable = false)
     private LocalDate fechaEstreno;
 
@@ -32,4 +30,7 @@ public class Pelicula {
 
     @Column(nullable = false)
     private Integer duracionMinutos;
+
+    @Column
+    private String rutaImagen;
 }

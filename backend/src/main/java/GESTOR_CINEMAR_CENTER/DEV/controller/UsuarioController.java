@@ -14,6 +14,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -22,7 +23,7 @@ import java.util.List;
 @RequestMapping("/api/usuarios")
 @CrossOrigin(origins = "http://localhost:4200")
 @RequiredArgsConstructor
-@Tag(name = "Usuarios", description = "Operaciones de administración y consulta de usuarios")
+@Tag(name = "Usuarios", description = "Operaciones de administración y consulta de usuarios. Requiere rol ADMINISTRADOR")
 @SecurityRequirement(name = "bearerAuth")
 public class UsuarioController {
 
@@ -32,6 +33,7 @@ public class UsuarioController {
     @ApiResponse(responseCode = "200", description = "Listado obtenido correctamente",
             content = @Content(array = @ArraySchema(schema = @Schema(implementation = UsuarioResponseDTO.class))))
     @GetMapping
+    @PreAuthorize("hasAuthority('ADMINISTRADOR')")
     public ResponseEntity<List<UsuarioResponseDTO>> listarTodos() {
         return ResponseEntity.ok(usuarioService.listarTodos());
     }
@@ -43,6 +45,7 @@ public class UsuarioController {
             @ApiResponse(responseCode = "404", description = "Usuario no encontrado")
     })
     @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('ADMINISTRADOR')")
     public ResponseEntity<UsuarioResponseDTO> buscarPorId(
             @Parameter(description = "ID del usuario", required = true) @PathVariable Long id) {
         return ResponseEntity.ok(usuarioService.buscarPorId(id));
@@ -52,6 +55,7 @@ public class UsuarioController {
     @ApiResponse(responseCode = "200", description = "Usuarios filtrados correctamente",
             content = @Content(array = @ArraySchema(schema = @Schema(implementation = UsuarioResponseDTO.class))))
     @GetMapping("/buscar")
+    @PreAuthorize("hasAuthority('ADMINISTRADOR')")
     public ResponseEntity<List<UsuarioResponseDTO>> buscarPorNombre(
             @Parameter(description = "Nombre o apellido a buscar", required = true) @RequestParam String nombre) {
         return ResponseEntity.ok(usuarioService.buscarPorNombre(nombre));
@@ -61,6 +65,7 @@ public class UsuarioController {
     @ApiResponse(responseCode = "200", description = "Usuarios filtrados por rol correctamente",
             content = @Content(array = @ArraySchema(schema = @Schema(implementation = UsuarioResponseDTO.class))))
     @GetMapping("/rol/{rol}")
+    @PreAuthorize("hasAuthority('ADMINISTRADOR')")
     public ResponseEntity<List<UsuarioResponseDTO>> listarPorRol(
             @Parameter(description = "Rol del usuario (CLIENTE o ADMINISTRADOR)", required = true) @PathVariable String rol) {
         TipoUsuario tipo = TipoUsuario.valueOf(rol.toUpperCase());

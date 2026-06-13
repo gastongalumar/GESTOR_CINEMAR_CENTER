@@ -24,9 +24,9 @@ public interface PeliculaService {
 
     PeliculaResponseDTO actualizar(Long id, ActualizarPeliculaRequestDTO request);
 
-    void eliminarImagenDePelicula(Long id);
-
-    String guardarImagen(MultipartFile file);
-
     void eliminar(Long id);
+
+    String guardarImagen(Long id, MultipartFile file);
+
+    void eliminarImagenDePelicula(Long id);
 }

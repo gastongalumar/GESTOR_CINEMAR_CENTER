@@ -21,9 +21,6 @@ public class ActualizarPeliculaRequestDTO {
     @Size(max = 200, message = "El nombre no puede superar 200 caracteres")
     private String nombre;
 
-    @Schema(description = "Ruta o URL de la imagen", example = "/imagenes/interstellar.jpg")
-    private String rutaImagen;
-
     @Schema(description = "Fecha de estreno", example = "2026-05-20")
     private LocalDate fechaEstreno;
 

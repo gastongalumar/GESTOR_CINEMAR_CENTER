@@ -12,6 +12,7 @@ import java.util.List;
 public interface ReservaService {
     ReservaResponseDTO crear(CrearReservaRequestDTO request);
     List<ReservaResponseDTO> listarPorCliente(Long clienteId);
+    List<ReservaResponseDTO> listarReservasPorEmail(String email);
     Reserva findByTicketEntity(String numeroTicket);
     ReservaResponseDTO buscarReservaPorTicket(String numeroTicket);
     PagoResponseDTO buscarPagoPorTicket(String numeroTicket);

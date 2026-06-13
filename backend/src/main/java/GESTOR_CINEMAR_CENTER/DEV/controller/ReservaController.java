@@ -19,6 +19,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -31,6 +33,17 @@ import java.util.List;
 public class ReservaController {
 
     private final ReservaService reservaService;
+
+    @Operation(summary = "Obtener mis reservas", description = "Retorna las reservas del cliente autenticado",
+            security = @SecurityRequirement(name = "bearerAuth"))
+    @ApiResponse(responseCode = "200", description = "Listado obtenido correctamente",
+            content = @Content(array = @ArraySchema(schema = @Schema(implementation = ReservaResponseDTO.class))))
+    @GetMapping("/mis")
+    @PreAuthorize("hasAuthority('CLIENTE') or hasAuthority('ADMINISTRADOR')")
+    public ResponseEntity<List<ReservaResponseDTO>> listarMisReservas(Authentication authentication) {
+        String email = authentication.getName();
+        return ResponseEntity.ok(reservaService.listarReservasPorEmail(email));
+    }
 
     @Operation(
             summary = "Crear una reserva",
@@ -48,6 +61,7 @@ public class ReservaController {
             @ApiResponse(responseCode = "401", description = "No autenticado")
     })
     @PostMapping
+    @PreAuthorize("hasAuthority('CLIENTE') or hasAuthority('ADMINISTRADOR')")
     public ResponseEntity<ReservaResponseDTO> crear(@Valid @RequestBody CrearReservaRequestDTO request) {
         return ResponseEntity.ok(reservaService.crear(request));
     }
@@ -57,6 +71,7 @@ public class ReservaController {
     @ApiResponse(responseCode = "200", description = "Listado obtenido correctamente",
             content = @Content(array = @ArraySchema(schema = @Schema(implementation = ReservaResponseDTO.class))))
     @GetMapping("/cliente/{clienteId}")
+    @PreAuthorize("hasAuthority('ADMINISTRADOR')")
     public ResponseEntity<List<ReservaResponseDTO>> listarPorCliente(
             @Parameter(description = "ID del cliente", required = true) @PathVariable Long clienteId) {
         return ResponseEntity.ok(reservaService.listarPorCliente(clienteId));
@@ -102,6 +117,7 @@ public class ReservaController {
     @Operation(
             summary = "Actualizar método de pago",
             description = "Modifica el método de pago de una reserva existente",
+            security = @SecurityRequirement(name = "bearerAuth"),
             requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
                     required = true,
                     content = @Content(schema = @Schema(implementation = ActualizarMetodoPagoRequestDTO.class))
@@ -110,22 +126,27 @@ public class ReservaController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Método de pago actualizado",
                     content = @Content(schema = @Schema(implementation = ReservaResponseDTO.class))),
-            @ApiResponse(responseCode = "404", description = "Ticket no encontrado")
+            @ApiResponse(responseCode = "404", description = "Ticket no encontrado"),
+            @ApiResponse(responseCode = "401", description = "No autenticado")
     })
     @PutMapping("/ticket/{numeroTicket}/pago")
+    @PreAuthorize("hasAuthority('CLIENTE') or hasAuthority('ADMINISTRADOR')")
     public ResponseEntity<ReservaResponseDTO> actualizarMetodoPago(
             @Parameter(description = "Número de ticket de la reserva", required = true) @PathVariable String numeroTicket,
             @Valid @RequestBody ActualizarMetodoPagoRequestDTO request) {
         return ResponseEntity.ok(reservaService.actualizarMetodoPago(numeroTicket, request));
     }
 
-    @Operation(summary = "Cancelar reserva", description = "Cancela una reserva existente por número de ticket")
+    @Operation(summary = "Cancelar reserva", description = "Cancela una reserva existente por número de ticket",
+            security = @SecurityRequirement(name = "bearerAuth"))
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Reserva cancelada correctamente",
                     content = @Content(schema = @Schema(implementation = MensajeResponse.class))),
-            @ApiResponse(responseCode = "404", description = "Ticket no encontrado")
+            @ApiResponse(responseCode = "404", description = "Ticket no encontrado"),
+            @ApiResponse(responseCode = "401", description = "No autenticado")
     })
     @DeleteMapping("/ticket/{numeroTicket}")
+    @PreAuthorize("hasAuthority('CLIENTE') or hasAuthority('ADMINISTRADOR')")
     public ResponseEntity<MensajeResponse> cancelar(
             @Parameter(description = "Número de ticket de la reserva", required = true) @PathVariable String numeroTicket) {
         reservaService.cancelar(numeroTicket);

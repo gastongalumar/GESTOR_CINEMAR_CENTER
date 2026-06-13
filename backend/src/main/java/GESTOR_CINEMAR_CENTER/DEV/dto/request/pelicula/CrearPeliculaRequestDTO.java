@@ -21,10 +21,6 @@ public class CrearPeliculaRequestDTO {
     @Size(max = 200, message = "El nombre no puede superar 200 caracteres")
     private String nombre;
 
-//    @Schema(description = "Ruta o URL de la imagen", example = "/imagenes/interstellar.jpg")
-//    @NotBlank(message = "La ruta de imagen es obligatoria")
-    private String rutaImagen;
-
     @Schema(description = "Fecha de estreno", example = "2026-05-20")
     @NotNull(message = "La fecha de estreno es obligatoria")
     @Future(message = "La fecha de estreno debe ser futura")

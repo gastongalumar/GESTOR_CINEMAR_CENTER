@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -33,6 +34,7 @@ public class PagoController {
     @ApiResponse(responseCode = "200", description = "Listado obtenido correctamente",
             content = @Content(array = @ArraySchema(schema = @Schema(implementation = PagoResponseDTO.class))))
     @GetMapping
+    @PreAuthorize("hasAuthority('ADMINISTRADOR')")
     public ResponseEntity<List<PagoResponseDTO>> listarTodos() {
         return ResponseEntity.ok(pagoService.listarTodos());
     }
@@ -45,6 +47,7 @@ public class PagoController {
             @ApiResponse(responseCode = "403", description = "Acceso denegado")
     })
     @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('ADMINISTRADOR')")
     public ResponseEntity<PagoResponseDTO> buscarPorId(
             @Parameter(description = "ID del pago", required = true) @PathVariable Long id) {
         return ResponseEntity.ok(pagoService.buscarPorId(id));
@@ -58,6 +61,7 @@ public class PagoController {
             @ApiResponse(responseCode = "403", description = "Acceso denegado")
     })
     @GetMapping("/reserva/{numeroTicket}")
+    @PreAuthorize("hasAuthority('ADMINISTRADOR')")
     public ResponseEntity<PagoResponseDTO> buscarPorReserva(
             @Parameter(description = "Número de ticket de la reserva", required = true) @PathVariable String numeroTicket) {
         return ResponseEntity.ok(pagoService.buscarPorReserva(numeroTicket));

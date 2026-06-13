@@ -17,6 +17,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -78,6 +79,7 @@ public class SalaController {
             @ApiResponse(responseCode = "401", description = "No autenticado")
     })
     @PostMapping
+    @PreAuthorize("hasAuthority('ADMINISTRADOR')")
     public ResponseEntity<SalaResponseDTO> crear(@Valid @RequestBody CrearSalaRequestDTO request) {
         return ResponseEntity.ok(salaService.crear(request));
     }
@@ -98,6 +100,7 @@ public class SalaController {
             @ApiResponse(responseCode = "401", description = "No autenticado")
     })
     @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('ADMINISTRADOR')")
     public ResponseEntity<SalaResponseDTO> actualizar(
             @Parameter(description = "ID de la sala", required = true) @PathVariable Long id,
             @Valid @RequestBody ActualizarSalaRequestDTO request) {
@@ -113,6 +116,7 @@ public class SalaController {
             @ApiResponse(responseCode = "401", description = "No autenticado")
     })
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('ADMINISTRADOR')")
     public ResponseEntity<MensajeResponse> eliminar(
             @Parameter(description = "ID de la sala", required = true) @PathVariable Long id) {
         salaService.eliminar(id);
