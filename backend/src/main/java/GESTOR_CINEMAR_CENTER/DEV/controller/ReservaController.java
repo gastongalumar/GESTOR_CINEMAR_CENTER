@@ -7,7 +7,6 @@ import GESTOR_CINEMAR_CENTER.DEV.dto.response.reserva.ReservaResponseDTO;
 import GESTOR_CINEMAR_CENTER.DEV.dto.response.reserva.ValidacionTicketResponseDTO;
 import GESTOR_CINEMAR_CENTER.DEV.dto.response.mensaje.MensajeResponse;
 import GESTOR_CINEMAR_CENTER.DEV.service.ReservaService;
-import GESTOR_CINEMAR_CENTER.DEV.service.impl.ReservaServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -24,6 +23,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -161,5 +161,49 @@ public class ReservaController {
     public ResponseEntity<List<String>> obtenerAsientosOcupados(
             @Parameter(description = "ID de la función", required = true) @PathVariable Long funcionId) {
         return ResponseEntity.ok(reservaService.obtenerAsientosOcupados(funcionId));
+    }
+
+    @Operation(summary = "Listar todas las reservas", description = "Retorna todas las reservas registradas en el sistema",
+            security = @SecurityRequirement(name = "bearerAuth"))
+    @ApiResponse(responseCode = "200", description = "Listado obtenido correctamente",
+            content = @Content(array = @ArraySchema(schema = @Schema(implementation = ReservaResponseDTO.class))))
+    @GetMapping("/admin/todas")
+    @PreAuthorize("hasAuthority('ADMINISTRADOR')")
+    public ResponseEntity<List<ReservaResponseDTO>> listarTodasReservas() {
+        return ResponseEntity.ok(reservaService.listarTodasReservas());
+    }
+
+    @Operation(summary = "Filtrar reservas por función", description = "Retorna todas las reservas de una función específica",
+            security = @SecurityRequirement(name = "bearerAuth"))
+    @ApiResponse(responseCode = "200", description = "Listado obtenido correctamente",
+            content = @Content(array = @ArraySchema(schema = @Schema(implementation = ReservaResponseDTO.class))))
+    @GetMapping("/admin/funcion/{funcionId}")
+    @PreAuthorize("hasAuthority('ADMINISTRADOR')")
+    public ResponseEntity<List<ReservaResponseDTO>> filtrarPorFuncion(
+            @Parameter(description = "ID de la función", required = true) @PathVariable Long funcionId) {
+        return ResponseEntity.ok(reservaService.filtrarReservasPorFuncion(funcionId));
+    }
+
+    @Operation(summary = "Filtrar reservas por sala", description = "Retorna todas las reservas de una sala específica",
+            security = @SecurityRequirement(name = "bearerAuth"))
+    @ApiResponse(responseCode = "200", description = "Listado obtenido correctamente",
+            content = @Content(array = @ArraySchema(schema = @Schema(implementation = ReservaResponseDTO.class))))
+    @GetMapping("/admin/sala/{salaId}")
+    @PreAuthorize("hasAuthority('ADMINISTRADOR')")
+    public ResponseEntity<List<ReservaResponseDTO>> filtrarPorSala(
+            @Parameter(description = "ID de la sala", required = true) @PathVariable Long salaId) {
+        return ResponseEntity.ok(reservaService.filtrarReservasPorSala(salaId));
+    }
+
+    @Operation(summary = "Filtrar reservas por rango de fechas", description = "Retorna reservas dentro de un rango de fechas específico",
+            security = @SecurityRequirement(name = "bearerAuth"))
+    @ApiResponse(responseCode = "200", description = "Listado obtenido correctamente",
+            content = @Content(array = @ArraySchema(schema = @Schema(implementation = ReservaResponseDTO.class))))
+    @GetMapping("/admin/fechas")
+    @PreAuthorize("hasAuthority('ADMINISTRADOR')")
+    public ResponseEntity<List<ReservaResponseDTO>> filtrarPorFecha(
+            @Parameter(description = "Fecha y hora inicial (ISO 8601)", required = true) @RequestParam LocalDateTime desde,
+            @Parameter(description = "Fecha y hora final (ISO 8601)", required = true) @RequestParam LocalDateTime hasta) {
+        return ResponseEntity.ok(reservaService.filtrarReservasPorFecha(desde, hasta));
     }
 }

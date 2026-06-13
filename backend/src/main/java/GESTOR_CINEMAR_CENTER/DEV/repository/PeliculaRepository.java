@@ -25,4 +25,16 @@ public interface PeliculaRepository extends JpaRepository<Pelicula, Long> {
     // Paginado
     @Query("SELECT p FROM Pelicula p WHERE p.fechaEstreno <= :fecha AND p.fechaSalida >= :fecha")
     Page<Pelicula> findVigentesEnFecha(@Param("fecha") LocalDate fecha, Pageable pageable);
+
+    @Query("SELECT p FROM Pelicula p WHERE p.nombre LIKE %:nombre%")
+    List<Pelicula> findByNombreContainsIgnoreCase(@Param("nombre") String nombre);
+
+    @Query("SELECT p FROM Pelicula p WHERE p.genero LIKE %:genero%")
+    List<Pelicula> findByGeneroContainsIgnoreCase(@Param("genero") String genero);
+
+    @Query("SELECT p FROM Pelicula p WHERE p.nombre LIKE %:nombre% AND p.fechaEstreno <= :fecha AND p.fechaSalida >= :fecha")
+    List<Pelicula> findVigentesPorNombre(@Param("nombre") String nombre, @Param("fecha") LocalDate fecha);
+
+    @Query("SELECT p FROM Pelicula p WHERE p.genero LIKE %:genero% AND p.fechaEstreno <= :fecha AND p.fechaSalida >= :fecha")
+    List<Pelicula> findVigentesPorGenero(@Param("genero") String genero, @Param("fecha") LocalDate fecha);
 }

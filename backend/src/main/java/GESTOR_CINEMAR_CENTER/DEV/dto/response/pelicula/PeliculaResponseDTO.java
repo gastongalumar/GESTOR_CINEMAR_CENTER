@@ -30,6 +30,9 @@ public class PeliculaResponseDTO {
     @Schema(description = "Duración en minutos", example = "169")
     private Integer duracionMinutos;
 
+    @Schema(description = "Género de la película", example = "Ciencia Ficción")
+    private String genero;
+
     @Schema(description = "Ruta de la imagen de la película", example = "/uploads/peliculas/abc123.jpg")
     private String rutaImagen;
 }

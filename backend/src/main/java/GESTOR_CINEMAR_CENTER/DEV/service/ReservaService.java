@@ -7,6 +7,7 @@ import GESTOR_CINEMAR_CENTER.DEV.dto.response.reserva.ReservaResponseDTO;
 import GESTOR_CINEMAR_CENTER.DEV.dto.response.reserva.ValidacionTicketResponseDTO;
 import GESTOR_CINEMAR_CENTER.DEV.model.Reserva;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface ReservaService {
@@ -20,4 +21,10 @@ public interface ReservaService {
     ReservaResponseDTO actualizarMetodoPago(String numeroTicket, ActualizarMetodoPagoRequestDTO request);
     void cancelar(String numeroTicket);
     List<String> obtenerAsientosOcupados(Long funcionId);
+    
+    // Métodos para filtrado de reservas (admin)
+    List<ReservaResponseDTO> listarTodasReservas();
+    List<ReservaResponseDTO> filtrarReservasPorFuncion(Long funcionId);
+    List<ReservaResponseDTO> filtrarReservasPorSala(Long salaId);
+    List<ReservaResponseDTO> filtrarReservasPorFecha(LocalDateTime inicio, LocalDateTime fin);
 }

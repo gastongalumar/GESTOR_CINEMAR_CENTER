@@ -29,4 +29,15 @@ public interface PeliculaService {
     String guardarImagen(Long id, MultipartFile file);
 
     void eliminarImagenDePelicula(Long id);
+
+    // Métodos para filtrado de películas
+    List<PeliculaResponseDTO> filtrarPorNombre(String nombre);
+
+    List<PeliculaResponseDTO> filtrarPorGenero(String genero);
+
+    List<PeliculaResponseDTO> filtrarVigentesPorNombre(String nombre);
+
+    List<PeliculaResponseDTO> filtrarVigentesPorGenero(String genero);
+
+    List<PeliculaResponseDTO> filtrarPorFuncion(Long funcionId);
 }

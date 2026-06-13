@@ -41,6 +41,43 @@ public class ReservaServiceImpl implements ReservaService {
     private final PagoMapper pagoMapper;
 
     @Override
+    @Transactional(readOnly = true)
+    public List<ReservaResponseDTO> listarTodasReservas() {
+        return reservaRepository.findAll()
+                .stream()
+                .map(reservaMapper::toResponse)
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ReservaResponseDTO> filtrarReservasPorFuncion(Long funcionId) {
+        Funcion funcion = funcionService.obtenerFuncion(funcionId);
+        return reservaRepository.findByFuncion(funcion)
+                .stream()
+                .map(reservaMapper::toResponse)
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ReservaResponseDTO> filtrarReservasPorSala(Long salaId) {
+        return reservaRepository.findBySalaId(salaId)
+                .stream()
+                .map(reservaMapper::toResponse)
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ReservaResponseDTO> filtrarReservasPorFecha(LocalDateTime inicio, LocalDateTime fin) {
+        return reservaRepository.findByFechaEmisionBetween(inicio, fin)
+                .stream()
+                .map(reservaMapper::toResponse)
+                .toList();
+    }
+
+    @Override
     @Transactional
     public ReservaResponseDTO crear(CrearReservaRequestDTO request) {
         Usuario usuario = usuarioService.findById(request.getClienteId());
@@ -185,6 +222,8 @@ public class ReservaServiceImpl implements ReservaService {
                 .distinct()
                 .toList();
     }
+
+
 
     private String normalizarMetodoPago(String metodoPago) {
         if (!MetodoPagoHelper.esValido(metodoPago)) {

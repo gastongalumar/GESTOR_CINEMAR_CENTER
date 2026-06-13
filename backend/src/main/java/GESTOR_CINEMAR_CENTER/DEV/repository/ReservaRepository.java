@@ -36,4 +36,19 @@ public interface ReservaRepository extends JpaRepository<Reserva, Long> {
     List<Reserva> findReservasPorClienteYFecha(@Param("clienteId") Long clienteId,
                                                @Param("inicio") LocalDateTime inicio,
                                                @Param("fin") LocalDateTime fin);
+
+    @EntityGraph(attributePaths = {"asientos", "funcion", "cliente"})
+    List<Reserva> findByEstadoReservaNotIn(List<EstadoReserva> estados);
+
+    /*@EntityGraph(attributePaths = {"asientos", "funcion", "cliente"})
+    List<Reserva> findByFuncion(Funcion funcion);*/
+
+    @EntityGraph(attributePaths = {"asientos", "funcion", "cliente"})
+    @Query("SELECT r FROM Reserva r WHERE r.funcion.sala.id = :salaId AND r.estadoReserva != 'CANCELADA'")
+    List<Reserva> findBySalaId(@Param("salaId") Long salaId);
+
+    @EntityGraph(attributePaths = {"asientos", "funcion", "cliente"})
+    @Query("SELECT r FROM Reserva r WHERE r.fechaEmision BETWEEN :inicio AND :fin AND r.estadoReserva != 'CANCELADA'")
+    List<Reserva> findByFechaEmisionBetween(@Param("inicio") LocalDateTime inicio,
+                                             @Param("fin") LocalDateTime fin);
 }

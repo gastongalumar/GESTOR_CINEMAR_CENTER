@@ -30,4 +30,8 @@ public class ActualizarPeliculaRequestDTO {
     @Schema(description = "Duración en minutos", example = "169")
     @Positive(message = "La duración debe ser mayor a cero")
     private Integer duracionMinutos;
+
+    @Schema(description = "Género de la película", example = "Ciencia Ficción")
+    @Size(max = 100, message = "El género no puede superar 100 caracteres")
+    private String genero;
 }

@@ -32,5 +32,8 @@ public class Pelicula {
     private Integer duracionMinutos;
 
     @Column
+    private String genero;
+
+    @Column
     private String rutaImagen;
 }

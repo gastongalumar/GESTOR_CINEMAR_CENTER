@@ -7,8 +7,11 @@ import GESTOR_CINEMAR_CENTER.DEV.dto.response.pelicula.PeliculaResponseDTO;
 import GESTOR_CINEMAR_CENTER.DEV.exception.RecursoNoEncontradoException;
 import GESTOR_CINEMAR_CENTER.DEV.exception.ReglaNegocioException;
 import GESTOR_CINEMAR_CENTER.DEV.mapper.PeliculaMapper;
+import GESTOR_CINEMAR_CENTER.DEV.model.Funcion;
 import GESTOR_CINEMAR_CENTER.DEV.model.Pelicula;
+import GESTOR_CINEMAR_CENTER.DEV.repository.FuncionRepository;
 import GESTOR_CINEMAR_CENTER.DEV.repository.PeliculaRepository;
+import GESTOR_CINEMAR_CENTER.DEV.service.FuncionService;
 import GESTOR_CINEMAR_CENTER.DEV.service.ImagenesService;
 import GESTOR_CINEMAR_CENTER.DEV.service.PeliculaService;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +29,7 @@ import java.util.List;
 public class PeliculaServiceImpl implements PeliculaService {
 
     private final PeliculaRepository peliculaRepository;
+    private final FuncionRepository funcionRepository;
     private final PeliculaMapper peliculaMapper;
     private final ImagenesService imagenesService;
 
@@ -125,5 +129,36 @@ public class PeliculaServiceImpl implements PeliculaService {
             pelicula.setRutaImagen(null);
             peliculaRepository.save(pelicula);
         }
+    }
+
+    @Override
+    public List<PeliculaResponseDTO> filtrarPorNombre(String nombre) {
+        return peliculaMapper.toResponseList(peliculaRepository.findByNombreContainsIgnoreCase(nombre));
+    }
+
+    @Override
+    public List<PeliculaResponseDTO> filtrarPorGenero(String genero) {
+        return peliculaMapper.toResponseList(peliculaRepository.findByGeneroContainsIgnoreCase(genero));
+    }
+
+    @Override
+    public List<PeliculaResponseDTO> filtrarVigentesPorNombre(String nombre) {
+        return peliculaMapper.toResponseList(
+                peliculaRepository.findVigentesPorNombre(nombre, LocalDate.now())
+        );
+    }
+
+    @Override
+    public List<PeliculaResponseDTO> filtrarVigentesPorGenero(String genero) {
+        return peliculaMapper.toResponseList(
+                peliculaRepository.findVigentesPorGenero(genero, LocalDate.now())
+        );
+    }
+
+    @Override
+    public List<PeliculaResponseDTO> filtrarPorFuncion(Long funcionId) {
+        Funcion funcion = funcionRepository.findById(funcionId)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Función", funcionId));
+        return peliculaMapper.toResponseList(List.of(funcion.getPelicula()));
     }
 }

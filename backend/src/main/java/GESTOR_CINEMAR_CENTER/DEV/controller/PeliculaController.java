@@ -152,4 +152,34 @@ public class PeliculaController {
         String ruta = peliculaService.guardarImagen(id, file);
         return ResponseEntity.ok(new MensajeResponse("Imagen guardada correctamente: " + ruta));
     }
+
+    @Operation(summary = "Filtrar películas por nombre", description = "Busca películas cuyo nombre contiene el texto especificado")
+    @ApiResponse(responseCode = "200", description = "Listado obtenido correctamente",
+            content = @Content(array = @ArraySchema(schema = @Schema(implementation = PeliculaResponseDTO.class))))
+    @GetMapping("/filtro/nombre")
+    public ResponseEntity<List<PeliculaResponseDTO>> filtrarPorNombre(
+            @Parameter(description = "Nombre o parte del nombre de la película", required = true) @RequestParam String nombre) {
+        return ResponseEntity.ok(peliculaService.filtrarVigentesPorNombre(nombre));
+    }
+
+    @Operation(summary = "Filtrar películas por género", description = "Busca películas cuyo género contiene el texto especificado")
+    @ApiResponse(responseCode = "200", description = "Listado obtenido correctamente",
+            content = @Content(array = @ArraySchema(schema = @Schema(implementation = PeliculaResponseDTO.class))))
+    @GetMapping("/filtro/genero")
+    public ResponseEntity<List<PeliculaResponseDTO>> filtrarPorGenero(
+            @Parameter(description = "Género de la película", required = true) @RequestParam String genero) {
+        return ResponseEntity.ok(peliculaService.filtrarVigentesPorGenero(genero));
+    }
+
+    @Operation(summary = "Obtener película por función", description = "Retorna la película asociada a una función específica")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Película encontrada",
+                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = PeliculaResponseDTO.class)))),
+            @ApiResponse(responseCode = "404", description = "Función no encontrada")
+    })
+    @GetMapping("/filtro/funcion/{funcionId}")
+    public ResponseEntity<List<PeliculaResponseDTO>> filtrarPorFuncion(
+            @Parameter(description = "ID de la función", required = true) @PathVariable Long funcionId) {
+        return ResponseEntity.ok(peliculaService.filtrarPorFuncion(funcionId));
+    }
 }

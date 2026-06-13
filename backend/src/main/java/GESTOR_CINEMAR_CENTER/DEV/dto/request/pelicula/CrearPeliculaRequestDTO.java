@@ -35,4 +35,8 @@ public class CrearPeliculaRequestDTO {
     @NotNull(message = "La duración es obligatoria")
     @Min(value = 1, message = "La duración debe ser mayor a 0")
     private Integer duracionMinutos;
+
+    @Schema(description = "Género de la película", example = "Ciencia Ficción")
+    @Size(max = 100, message = "El género no puede superar 100 caracteres")
+    private String genero;
 }
