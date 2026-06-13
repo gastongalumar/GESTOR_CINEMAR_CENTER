@@ -87,12 +87,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/reservas/cliente/**").hasAuthority("ADMINISTRADOR")
                         .requestMatchers(HttpMethod.GET, "/api/reservas/**").hasAuthority("ADMINISTRADOR")
 
-                        .requestMatchers(HttpMethod.GET, "/api/estadisticas/ocupacion/sala/**").hasAuthority("ADMINISTRADOR")
-                        .requestMatchers(HttpMethod.GET, "/api/estadisticas/ocupacion/funcion/**").hasAuthority("ADMINISTRADOR")
-                        .requestMatchers(HttpMethod.GET, "/api/estadisticas/ocupacion/pelicula/**").hasAuthority("ADMINISTRADOR")
-                        .requestMatchers(HttpMethod.GET, "/api/estadisticas/reservas/por-fecha").hasAuthority("ADMINISTRADOR")
-                        .requestMatchers(HttpMethod.GET, "/api/estadisticas/ingresos/**").hasAuthority("ADMINISTRADOR")
-                        .requestMatchers(HttpMethod.GET, "/api/estadisticas/dashboard/resumen").hasAuthority("ADMINISTRADOR")
+                        // Protege de forma centralizada todos los endpoints de estadísticas
+                        .requestMatchers(HttpMethod.GET, "/api/estadisticas/**").hasAuthority("ADMINISTRADOR")
 
                         .requestMatchers(HttpMethod.POST, "/api/reservas/validar/**").hasAuthority("ADMINISTRADOR")
 
