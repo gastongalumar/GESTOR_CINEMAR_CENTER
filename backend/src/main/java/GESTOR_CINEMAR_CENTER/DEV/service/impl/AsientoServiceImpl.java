@@ -49,8 +49,8 @@ public class AsientoServiceImpl implements AsientoService {
     @Transactional
     public void eliminarPorSala(Sala sala) {
         asientoRepository.deleteBySala(sala);
+        asientoRepository.flush();
     }
-
     @Override
     @Transactional
     public void guardarTodos(List<Asiento> asientos) {

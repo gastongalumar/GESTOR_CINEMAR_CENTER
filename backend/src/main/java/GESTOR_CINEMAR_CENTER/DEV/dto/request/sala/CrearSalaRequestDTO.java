@@ -1,9 +1,6 @@
 package GESTOR_CINEMAR_CENTER.DEV.dto.request.sala;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -21,10 +18,12 @@ public class CrearSalaRequestDTO {
 
     @NotNull(message = "Las filas son obligatorias")
     @Positive(message = "Las filas deben ser mayor a cero")
+    @Digits(integer = 2, fraction = 0, message = "Las filas deben ser un número entero")
     private Integer filas;
 
     @NotNull(message = "Las columnas son obligatorias")
     @Positive(message = "Las columnas deben ser mayor a cero")
+    @Digits(integer = 2, fraction = 0, message = "Las columnas deben ser un número entero")
     private Integer columnas;
 
 

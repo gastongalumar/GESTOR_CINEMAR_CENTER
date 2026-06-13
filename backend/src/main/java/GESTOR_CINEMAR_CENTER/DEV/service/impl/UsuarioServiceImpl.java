@@ -45,36 +45,110 @@ public class UsuarioServiceImpl implements UsuarioService {
         return usuarioMapper.toAuthResponse(usuario, generarToken(usuario));
     }
 
-    @Override
+    public String validarTelefono(String telefono) {
+
+        if (telefono == null || telefono.isBlank()) {
+            throw new ReglaNegocioException(
+                    "El teléfono es obligatorio"
+            );
+        }
+
+        // Quitamos espacios, +, guiones, paréntesis, etc.
+        String normalizado = telefono.replaceAll("\\D", "");
+
+        // Formato internacional argentino obligatorio: 549 + 10 dígitos
+        if (!normalizado.startsWith("549")) {
+            throw new ReglaNegocioException(
+                    "El teléfono debe estar en formato internacional argentino. Ejemplo: +54 9 351 1234567"
+            );
+        }
+
+
+        if (normalizado.length() != 13) {
+            throw new ReglaNegocioException(
+                    "El teléfono debe tener 13 dígitos en formato internacional. Formato esperado: 549XXXXXXXXX"
+            );
+        }
+
+
+        // Sacamos el prefijo internacional 549
+        String numeroNacional = normalizado.substring(3);
+
+
+        // Evitar números tipo 5491111111111, 5492222222222, etc.
+        if (numeroNacional.matches("^(.)\\1+$")) {
+            throw new ReglaNegocioException(
+                    "El teléfono no es válido porque el número no puede tener los 10 dígitos iguales"
+            );
+        }
+
+
+        // Evitar algunos casos absurdos de secuencia
+        if (numeroNacional.equals("1234567890")
+                || numeroNacional.equals("9876543210")) {
+
+            throw new ReglaNegocioException(
+                    "El teléfono no es válido porque contiene una secuencia inválida"
+            );
+        }
+
+
+        // Comprobar duplicado (en BD ya está guardado normalizado)
+        boolean telefonoExistente = usuarioRepository.findAll()
+                .stream()
+                .map(Usuario::getTelefono)
+                .anyMatch(t -> t != null && t.equals(normalizado));
+
+
+        if (telefonoExistente) {
+            throw new ReglaNegocioException(
+                    "El teléfono ingresado ya se encuentra registrado"
+            );
+        }
+
+
+        return normalizado;
+    }
     public AuthResponse registrar(RegistroRequest request) {
         if (usuarioRepository.existsByEmail(request.getEmail())) {
             throw new ReglaNegocioException("El email ya está registrado");
         }
 
+        String telefonoNormalizado = validarTelefono(request.getTelefono());
         String passwordHash = passwordEncoder.encode(request.getPassword());
-        Usuario usuario;
-        if (request.isEsAdministrador()) {
-            Administrador admin = new Administrador();
-            admin.setNombre(request.getNombre());
-            admin.setApellido(request.getApellido());
-            admin.setEmail(request.getEmail());
-            admin.setPassword(passwordHash);
-            admin.setTelefono(request.getTelefono());
-            admin.setTipo(TipoUsuario.ADMINISTRADOR);
-            usuario = admin;
-        } else {
-            Cliente cliente = new Cliente();
-            cliente.setNombre(request.getNombre());
-            cliente.setApellido(request.getApellido());
-            cliente.setEmail(request.getEmail());
-            cliente.setPassword(passwordHash);
-            cliente.setTelefono(request.getTelefono());
-            cliente.setTipo(TipoUsuario.CLIENTE);
-            usuario = cliente;
+        Cliente cliente = new Cliente();
+        cliente.setNombre(request.getNombre());
+        cliente.setApellido(request.getApellido());
+        cliente.setEmail(request.getEmail());
+        cliente.setPassword(passwordHash);
+        cliente.setTelefono(telefonoNormalizado);
+        cliente.setTipo(TipoUsuario.CLIENTE);
+        cliente= usuarioRepository.save(cliente);
+        return usuarioMapper.toAuthResponse(cliente, generarToken(cliente));
+    }
+
+
+    public AuthResponse registrarAdministrador(RegistroRequest request) {
+        if (usuarioRepository.existsByEmail(request.getEmail())) {
+            throw new ReglaNegocioException("El email ya está registrado");
         }
 
-        usuario = usuarioRepository.save(usuario);
-        return usuarioMapper.toAuthResponse(usuario, generarToken(usuario));
+        // Validar y normalizar teléfono (es obligatorio)
+        String telefonoNormalizado = validarTelefono(request.getTelefono());
+
+        String passwordHash = passwordEncoder.encode(request.getPassword());
+
+        // Crear Administrador
+        Administrador admin = new Administrador();
+        admin.setNombre(request.getNombre());
+        admin.setApellido(request.getApellido());
+        admin.setEmail(request.getEmail());
+        admin.setPassword(passwordHash);
+        admin.setTelefono(telefonoNormalizado);
+        admin.setTipo(TipoUsuario.ADMINISTRADOR);
+
+        admin = usuarioRepository.save(admin);
+        return usuarioMapper.toAuthResponse(admin, generarToken(admin));
     }
 
     private String generarToken(Usuario usuario) {

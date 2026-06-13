@@ -7,6 +7,7 @@ import GESTOR_CINEMAR_CENTER.DEV.dto.response.sala.SalaResponseDTO;
 import GESTOR_CINEMAR_CENTER.DEV.model.Sala;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface SalaService {
     List<SalaResponseDTO> listarTodas();

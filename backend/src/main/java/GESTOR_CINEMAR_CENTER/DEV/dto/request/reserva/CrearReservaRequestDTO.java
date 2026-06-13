@@ -24,6 +24,7 @@ public class CrearReservaRequestDTO {
 
     @Schema(description = "ID de la función", example = "5")
     @NotNull(message = "La función es obligatoria")
+    @Positive(message = "El id de función debe ser válido")
     private Long funcionId;
 
 

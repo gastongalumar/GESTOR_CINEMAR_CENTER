@@ -39,49 +39,109 @@ public class SalaServiceImpl implements SalaService {
 
     @Override
     public List<SalaResponseDTO> listarTodas() {
-        return salaMapper.toDTOList(salaRepository.findAll());
+        return salaMapper.toDTOList(
+                salaRepository.findByActivaTrue()
+        );
+    }
+
+    private Sala obtenerEntidadActiva(Long id) {
+        return salaRepository.findByIdAndActivaTrue(id)
+                .orElseThrow(() ->
+                        new RecursoNoEncontradoException("Sala no encontrada o inactiva", id)
+                );
     }
 
     @Override
     public SalaResponseDTO buscarPorId(Long id) {
-        return salaMapper.toDTO(obtenerEntidad(id));
+        return salaMapper.toDTO(obtenerEntidadActiva(id));
     }
 
     @Override
     public SalaResponseDTO buscarPorNombre(String nombre) {
-        Sala sala = salaRepository.findByNombre(nombre)
-                .orElseThrow(() -> new RecursoNoEncontradoException("Sala", "nombre", nombre));
+        Sala sala = salaRepository.findByNombreAndActivaTrue(nombre)
+                .orElseThrow(() ->
+                        new RecursoNoEncontradoException("Sala", "nombre", nombre)
+                );
         return salaMapper.toDTO(sala);
+    }
+
+    private void validarDimensiones(Integer filas, Integer columnas) {
+
+        if (filas != null && filas > 26) {
+            throw new ReglaNegocioException("La sala no puede tener más de 26 filas");
+        }
+
+        if (columnas != null && columnas > 15) {
+            throw new ReglaNegocioException("La sala no puede tener más de 15 columnas");
+        }
+
+        if (filas != null && columnas != null && (filas * columnas) > 390) {
+            throw new ReglaNegocioException("La capacidad máxima de la sala es de 390 asientos");
+        }
     }
 
     @Override
     @Transactional
     public SalaResponseDTO crear(CrearSalaRequestDTO request) {
-        if (salaRepository.existsByNombre(request.getNombre())) {
-            throw new ReglaNegocioException("Ya existe una sala con el nombre: " + request.getNombre());
+
+        if (salaRepository.existsByNombreAndActivaTrue(request.getNombre())) {
+            throw new ReglaNegocioException(
+                    "Ya existe una sala activa con el nombre: " + request.getNombre()
+            );
         }
+
+        validarDimensiones(request.getFilas(), request.getColumnas());
+
         Sala sala = salaMapper.toEntity(request);
+
+        sala.setCapacidad(request.getFilas() * request.getColumnas());
+        sala.setActiva(true);
+
         sala = salaRepository.save(sala);
+
         generarAsientos(sala);
+
         return salaMapper.toDTO(sala);
     }
 
     @Override
     @Transactional
     public SalaResponseDTO actualizar(Long id, ActualizarSalaRequestDTO request) {
-        Sala existente = obtenerEntidad(id);
+
+        Sala existente = obtenerEntidadActiva(id);
+
         if (request.getNombre() != null
                 && !existente.getNombre().equals(request.getNombre())
-                && salaRepository.existsByNombre(request.getNombre())) {
-            throw new ReglaNegocioException("Ya existe una sala con el nombre: " + request.getNombre());
+                && salaRepository.existsByNombreAndActivaTrue(request.getNombre())) {
+
+            throw new ReglaNegocioException(
+                    "Ya existe una sala activa con el nombre: " + request.getNombre()
+            );
         }
 
-        boolean layoutCambio = request.getFilas() != null && request.getColumnas() != null
-                && (!existente.getFilas().equals(request.getFilas())
-                || !existente.getColumnas().equals(request.getColumnas()));
+        Integer nuevasFilas = request.getFilas() != null
+                ? request.getFilas()
+                : existente.getFilas();
 
-        salaMapper.updateEntity(request, existente);
-        existente = salaRepository.save(existente);
+        Integer nuevasColumnas = request.getColumnas() != null
+                ? request.getColumnas()
+                : existente.getColumnas();
+
+        validarDimensiones(nuevasFilas, nuevasColumnas);
+
+        boolean layoutCambio =
+                !existente.getFilas().equals(nuevasFilas)
+                        || !existente.getColumnas().equals(nuevasColumnas);
+
+        existente.setNombre(
+                request.getNombre() != null ? request.getNombre() : existente.getNombre()
+        );
+
+        existente.setFilas(nuevasFilas);
+        existente.setColumnas(nuevasColumnas);
+        existente.setCapacidad(nuevasFilas * nuevasColumnas);
+
+        salaRepository.save(existente);
 
         if (layoutCambio) {
             asientoService.eliminarPorSala(existente);
@@ -92,13 +152,19 @@ public class SalaServiceImpl implements SalaService {
     }
 
     @Override
+    @Transactional
     public void eliminar(Long id) {
-        salaRepository.delete(obtenerEntidad(id));
+
+        Sala sala = obtenerEntidadActiva(id);
+
+        sala.setActiva(false);
+
+        salaRepository.save(sala);
     }
 
     @Override
     public List<AsientoResponseDTO> listarAsientosPorSala(Long salaId) {
-        Sala sala = obtenerEntidad(salaId);
+        Sala sala = obtenerEntidadActiva(salaId);
         asegurarAsientosDeSala(sala);
         return asientoMapper.toResponseList(asientoService.obtenerPorSala(sala));
     }
@@ -111,23 +177,28 @@ public class SalaServiceImpl implements SalaService {
         }
     }
 
-    @Override
-    public Sala obtenerEntidad(Long id) {
-        return salaRepository.findById(id)
-                .orElseThrow(() -> new RecursoNoEncontradoException("Sala", id));
-    }
-
     private void generarAsientos(Sala sala) {
-        int filas = sala.getFilas() != null ? sala.getFilas() : 10;
-        int columnas = sala.getColumnas() != null ? sala.getColumnas() : 16;
+
+        int filas = sala.getFilas();
+        int columnas = sala.getColumnas();
+
         List<Asiento> asientos = new ArrayList<>();
 
         for (int f = 1; f <= filas; f++) {
             for (int c = 1; c <= columnas; c++) {
+
                 String etiqueta = (char) ('A' + f - 1) + String.valueOf(c);
+
                 asientos.add(new Asiento(sala, f, c, etiqueta));
             }
         }
+
         asientoService.guardarTodos(asientos);
+    }
+
+    @Override
+    public Sala obtenerEntidad(Long id) {
+        return salaRepository.findById(id)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Sala", id));
     }
 }

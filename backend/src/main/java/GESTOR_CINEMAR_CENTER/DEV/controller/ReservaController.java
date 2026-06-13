@@ -7,6 +7,7 @@ import GESTOR_CINEMAR_CENTER.DEV.dto.response.reserva.ReservaResponseDTO;
 import GESTOR_CINEMAR_CENTER.DEV.dto.response.reserva.ValidacionTicketResponseDTO;
 import GESTOR_CINEMAR_CENTER.DEV.dto.response.mensaje.MensajeResponse;
 import GESTOR_CINEMAR_CENTER.DEV.service.ReservaService;
+import GESTOR_CINEMAR_CENTER.DEV.service.impl.ReservaServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -61,7 +62,7 @@ public class ReservaController {
             @ApiResponse(responseCode = "401", description = "No autenticado")
     })
     @PostMapping
-    @PreAuthorize("hasAuthority('CLIENTE') or hasAuthority('ADMINISTRADOR')")
+    //@PreAuthorize("hasAuthority('CLIENTE') or hasAuthority('ADMINISTRADOR')")
     public ResponseEntity<ReservaResponseDTO> crear(@Valid @RequestBody CrearReservaRequestDTO request) {
         return ResponseEntity.ok(reservaService.crear(request));
     }

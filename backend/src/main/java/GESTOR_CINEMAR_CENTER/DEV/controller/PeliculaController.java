@@ -16,6 +16,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -77,7 +78,7 @@ public class PeliculaController {
     })
     @GetMapping("/{id}")
     public ResponseEntity<PeliculaResponseDTO> obtenerPorId(
-            @Parameter(description = "ID de la película", required = true) @PathVariable Long id) {
+            @Parameter(description = "ID de la película", required = true) @Positive(message = "El ID debe ser mayor a 0") @PathVariable Long id) {
         return ResponseEntity.ok(peliculaService.buscarPorId(id));
     }
 

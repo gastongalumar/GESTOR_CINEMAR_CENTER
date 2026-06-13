@@ -1,6 +1,7 @@
 package GESTOR_CINEMAR_CENTER.DEV.dto.request.funcion;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.Future;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
@@ -34,5 +35,6 @@ public class CrearFuncionRequestDTO {
     @Schema(description = "Precio de la entrada", example = "2500")
     @NotNull(message = "El precio es obligatorio")
     @Min(value = 1, message = "El precio debe ser mayor a 0")
+    @DecimalMax(value = "999999.99", message = "El precio no puede ser mayor a 999999.99")
     private Double precio;
 }

@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.Getter;
 
 @Getter
@@ -23,9 +24,10 @@ public class UsuarioRequestDTO {
 
     @NotBlank
     @Schema(description = "Contraseña del usuario", example = "password123", requiredMode = Schema.RequiredMode.REQUIRED)
+    @Size(min = 6, max = 100, message = "La contraseña debe tener entre 6 y 100 caracteres")
     private String password;
 
-    @NotNull
+    @NotBlank(message = "El teléfono es obligatorio")
     @Schema(description = "Teléfono del usuario", example = "+34612345678", requiredMode = Schema.RequiredMode.REQUIRED)
     private String telefono;
 

@@ -20,8 +20,10 @@ public class Sala {
     @Column(unique = true, nullable = false)
     private String nombre;
 
-    private Integer filas = 10;
-    private Integer columnas = 16;
-    private Integer capacidad = 160;
+    private Integer filas;
+    private Integer columnas;
+    private Integer capacidad;
+
+    private boolean activa;
 
 }

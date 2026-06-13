@@ -40,8 +40,4 @@ public class RegistroRequest {
     @Schema(description = "Teléfono de contacto", example = "3511234567")
     @Size(max = 30, message = "El teléfono no puede superar 30 caracteres")
     private String telefono;
-
-    @Schema(description = "Indica si el usuario se registra como administrador", example = "false")
-    private boolean esAdministrador;
-
     }
