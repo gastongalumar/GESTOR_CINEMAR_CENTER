@@ -2,7 +2,6 @@ package GESTOR_CINEMAR_CENTER.DEV.controller;
 
 import GESTOR_CINEMAR_CENTER.DEV.dto.request.pelicula.ActualizarPeliculaRequestDTO;
 import GESTOR_CINEMAR_CENTER.DEV.dto.request.pelicula.CrearPeliculaRequestDTO;
-import GESTOR_CINEMAR_CENTER.DEV.dto.response.mensaje.ActualizarResponse;
 import GESTOR_CINEMAR_CENTER.DEV.dto.response.mensaje.MensajeResponse;
 import GESTOR_CINEMAR_CENTER.DEV.dto.response.pelicula.PeliculaPageResponse;
 import GESTOR_CINEMAR_CENTER.DEV.dto.response.pelicula.PeliculaResponseDTO;
@@ -18,6 +17,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -31,7 +31,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.util.List;
 
@@ -142,28 +141,14 @@ public class PeliculaController {
         return ResponseEntity.ok(new MensajeResponse("Película eliminada correctamente"));
     }
 
-    @Operation(summary = "Subir imagen de película", description = "Sube un archivo de imagen y retorna la URL pública. Requiere rol ADMINISTRADOR",
+    @Operation(summary = "Subir imagen de película", description = "Guarda una imagen para una película. Requiere rol ADMINISTRADOR",
             security = @SecurityRequirement(name = "bearerAuth"))
-    @ApiResponse(responseCode = "200", description = "Imagen subida correctamente",
-            content = @Content(schema = @Schema(implementation = ActualizarResponse.class)))
-    @PostMapping("/subir-imagen")
+    @PostMapping(value = "/{id}/imagen", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasAuthority('ADMINISTRADOR')")
-    public ResponseEntity<ActualizarResponse> subirImagen(
-            @Parameter(description = "Archivo de imagen", required = true) @RequestParam("file") MultipartFile file) {
-        String rutaRel = peliculaService.guardarImagen(file);
-        String url = ServletUriComponentsBuilder.fromCurrentContextPath().path(rutaRel).toUriString();
-        return ResponseEntity.ok(new ActualizarResponse(rutaRel, url));
-    }
-
-    @Operation(summary = "Eliminar imagen de película", description = "Elimina la imagen asociada a una película. Requiere rol ADMINISTRADOR",
-            security = @SecurityRequirement(name = "bearerAuth"))
-    @ApiResponse(responseCode = "200", description = "Imagen eliminada correctamente",
-            content = @Content(schema = @Schema(implementation = MensajeResponse.class)))
-    @DeleteMapping("/{id}/imagen")
-    @PreAuthorize("hasAuthority('ADMINISTRADOR')")
-    public ResponseEntity<MensajeResponse> eliminarImagen(
-            @Parameter(description = "ID de la película", required = true) @PathVariable Long id) {
-        peliculaService.eliminarImagenDePelicula(id);
-        return ResponseEntity.ok(new MensajeResponse("Imagen eliminada"));
+    public ResponseEntity<MensajeResponse> subirImagen(
+            @Parameter(description = "ID de la película", required = true) @PathVariable Long id,
+            @Parameter(description = "Archivo de imagen (JPEG, PNG, WEBP. Máx 5MB)") @RequestParam("file") MultipartFile file) {
+        String ruta = peliculaService.guardarImagen(id, file);
+        return ResponseEntity.ok(new MensajeResponse("Imagen guardada correctamente: " + ruta));
     }
 }

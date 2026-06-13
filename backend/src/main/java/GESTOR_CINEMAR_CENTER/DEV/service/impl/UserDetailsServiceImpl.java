@@ -1,5 +1,4 @@
-package GESTOR_CINEMAR_CENTER.DEV.service;
-
+package GESTOR_CINEMAR_CENTER.DEV.service.impl;
 
 import GESTOR_CINEMAR_CENTER.DEV.model.Usuario;
 import GESTOR_CINEMAR_CENTER.DEV.repository.UsuarioRepository;
@@ -11,6 +10,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 import java.util.Collections;
 
 @Service
@@ -18,8 +18,6 @@ import java.util.Collections;
 public class UserDetailsServiceImpl implements UserDetailsService {
 
     private final UsuarioRepository usuarioRepository;
-
-
 
     @Override
     @Transactional(readOnly = true)

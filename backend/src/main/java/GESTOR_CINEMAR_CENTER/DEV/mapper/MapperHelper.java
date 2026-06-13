@@ -1,6 +1,7 @@
 package GESTOR_CINEMAR_CENTER.DEV.mapper;
 
 import GESTOR_CINEMAR_CENTER.DEV.enums.MetodoPago;
+import GESTOR_CINEMAR_CENTER.DEV.enums.MetodoPagoHelper;
 import GESTOR_CINEMAR_CENTER.DEV.model.Asiento;
 import GESTOR_CINEMAR_CENTER.DEV.model.Usuario;
 import org.mapstruct.Named;
@@ -31,10 +32,10 @@ public class MapperHelper {
         if (metodoPago == null || metodoPago.isBlank()) {
             return null;
         }
-        if (!MetodoPago.esValido(metodoPago)) {
+        if (!MetodoPagoHelper.esValido(metodoPago)) {
             throw new IllegalArgumentException("Método de pago no permitido: " + metodoPago + "  ");
         }
-        return MetodoPago.fromString(metodoPago).name();
+        return MetodoPagoHelper.fromString(metodoPago).name();
     }
 
     @Named("asientosAEtiquetas")

@@ -39,6 +39,13 @@ public class GlobalExceptionHandler {
                 .body(buildError(HttpStatus.NOT_FOUND, "Not Found", ex.getMessage(), request));
     }
 
+    @ExceptionHandler(GuardadoImagenException.class)
+    public ResponseEntity<ErrorResponse> handleImageSave(
+            GuardadoImagenException ex, HttpServletRequest request) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(buildError(HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error", ex.getMessage(), request));
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidation(
             MethodArgumentNotValidException ex, HttpServletRequest request) {

@@ -11,10 +11,12 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -74,7 +76,8 @@ public class FuncionController {
 
     @Operation(
             summary = "Crear una nueva función",
-            description = "Programa una nueva función de proyección en una sala",
+            description = "Programa una nueva función de proyección en una sala. Requiere rol ADMINISTRADOR",
+            security = @SecurityRequirement(name = "bearerAuth"),
             requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
                     required = true,
                     content = @Content(schema = @Schema(implementation = CrearFuncionRequestDTO.class))
@@ -83,20 +86,25 @@ public class FuncionController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Función creada correctamente",
                     content = @Content(schema = @Schema(implementation = FuncionResponseDTO.class))),
-            @ApiResponse(responseCode = "400", description = "Datos inválidos")
+            @ApiResponse(responseCode = "400", description = "Datos inválidos"),
+            @ApiResponse(responseCode = "403", description = "Acceso denegado")
     })
     @PostMapping
+    @PreAuthorize("hasAuthority('ADMINISTRADOR')")
     public ResponseEntity<FuncionResponseDTO> crear(@Valid @RequestBody CrearFuncionRequestDTO request) {
         return ResponseEntity.ok(funcionService.crear(request));
     }
 
-    @Operation(summary = "Eliminar una función", description = "Elimina una función de proyección del sistema")
+    @Operation(summary = "Eliminar una función", description = "Elimina una función de proyección del sistema. Requiere rol ADMINISTRADOR",
+            security = @SecurityRequirement(name = "bearerAuth"))
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Función eliminada correctamente",
                     content = @Content(schema = @Schema(implementation = MensajeResponse.class))),
-            @ApiResponse(responseCode = "404", description = "Función no encontrada")
+            @ApiResponse(responseCode = "404", description = "Función no encontrada"),
+            @ApiResponse(responseCode = "403", description = "Acceso denegado")
     })
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('ADMINISTRADOR')")
     public ResponseEntity<MensajeResponse> eliminar(
             @Parameter(description = "ID de la función", required = true) @PathVariable Long id) {
         funcionService.eliminar(id);

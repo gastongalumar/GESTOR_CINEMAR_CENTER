@@ -1,6 +1,5 @@
 package GESTOR_CINEMAR_CENTER.DEV.config;
 
-
 import GESTOR_CINEMAR_CENTER.DEV.security.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -45,24 +44,44 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
-                        .requestMatchers("/api/customizacion", "/api/customizacion/", "/api/customizacion/**").permitAll()
-                        .requestMatchers("/api/funciones", "/api/funciones/", "/api/funciones/vigentes",
-                                "/api/funciones/pelicula/**", "/api/funciones/**").permitAll()
-                        .requestMatchers("/api/peliculas", "/api/peliculas/", "/api/peliculas/vigentes",
-                                "/api/peliculas/vigentes/**", "/api/peliculas/**").authenticated()
-                        .requestMatchers(HttpMethod.GET, "/api/salas", "/api/salas/**").permitAll()
+                        // ──────────────────────────────────────────────
+                        // 🔓 ENDPOINTS 100% PÚBLICOS (sin token)
+                        // ──────────────────────────────────────────────
+
+                        // Swagger / OpenAPI
+                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                        // Error handler por defecto
+                        .requestMatchers("/error").permitAll()
+                        // Archivos estáticos subidos (imágenes de películas, logos, fondos)
                         .requestMatchers("/uploads/**").permitAll()
-                        .requestMatchers("/api/reservas/funcion/**").permitAll()
-                        .requestMatchers("/api/reservas/*/pdf").permitAll()
-                        .requestMatchers("/api/reservas/validar/**").permitAll()
-                        .requestMatchers("/api/reservas/ticket/**").permitAll()
-                        .requestMatchers("/actuator/health", "/actuator/info").permitAll()
-                        .requestMatchers("/actuator/**").hasAuthority("ADMINISTRADOR")
+                        // Autenticación: login y registro (no requieren token)
+                        .requestMatchers("/api/auth/**").permitAll()
+                        // Customización: consultar configuración pública (GET)
+                        .requestMatchers(HttpMethod.GET, "/api/customizacion").permitAll()
+                        // Películas: consultas GET públicas (cartelera, detalles)
+                        .requestMatchers(HttpMethod.GET, "/api/peliculas/**").permitAll()
+                        // Funciones: consultas GET públicas (horarios, disponibilidad)
+                        .requestMatchers(HttpMethod.GET, "/api/funciones/**").permitAll()
+                        // Salas: consultas GET públicas
+                        .requestMatchers(HttpMethod.GET, "/api/salas/**").permitAll()
+                        // Reservas: consultar ticket, pago asociado, validar ticket
+                        // y asientos ocupados NO requieren autenticación
+                        .requestMatchers(HttpMethod.GET, "/api/reservas/ticket/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/reservas/validar/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/reservas/funcion/*/ocupados").permitAll()
+
+                        // ──────────────────────────────────────────────
+                        // 🔒 ENDPOINTS SOLO PARA ADMINISTRADORES
+                        // ──────────────────────────────────────────────
                         .requestMatchers("/api/pagos/**").hasAuthority("ADMINISTRADOR")
-                        .requestMatchers("/api/admin/**").hasAuthority("ADMINISTRADOR")
-                        .anyRequest().denyAll()
+                        .requestMatchers("/api/usuarios/**").hasAuthority("ADMINISTRADOR")
+
+                        // ──────────────────────────────────────────────
+                        // 🛡️ CUALQUIER OTRA COSA → Requiere autenticación
+                        //     (sin importar el rol). Si no hay token JWT
+                        //     válido, Spring retorna 401 automáticamente.
+                        // ──────────────────────────────────────────────
+                        .anyRequest().authenticated()
                 )
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);

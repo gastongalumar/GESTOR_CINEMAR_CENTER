@@ -21,9 +21,6 @@ public class PeliculaResponseDTO {
     @Schema(description = "Nombre de la película", example = "Interstellar")
     private String nombre;
 
-    @Schema(description = "Ruta o URL de la imagen", example = "/imagenes/interstellar.jpg")
-    private String rutaImagen;
-
     @Schema(description = "Fecha de estreno", example = "2026-05-20")
     private LocalDate fechaEstreno;
 
@@ -32,4 +29,7 @@ public class PeliculaResponseDTO {
 
     @Schema(description = "Duración en minutos", example = "169")
     private Integer duracionMinutos;
+
+    @Schema(description = "Ruta de la imagen de la película", example = "/uploads/peliculas/abc123.jpg")
+    private String rutaImagen;
 }
