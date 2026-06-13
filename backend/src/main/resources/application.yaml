@@ -2,7 +2,7 @@ spring:
   datasource:
     url: jdbc:mysql://localhost:3306/cine_db2?createDatabaseIfNotExist=true
     username: root
-    password: hpto1capo
+    password: Davidguetta
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:

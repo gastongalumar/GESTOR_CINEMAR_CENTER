@@ -51,4 +51,16 @@ public interface ReservaRepository extends JpaRepository<Reserva, Long> {
     @Query("SELECT r FROM Reserva r WHERE r.fechaEmision BETWEEN :inicio AND :fin AND r.estadoReserva != 'CANCELADA'")
     List<Reserva> findByFechaEmisionBetween(@Param("inicio") LocalDateTime inicio,
                                              @Param("fin") LocalDateTime fin);
+
+    // ---------------------------
+    // Métodos agregados para estadísticas
+    // ---------------------------
+
+    // Total de entradas vendidas = total de asientos asociados a reservas
+    @Query("SELECT COUNT(a) FROM Reserva r JOIN r.asientos a")
+    Long countEntradasTotales();
+
+    // Puedes añadir otros métodos filtrados por rango de fechas si los necesitas
+    @Query("SELECT COUNT(a) FROM Reserva r JOIN r.asientos a WHERE r.fechaEmision BETWEEN :inicio AND :fin")
+    Long countEntradasTotalesPorPeriodo(@Param("inicio") LocalDateTime inicio, @Param("fin") LocalDateTime fin);
 }
