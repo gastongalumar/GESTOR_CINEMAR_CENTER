@@ -98,7 +98,7 @@ public class EstadisticasServiceImpl implements EstadisticasService {
         List<VentaPeliculaDTO> resultado = new ArrayList<>();
 
         for (Pelicula pelicula : peliculas) {
-            List<Funcion> funcionesDePelicula = funcionRepository.findByPelicula(pelicula);
+            List<Funcion> funcionesDePelicula = funcionRepository.findByActivaTrueAndPelicula(pelicula);
 
             long totalReservas = 0;
             long totalEntradas = 0;
@@ -145,7 +145,7 @@ public class EstadisticasServiceImpl implements EstadisticasService {
         List<VentaSalaDTO> resultado = new ArrayList<>();
 
         for (Sala sala : salas) {
-            List<Funcion> funcionesDeSala = funcionRepository.findBySala(sala);
+            List<Funcion> funcionesDeSala = funcionRepository.findByActivaTrueAndSala(sala);
 
             long totalFunciones = funcionesDeSala.size();
             long totalEntradas = 0;
@@ -188,7 +188,7 @@ public class EstadisticasServiceImpl implements EstadisticasService {
     @Override
     public List<OcupacionFuncionDTO> ocupacionFunciones(boolean soloVigentes) {
         List<Funcion> funciones = soloVigentes
-                ? funcionRepository.findByHorarioAfter(LocalDateTime.now())
+                ? funcionRepository.findByActivaTrueAndHorarioAfter(LocalDateTime.now())
                 : funcionRepository.findAll();
 
         List<OcupacionFuncionDTO> resultado = new ArrayList<>();
