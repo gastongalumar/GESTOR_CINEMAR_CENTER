@@ -44,44 +44,83 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // ──────────────────────────────────────────────
-                        // 🔓 ENDPOINTS 100% PÚBLICOS (sin token)
-                        // ──────────────────────────────────────────────
 
-                        // Swagger / OpenAPI
+                        // ══════════════════════════════════════════════
+                        // 🔓 ENDPOINTS PÚBLICOS (sin token requerido)
+                        //    Swagger, error handler, login/registro,
+                        //    y datos de consulta que la UI necesita
+                        //    mostrar antes de autenticarse (logo, colores,
+                        //    cartelera, horarios)
+                        // ══════════════════════════════════════════════
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
-                        // Error handler por defecto
                         .requestMatchers("/error").permitAll()
-                        // Archivos estáticos subidos (imágenes de películas, logos, fondos)
                         .requestMatchers("/uploads/**").permitAll()
-                        // Autenticación: login y registro (no requieren token)
                         .requestMatchers("/api/auth/**").permitAll()
-                        // Customización: consultar configuración pública (GET)
+
+                        // ── Datos públicos de consulta ────────────────
+                        // La UI carga logo, colores y nombre del cine
+                        // incluso en la pantalla de login
                         .requestMatchers(HttpMethod.GET, "/api/customizacion").permitAll()
-                        // Películas: consultas GET públicas (cartelera, detalles)
+                        // Cartelera de películas visible sin login
                         .requestMatchers(HttpMethod.GET, "/api/peliculas/**").permitAll()
-                        // Funciones: consultas GET públicas (horarios, disponibilidad)
+                        // Horarios de funciones visibles sin login
                         .requestMatchers(HttpMethod.GET, "/api/funciones/**").permitAll()
-                        // Salas: consultas GET públicas
+                        // Consulta de salas
                         .requestMatchers(HttpMethod.GET, "/api/salas/**").permitAll()
-                        // Reservas: consultar ticket, pago asociado, validar ticket
-                        // y asientos ocupados NO requieren autenticación
-                        .requestMatchers(HttpMethod.GET, "/api/reservas/ticket/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/reservas/validar/**").permitAll()
+                        // Asientos ocupados (ver disponibilidad sin login)
                         .requestMatchers(HttpMethod.GET, "/api/reservas/funcion/*/ocupados").permitAll()
 
-                        // ──────────────────────────────────────────────
-                        // 🔒 ENDPOINTS SOLO PARA ADMINISTRADORES
-                        // ──────────────────────────────────────────────
+                        // ══════════════════════════════════════════════
+                        // 👥 ENDPOINTS PARA CLIENTE Y ADMINISTRADOR
+                        //    (requieren token JWT + rol CLIENTE o ADMIN)
+                        // ══════════════════════════════════════════════
+
+                        // ── Reservas ──────────────────────────────────
+                        .requestMatchers(HttpMethod.GET, "/api/reservas/mis")
+                            .hasAnyAuthority("CLIENTE", "ADMINISTRADOR")
+                        .requestMatchers(HttpMethod.POST, "/api/reservas")
+                            .hasAnyAuthority("CLIENTE", "ADMINISTRADOR")
+                        .requestMatchers("/api/reservas/ticket/**")
+                            .hasAnyAuthority("CLIENTE", "ADMINISTRADOR")
+
+                        // ══════════════════════════════════════════════
+                        // 🔒 ENDPOINTS SOLO ADMINISTRADORES
+                        // ══════════════════════════════════════════════
+
+                        // ── Películas (escritura) ─────────────────────
+                        .requestMatchers(HttpMethod.POST, "/api/peliculas/**").hasAuthority("ADMINISTRADOR")
+                        .requestMatchers(HttpMethod.PUT, "/api/peliculas/**").hasAuthority("ADMINISTRADOR")
+                        .requestMatchers(HttpMethod.DELETE, "/api/peliculas/**").hasAuthority("ADMINISTRADOR")
+
+                        // ── Funciones (escritura) ─────────────────────
+                        .requestMatchers(HttpMethod.POST, "/api/funciones/**").hasAuthority("ADMINISTRADOR")
+                        .requestMatchers(HttpMethod.DELETE, "/api/funciones/**").hasAuthority("ADMINISTRADOR")
+
+                        // ── Salas (escritura) ─────────────────────────
+                        .requestMatchers(HttpMethod.POST, "/api/salas/**").hasAuthority("ADMINISTRADOR")
+                        .requestMatchers(HttpMethod.PUT, "/api/salas/**").hasAuthority("ADMINISTRADOR")
+                        .requestMatchers(HttpMethod.DELETE, "/api/salas/**").hasAuthority("ADMINISTRADOR")
+
+                        // ── Customización (escritura) ─────────────────
+                        .requestMatchers(HttpMethod.POST, "/api/customizacion/**").hasAuthority("ADMINISTRADOR")
+                        .requestMatchers(HttpMethod.DELETE, "/api/customizacion/**").hasAuthority("ADMINISTRADOR")
+
+                        // ── Validar ticket ────────────────────────────
+                        .requestMatchers(HttpMethod.POST, "/api/reservas/validar/**").hasAuthority("ADMINISTRADOR")
+
+                        // ── Listar reservas por cliente ───────────────
+                        .requestMatchers(HttpMethod.GET, "/api/reservas/cliente/**").hasAuthority("ADMINISTRADOR")
+
+                        // ── Pagos ─────────────────────────────────────
                         .requestMatchers("/api/pagos/**").hasAuthority("ADMINISTRADOR")
+
+                        // ── Usuarios ──────────────────────────────────
                         .requestMatchers("/api/usuarios/**").hasAuthority("ADMINISTRADOR")
 
-                        // ──────────────────────────────────────────────
-                        // 🛡️ CUALQUIER OTRA COSA → Requiere autenticación
-                        //     (sin importar el rol). Si no hay token JWT
-                        //     válido, Spring retorna 401 automáticamente.
-                        // ──────────────────────────────────────────────
-                        .anyRequest().authenticated()
+                        // ══════════════════════════════════════════════
+                        // 🚫 CUALQUIER OTRA RUTA → Denegar acceso (403)
+                        // ══════════════════════════════════════════════
+                        .anyRequest().denyAll()
                 )
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
