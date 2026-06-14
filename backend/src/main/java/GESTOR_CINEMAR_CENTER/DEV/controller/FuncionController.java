@@ -2,6 +2,7 @@ package GESTOR_CINEMAR_CENTER.DEV.controller;
 
 import GESTOR_CINEMAR_CENTER.DEV.dto.response.mensaje.MensajeResponse;
 import GESTOR_CINEMAR_CENTER.DEV.dto.request.funcion.CrearFuncionRequestDTO;
+import GESTOR_CINEMAR_CENTER.DEV.dto.request.funcion.CrearFuncionesPorRangoRequestDTO;
 import GESTOR_CINEMAR_CENTER.DEV.dto.response.funcion.FuncionResponseDTO;
 import GESTOR_CINEMAR_CENTER.DEV.service.FuncionService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -105,6 +106,30 @@ public class FuncionController {
     @PreAuthorize("hasAuthority('ADMINISTRADOR')")
     public ResponseEntity<FuncionResponseDTO> crear(@Valid @RequestBody CrearFuncionRequestDTO request) {
         return ResponseEntity.ok(funcionService.crear(request));
+    }
+
+    @Operation(
+            summary = "Crear funciones por rango de fechas",
+            description = "Genera funciones consecutivas en una sala para un rango de fechas, según la duración de la película. "
+                    + "Si alguna función solapa con funciones existentes o el rango queda fuera de la cartelera, "
+                    + "no se crea ninguna función. Requiere rol ADMINISTRADOR",
+            security = @SecurityRequirement(name = "bearerAuth"),
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    required = true,
+                    content = @Content(schema = @Schema(implementation = CrearFuncionesPorRangoRequestDTO.class))
+            )
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Funciones creadas correctamente",
+                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = FuncionResponseDTO.class)))),
+            @ApiResponse(responseCode = "400", description = "Datos inválidos o regla de negocio incumplida"),
+            @ApiResponse(responseCode = "403", description = "Acceso denegado")
+    })
+    @PostMapping("/por-rango")
+    @PreAuthorize("hasAuthority('ADMINISTRADOR')")
+    public ResponseEntity<List<FuncionResponseDTO>> crearFuncionesPorRango(
+            @Valid @RequestBody CrearFuncionesPorRangoRequestDTO request) {
+        return ResponseEntity.ok(funcionService.crearFuncionesPorRango(request));
     }
 
     @Operation(summary = "Eliminar una función", description = "Elimina una función de proyección del sistema. Requiere rol ADMINISTRADOR",

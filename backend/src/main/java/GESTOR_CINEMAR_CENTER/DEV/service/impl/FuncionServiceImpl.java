@@ -1,6 +1,7 @@
 package GESTOR_CINEMAR_CENTER.DEV.service.impl;
 
 import GESTOR_CINEMAR_CENTER.DEV.dto.request.funcion.CrearFuncionRequestDTO;
+import GESTOR_CINEMAR_CENTER.DEV.dto.request.funcion.CrearFuncionesPorRangoRequestDTO;
 import GESTOR_CINEMAR_CENTER.DEV.dto.response.funcion.FuncionResponseDTO;
 import GESTOR_CINEMAR_CENTER.DEV.enums.EstadoReserva;
 import GESTOR_CINEMAR_CENTER.DEV.exception.RecursoNoEncontradoException;
@@ -21,6 +22,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service("funcionService")
@@ -77,17 +80,8 @@ public class FuncionServiceImpl implements FuncionService {
         Sala sala = salaService.obtenerSalaActiva(request.getSalaId());
         Pelicula pelicula = peliculaService.obtenerPelicula(request.getPeliculaId());
 
-        // 1. Validar que la fecha de la función esté dentro del rango de estreno de la
-        // película
-        LocalDate fechaFuncion = request.getHorario().toLocalDate();
-        if (fechaFuncion.isBefore(pelicula.getFechaEstreno()) || fechaFuncion.isAfter(pelicula.getFechaSalida())) {
-            throw new ReglaNegocioException(
-                    "El horario de la función debe estar dentro del rango de cartelera de la película ("
-                            + pelicula.getFechaEstreno() + " a " + pelicula.getFechaSalida() + ")");
-        }
+        validarFechaDentroDeCartelera(request.getHorario().toLocalDate(), pelicula);
 
-        // 2. Validar que no haya solapamiento de horarios en la misma sala para esa
-        // fecha
         LocalDateTime inicioNueva = request.getHorario();
         LocalDateTime finNueva = inicioNueva.plusMinutes(pelicula.getDuracionMinutos());
 
@@ -96,18 +90,8 @@ public class FuncionServiceImpl implements FuncionService {
                 inicioNueva.toLocalDate().atStartOfDay(),
                 inicioNueva.toLocalDate().plusDays(1).atStartOfDay());
 
-        for (Funcion f : funcionesMismaSala) {
-            LocalDateTime inicioExistente = f.getHorario();
-            LocalDateTime finExistente = inicioExistente.plusMinutes(f.getPelicula().getDuracionMinutos());
+        validarSinSolapamiento(inicioNueva, finNueva, funcionesMismaSala);
 
-            if (inicioNueva.isBefore(finExistente) && finNueva.isAfter(inicioExistente)) {
-                throw new ReglaNegocioException(
-                        "Conflicto de horario en la sala: ya existe la función de '" + f.getPelicula().getNombre()
-                                + "' de " + inicioExistente.toLocalTime() + " a " + finExistente.toLocalTime());
-            }
-        }
-
-        // 3. Verificar colisión exacta de horario (solo activas)
         if (funcionRepository.existsBySalaAndHorarioAndActivaTrue(sala, request.getHorario())) {
             throw new ReglaNegocioException("Ya existe una función activa en esa sala a esa hora exacta");
         }
@@ -115,6 +99,127 @@ public class FuncionServiceImpl implements FuncionService {
         Funcion funcion = funcionMapper.toEntity(request, sala, pelicula);
         funcion.setActiva(true);
         return funcionMapper.toResponse(funcionRepository.save(funcion));
+    }
+
+    @Override
+    @Transactional
+    public List<FuncionResponseDTO> crearFuncionesPorRango(CrearFuncionesPorRangoRequestDTO request) {
+        Sala sala = salaService.obtenerSalaActiva(request.getSalaId());
+        Pelicula pelicula = peliculaService.obtenerPelicula(request.getPeliculaId());
+
+        validarRangoDentroDeCartelera(request.getFechaDesde(), request.getFechaHasta(), pelicula);
+
+        List<LocalDateTime> horariosPropuestos = generarHorariosConsecutivos(
+                request.getFechaDesde(),
+                request.getFechaHasta(),
+                request.getHoraInicio(),
+                request.getHoraFin(),
+                pelicula.getDuracionMinutos());
+
+        if (horariosPropuestos.isEmpty()) {
+            throw new ReglaNegocioException(
+                    "No se puede generar ninguna función: la duración de la película no entra en el horario diario indicado");
+        }
+
+        LocalDateTime ahora = LocalDateTime.now();
+        for (LocalDateTime horario : horariosPropuestos) {
+            if (horario.isBefore(ahora)) {
+                throw new ReglaNegocioException(
+                        "El rango incluye funciones en el pasado (" + horario.toLocalDate() + " "
+                                + horario.toLocalTime() + ")");
+            }
+        }
+
+        List<Funcion> funcionesExistentes = funcionRepository.findByActivaTrueAndSalaAndHorarioBetween(
+                sala,
+                request.getFechaDesde().atStartOfDay(),
+                request.getFechaHasta().plusDays(1).atStartOfDay());
+
+        int duracionMinutos = pelicula.getDuracionMinutos();
+        for (LocalDateTime inicioPropuesto : horariosPropuestos) {
+            LocalDateTime finPropuesto = inicioPropuesto.plusMinutes(duracionMinutos);
+            validarSinSolapamiento(inicioPropuesto, finPropuesto, funcionesExistentes);
+        }
+
+        List<Funcion> funcionesNuevas = horariosPropuestos.stream()
+                .map(horario -> {
+                    Funcion funcion = new Funcion();
+                    funcion.setSala(sala);
+                    funcion.setPelicula(pelicula);
+                    funcion.setHorario(horario);
+                    funcion.setPrecio(request.getPrecio());
+                    funcion.setActiva(true);
+                    return funcion;
+                })
+                .toList();
+
+        return funcionMapper.toResponseList(funcionRepository.saveAll(funcionesNuevas));
+    }
+
+    private void validarFechaDentroDeCartelera(LocalDate fecha, Pelicula pelicula) {
+        if (fecha.isBefore(pelicula.getFechaEstreno()) || fecha.isAfter(pelicula.getFechaSalida())) {
+            throw new ReglaNegocioException(
+                    "El horario de la función debe estar dentro del rango de cartelera de la película ("
+                            + pelicula.getFechaEstreno() + " a " + pelicula.getFechaSalida() + ")");
+        }
+    }
+
+    private void validarRangoDentroDeCartelera(LocalDate fechaDesde, LocalDate fechaHasta, Pelicula pelicula) {
+        if (fechaDesde.isBefore(pelicula.getFechaEstreno()) || fechaHasta.isAfter(pelicula.getFechaSalida())) {
+            throw new ReglaNegocioException(
+                    "El rango de fechas debe estar completamente dentro de la cartelera de la película ("
+                            + pelicula.getFechaEstreno() + " a " + pelicula.getFechaSalida() + ")");
+        }
+    }
+
+    private List<LocalDateTime> generarHorariosConsecutivos(
+            LocalDate fechaDesde,
+            LocalDate fechaHasta,
+            LocalTime horaInicio,
+            LocalTime horaFin,
+            int duracionMinutos) {
+
+        List<LocalDateTime> horarios = new ArrayList<>();
+        LocalDate dia = fechaDesde;
+
+        while (!dia.isAfter(fechaHasta)) {
+            LocalDateTime inicio = LocalDateTime.of(dia, horaInicio);
+            LocalDateTime limiteDia = LocalDateTime.of(dia, horaFin);
+
+            while (true) {
+                LocalDateTime fin = inicio.plusMinutes(duracionMinutos);
+                if (fin.isAfter(limiteDia)) {
+                    break;
+                }
+                horarios.add(inicio);
+                inicio = fin;
+            }
+
+            dia = dia.plusDays(1);
+        }
+
+        return horarios;
+    }
+
+    private void validarSinSolapamiento(
+            LocalDateTime inicioNueva,
+            LocalDateTime finNueva,
+            List<Funcion> funcionesExistentes) {
+
+        for (Funcion funcionExistente : funcionesExistentes) {
+            LocalDateTime inicioExistente = funcionExistente.getHorario();
+            LocalDateTime finExistente = inicioExistente.plusMinutes(
+                    funcionExistente.getPelicula().getDuracionMinutos());
+
+            if (inicioNueva.isBefore(finExistente) && finNueva.isAfter(inicioExistente)) {
+                throw new ReglaNegocioException(
+                        "Conflicto de horario en la sala: ya existe la función de '"
+                                + funcionExistente.getPelicula().getNombre()
+                                + "' de " + inicioExistente.toLocalDate() + " "
+                                + inicioExistente.toLocalTime() + " a " + finExistente.toLocalTime()
+                                + ". No se creó ninguna función del rango.");
+            }
+        }
     }
 
     /**
