@@ -54,7 +54,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/auth/registro").permitAll()
 
                         // 👥 CUALQUIER USUARIO AUTENTICADO
-                        .requestMatchers(HttpMethod.GET, "/api/peliculas/**").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/peliculas/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/funciones/**").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/salas/**").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/reservas/funcion/*/ocupados").authenticated()
