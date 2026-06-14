@@ -1,5 +1,6 @@
 package GESTOR_CINEMAR_CENTER.DEV.model;
 
+import GESTOR_CINEMAR_CENTER.DEV.enums.GeneroPelicula;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -31,8 +32,9 @@ public class Pelicula {
     @Column(nullable = false)
     private Integer duracionMinutos;
 
-    @Column
-    private String genero;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private GeneroPelicula genero;
 
     @Column
     private String rutaImagen;

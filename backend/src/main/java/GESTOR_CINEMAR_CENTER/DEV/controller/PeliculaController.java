@@ -63,6 +63,14 @@ public class PeliculaController {
         return ResponseEntity.ok(peliculaService.listarPeliculasVigentes());
     }
 
+    @Operation(summary = "Listar películas próximamente", description = "Retorna películas activas cuyo estreno está dentro de los próximos 20 días")
+    @ApiResponse(responseCode = "200", description = "Listado obtenido correctamente",
+            content = @Content(array = @ArraySchema(schema = @Schema(implementation = PeliculaResponseDTO.class))))
+    @GetMapping("/proximamente")
+    public ResponseEntity<List<PeliculaResponseDTO>> listarPeliculasProximamente() {
+        return ResponseEntity.ok(peliculaService.listarPeliculasProximamente());
+    }
+
     @Operation(summary = "Obtener película por ID", description = "Busca una película específica por su identificador")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Película encontrada",

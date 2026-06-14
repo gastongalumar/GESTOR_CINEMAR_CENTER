@@ -36,8 +36,4 @@ public class Pago {
 
     private EstadoPago estadoPago = EstadoPago.COMPLETADO;
 
-    private String transaccionId;
-
-
-
 }

@@ -7,11 +7,13 @@ import GESTOR_CINEMAR_CENTER.DEV.dto.response.reserva.ReservaResponseDTO;
 import GESTOR_CINEMAR_CENTER.DEV.dto.response.reserva.ValidacionTicketResponseDTO;
 import GESTOR_CINEMAR_CENTER.DEV.enums.EstadoReserva;
 import GESTOR_CINEMAR_CENTER.DEV.enums.MetodoPagoHelper;
+import GESTOR_CINEMAR_CENTER.DEV.exception.ConflictoRecursoException;
 import GESTOR_CINEMAR_CENTER.DEV.exception.RecursoNoEncontradoException;
 import GESTOR_CINEMAR_CENTER.DEV.exception.ReglaNegocioException;
 import GESTOR_CINEMAR_CENTER.DEV.mapper.PagoMapper;
 import GESTOR_CINEMAR_CENTER.DEV.mapper.ReservaMapper;
 import GESTOR_CINEMAR_CENTER.DEV.model.*;
+import GESTOR_CINEMAR_CENTER.DEV.repository.FuncionRepository;
 import GESTOR_CINEMAR_CENTER.DEV.repository.ReservaRepository;
 import GESTOR_CINEMAR_CENTER.DEV.service.*;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +21,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Service("reservaService")
 @RequiredArgsConstructor
@@ -32,6 +36,7 @@ public class ReservaServiceImpl implements ReservaService {
     );
 
     private final ReservaRepository reservaRepository;
+    private final FuncionRepository funcionRepository;
     private final FuncionService funcionService;
     private final PagoService pagoService;
     private final UsuarioService usuarioService;
@@ -71,6 +76,7 @@ public class ReservaServiceImpl implements ReservaService {
     @Override
     @Transactional(readOnly = true)
     public List<ReservaResponseDTO> filtrarReservasPorFecha(LocalDateTime inicio, LocalDateTime fin) {
+        validarRangoFechas(inicio, fin);
         return reservaRepository.findByFechaEmisionBetween(inicio, fin)
                 .stream()
                 .map(reservaMapper::toResponse)
@@ -79,20 +85,28 @@ public class ReservaServiceImpl implements ReservaService {
 
     @Override
     @Transactional
-    public ReservaResponseDTO crear(CrearReservaRequestDTO request) {
-        Usuario usuario = usuarioService.findById(request.getClienteId());
+    public ReservaResponseDTO crear(CrearReservaRequestDTO request, String emailAutenticado) {
+        Usuario usuario = usuarioService.findByEmail(emailAutenticado.trim().toLowerCase());
 
         if (!(usuario instanceof Cliente cliente)) {
             throw new ReglaNegocioException("Solo los clientes pueden realizar reservas");
         }
 
-        Funcion funcion = funcionService.obtenerFuncion(request.getFuncionId());
+        Funcion funcion = funcionRepository.findByIdAndActivaTrueForUpdate(request.getFuncionId())
+                .orElseThrow(() -> new RecursoNoEncontradoException("Función", request.getFuncionId()));
+
+        if (!funcion.getHorario().isAfter(LocalDateTime.now())) {
+            throw new ReglaNegocioException("No se pueden reservar funciones que ya comenzaron o finalizaron");
+        }
+
         String metodoPago = normalizarMetodoPago(request.getMetodoPago());
         List<String> etiquetasAsientos = request.getAsientosSeleccionados();
 
         if (etiquetasAsientos == null || etiquetasAsientos.isEmpty()) {
             throw new ReglaNegocioException("Debe seleccionar al menos un asiento");
         }
+
+        validarAsientosSinDuplicados(etiquetasAsientos);
 
         salaService.asegurarAsientosDeSala(funcion.getSala());
 
@@ -107,7 +121,7 @@ public class ReservaServiceImpl implements ReservaService {
 
         for (Asiento asiento : asientosSeleccionados) {
             if (idsOcupados.contains(asiento.getId())) {
-                throw new ReglaNegocioException("El asiento " + asiento.getEtiqueta() + " ya no está disponible");
+                throw new ConflictoRecursoException("El asiento " + asiento.getEtiqueta() + " ya no está disponible");
             }
         }
 
@@ -121,7 +135,12 @@ public class ReservaServiceImpl implements ReservaService {
         reserva.setAsientos(asientosSeleccionados);
         reserva.setMontoTotal(funcion.getPrecio() * asientosSeleccionados.size());
 
-        reserva = reservaRepository.save(reserva);
+        try {
+            reserva = reservaRepository.save(reserva);
+        } catch (org.springframework.dao.DataIntegrityViolationException ex) {
+            throw new ConflictoRecursoException("Uno o más asientos ya no están disponibles");
+        }
+
         pagoService.crearPago(reserva, reserva.getMontoTotal(), reserva.getMetodoPago());
 
         return reservaMapper.toResponse(reserva);
@@ -145,7 +164,7 @@ public class ReservaServiceImpl implements ReservaService {
     @Override
     @Transactional(readOnly = true)
     public List<ReservaResponseDTO> listarReservasPorEmail(String email) {
-        Usuario usuario = usuarioService.findByEmail(email);
+        Usuario usuario = usuarioService.findByEmail(email.trim().toLowerCase());
 
         if (!(usuario instanceof Cliente cliente)) {
             return List.of();
@@ -172,17 +191,18 @@ public class ReservaServiceImpl implements ReservaService {
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public PagoResponseDTO buscarPagoPorTicket(String numeroTicket) {
-        Reserva reserva = findByTicketEntity(numeroTicket);
-        Pago pago = pagoService.buscarPagoPorReserva(reserva);
-        return pagoMapper.toDTO(pago);
-    }
-
-    @Override
     @Transactional
     public ValidacionTicketResponseDTO validarTicket(String numeroTicket, boolean marcarUsado) {
         Reserva reserva = findByTicketEntity(numeroTicket);
+
+        if (reserva.getEstadoReserva() == EstadoReserva.CANCELADA) {
+            throw new ReglaNegocioException("No se puede validar un ticket de una reserva cancelada");
+        }
+
+        if (reserva.getEstadoReserva() == EstadoReserva.VALIDADA && marcarUsado) {
+            return reservaMapper.toValidacionTicket(reserva, false);
+        }
+
         boolean marcarAhora = marcarUsado && reserva.getEstadoReserva() != EstadoReserva.VALIDADA;
 
         if (marcarAhora) {
@@ -194,36 +214,51 @@ public class ReservaServiceImpl implements ReservaService {
         return reservaMapper.toValidacionTicket(reserva, marcarAhora);
     }
 
-    @Override
-    @Transactional
-    public ReservaResponseDTO actualizarMetodoPago(String numeroTicket, ActualizarMetodoPagoRequestDTO request) {
-        Reserva reserva = findByTicketEntity(numeroTicket);
-        reserva.setMetodoPago(normalizarMetodoPago(request.getMetodoPago()));
-        return reservaMapper.toResponse(reservaRepository.save(reserva));
-    }
 
     @Override
     @Transactional
     public void cancelar(String numeroTicket) {
         Reserva reserva = findByTicketEntity(numeroTicket);
+
+        if (reserva.getEstadoReserva() == EstadoReserva.CANCELADA) {
+            throw new ReglaNegocioException("La reserva ya está cancelada");
+        }
+
+        if (reserva.getEstadoReserva() == EstadoReserva.VALIDADA) {
+            throw new ReglaNegocioException("No se puede cancelar una reserva cuyo ticket ya fue validado");
+        }
+
         reserva.setEstadoReserva(EstadoReserva.CANCELADA);
         reservaRepository.save(reserva);
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public List<String> obtenerAsientosOcupados(Long funcionId) {
-        Funcion funcion = funcionService.obtenerFuncion(funcionId);
-
-        return reservaRepository.findByFuncionAndEstadoReservaIn(funcion, ESTADOS_OCUPAN_ASIENTO)
-                .stream()
-                .flatMap(reserva -> reserva.getAsientos().stream())
-                .map(Asiento::getEtiqueta)
-                .distinct()
-                .toList();
+    private void validarRangoFechas(LocalDateTime inicio, LocalDateTime fin) {
+        if (inicio == null || fin == null) {
+            throw new ReglaNegocioException("Las fechas desde y hasta son obligatorias");
+        }
+        if (inicio.isAfter(fin)) {
+            throw new ReglaNegocioException("La fecha inicial no puede ser posterior a la fecha final");
+        }
     }
 
+    private void validarReservaModificable(Reserva reserva) {
+        if (reserva.getEstadoReserva() == EstadoReserva.CANCELADA) {
+            throw new ReglaNegocioException("No se puede modificar una reserva cancelada");
+        }
+        if (reserva.getEstadoReserva() == EstadoReserva.VALIDADA) {
+            throw new ReglaNegocioException("No se puede modificar una reserva cuyo ticket ya fue validado");
+        }
+    }
 
+    private void validarAsientosSinDuplicados(List<String> etiquetasAsientos) {
+        Set<String> vistos = new HashSet<>();
+        for (String etiqueta : etiquetasAsientos) {
+            String normalizada = etiqueta.trim().toUpperCase();
+            if (!vistos.add(normalizada)) {
+                throw new ReglaNegocioException("No se pueden seleccionar asientos duplicados: " + etiqueta);
+            }
+        }
+    }
 
     private String normalizarMetodoPago(String metodoPago) {
         if (!MetodoPagoHelper.esValido(metodoPago)) {

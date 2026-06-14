@@ -4,6 +4,8 @@ import GESTOR_CINEMAR_CENTER.DEV.dto.request.pelicula.ActualizarPeliculaRequestD
 import GESTOR_CINEMAR_CENTER.DEV.dto.request.pelicula.CrearPeliculaRequestDTO;
 import GESTOR_CINEMAR_CENTER.DEV.dto.response.pelicula.PeliculaPageResponse;
 import GESTOR_CINEMAR_CENTER.DEV.dto.response.pelicula.PeliculaResponseDTO;
+import GESTOR_CINEMAR_CENTER.DEV.enums.GeneroPelicula;
+import GESTOR_CINEMAR_CENTER.DEV.enums.GeneroPeliculaHelper;
 import GESTOR_CINEMAR_CENTER.DEV.exception.RecursoNoEncontradoException;
 import GESTOR_CINEMAR_CENTER.DEV.exception.ReglaNegocioException;
 import GESTOR_CINEMAR_CENTER.DEV.mapper.PeliculaMapper;
@@ -55,15 +57,15 @@ public class PeliculaServiceImpl implements PeliculaService {
     }
 
     @Override
-    public PeliculaResponseDTO buscarPorId(Long id) {
-        return peliculaMapper.toResponse(obtenerPelicula(id));
+    public List<PeliculaResponseDTO> listarPeliculasProximamente() {
+        LocalDate hoy = LocalDate.now();
+        return peliculaMapper.toResponseList(
+                peliculaRepository.findProximamenteEnVentana(hoy, hoy.plusDays(20)));
     }
 
     @Override
-    public PeliculaPageResponse listarVigentesPaginado(int page, int size) {
-        Pageable pageable = PageRequest.of(page, size);
-        Page<Pelicula> result = peliculaRepository.findVigentesEnFecha(LocalDate.now(), pageable);
-        return peliculaMapper.toPageResponse(result);
+    public PeliculaResponseDTO buscarPorId(Long id) {
+        return peliculaMapper.toResponse(obtenerPelicula(id));
     }
 
     /**
@@ -71,7 +73,7 @@ public class PeliculaServiceImpl implements PeliculaService {
      * Las películas desactivadas no bloquean la creación.
      */
     private void validarNombreDisponible(String nombre) {
-        if (peliculaRepository.existsByNombreAndActivaTrue(nombre)) {
+        if (peliculaRepository.existsByNombreIgnoreCaseAndActivaTrue(nombre.trim())) {
             throw new ReglaNegocioException("Ya existe una película activa con ese nombre");
         }
     }
@@ -123,8 +125,8 @@ public class PeliculaServiceImpl implements PeliculaService {
     public PeliculaResponseDTO actualizar(Long id, ActualizarPeliculaRequestDTO request) {
         Pelicula existente = obtenerPelicula(id);
 
-        if (request.getNombre() != null && !existente.getNombre().equals(request.getNombre())) {
-            validarNombreDisponible(request.getNombre());
+        if (request.getNombre() != null && !existente.getNombre().equalsIgnoreCase(request.getNombre().trim())) {
+            validarNombreDisponible(request.getNombre().trim());
         }
 
         LocalDate fechaEstreno = request.getFechaEstreno() != null ? request.getFechaEstreno()
@@ -132,8 +134,8 @@ public class PeliculaServiceImpl implements PeliculaService {
         LocalDate fechaSalida = request.getFechaSalida() != null ? request.getFechaSalida()
                 : existente.getFechaSalida();
 
-        // Validar que la fecha de estreno sea al menos mañana (mínimo 1 día de anticipación)
-        if (fechaEstreno.isBefore(LocalDate.now().plusDays(1))) {
+        if (request.getFechaEstreno() != null
+                && fechaEstreno.isBefore(LocalDate.now().plusDays(1))) {
             throw new ReglaNegocioException(
                     "La fecha de estreno debe ser al menos 1 día en el futuro (a partir de " +
                     LocalDate.now().plusDays(1) + ")");
@@ -189,7 +191,8 @@ public class PeliculaServiceImpl implements PeliculaService {
 
     @Override
     public List<PeliculaResponseDTO> filtrarPorGenero(String genero) {
-        return peliculaMapper.toResponseList(peliculaRepository.findByGeneroContainsIgnoreCase(genero));
+        GeneroPelicula generoPelicula = GeneroPeliculaHelper.fromString(genero);
+        return peliculaMapper.toResponseList(peliculaRepository.findByActivaTrueAndGenero(generoPelicula));
     }
 
     @Override
@@ -200,8 +203,9 @@ public class PeliculaServiceImpl implements PeliculaService {
 
     @Override
     public List<PeliculaResponseDTO> filtrarVigentesPorGenero(String genero) {
+        GeneroPelicula generoPelicula = GeneroPeliculaHelper.fromString(genero);
         return peliculaMapper.toResponseList(
-                peliculaRepository.findVigentesPorGenero(genero, LocalDate.now()));
+                peliculaRepository.findVigentesPorGenero(generoPelicula, LocalDate.now()));
     }
 
     @Override

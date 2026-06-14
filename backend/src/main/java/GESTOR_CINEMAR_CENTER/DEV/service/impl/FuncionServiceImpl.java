@@ -2,13 +2,16 @@ package GESTOR_CINEMAR_CENTER.DEV.service.impl;
 
 import GESTOR_CINEMAR_CENTER.DEV.dto.request.funcion.CrearFuncionRequestDTO;
 import GESTOR_CINEMAR_CENTER.DEV.dto.response.funcion.FuncionResponseDTO;
+import GESTOR_CINEMAR_CENTER.DEV.enums.EstadoReserva;
 import GESTOR_CINEMAR_CENTER.DEV.exception.RecursoNoEncontradoException;
 import GESTOR_CINEMAR_CENTER.DEV.exception.ReglaNegocioException;
 import GESTOR_CINEMAR_CENTER.DEV.mapper.FuncionMapper;
+import GESTOR_CINEMAR_CENTER.DEV.model.Asiento;
 import GESTOR_CINEMAR_CENTER.DEV.model.Funcion;
 import GESTOR_CINEMAR_CENTER.DEV.model.Pelicula;
 import GESTOR_CINEMAR_CENTER.DEV.model.Sala;
 import GESTOR_CINEMAR_CENTER.DEV.repository.FuncionRepository;
+import GESTOR_CINEMAR_CENTER.DEV.repository.ReservaRepository;
 import GESTOR_CINEMAR_CENTER.DEV.service.FuncionService;
 import GESTOR_CINEMAR_CENTER.DEV.service.PeliculaService;
 import GESTOR_CINEMAR_CENTER.DEV.service.SalaService;
@@ -25,9 +28,16 @@ import java.util.List;
 public class FuncionServiceImpl implements FuncionService {
 
     private final FuncionRepository funcionRepository;
+    private final ReservaRepository reservaRepository;
     private final PeliculaService peliculaService;
     private final SalaService salaService;
     private final FuncionMapper funcionMapper;
+
+    private static final List<EstadoReserva> ESTADOS_RESERVA_ACTIVA = List.of(
+            EstadoReserva.PENDIENTE,
+            EstadoReserva.CONFIRMADA,
+            EstadoReserva.VALIDADA
+    );
 
     /**
      * Obtiene la entidad Funcion solo si está activa.
@@ -64,7 +74,7 @@ public class FuncionServiceImpl implements FuncionService {
     @Override
     @Transactional
     public FuncionResponseDTO crear(CrearFuncionRequestDTO request) {
-        Sala sala = salaService.obtenerEntidad(request.getSalaId());
+        Sala sala = salaService.obtenerSalaActiva(request.getSalaId());
         Pelicula pelicula = peliculaService.obtenerPelicula(request.getPeliculaId());
 
         // 1. Validar que la fecha de la función esté dentro del rango de estreno de la
@@ -115,6 +125,12 @@ public class FuncionServiceImpl implements FuncionService {
     @Transactional
     public void eliminar(Long id) {
         Funcion funcion = obtenerFuncion(id);
+
+        if (reservaRepository.existsByFuncionAndEstadoReservaIn(funcion, ESTADOS_RESERVA_ACTIVA)) {
+            throw new ReglaNegocioException(
+                    "No se puede desactivar la función porque tiene reservas activas asociadas");
+        }
+
         funcion.setActiva(false);
         funcionRepository.save(funcion);
     }
@@ -124,5 +140,18 @@ public class FuncionServiceImpl implements FuncionService {
         return funcionRepository.findByActivaTrueAndSala(sala)
                 .stream()
                 .anyMatch(f -> f.getHorario().isAfter(LocalDateTime.now()));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<String> obtenerAsientosOcupados(Long funcionId) {
+        Funcion funcion = obtenerFuncion(funcionId);
+
+        return reservaRepository.findByFuncionAndEstadoReservaIn(funcion, ESTADOS_RESERVA_ACTIVA)
+                .stream()
+                .flatMap(reserva -> reserva.getAsientos().stream())
+                .map(Asiento::getEtiqueta)
+                .distinct()
+                .toList();
     }
 }

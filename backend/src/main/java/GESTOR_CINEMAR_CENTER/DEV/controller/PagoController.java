@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.constraints.NotBlank;
@@ -42,6 +43,15 @@ public class PagoController {
     @PreAuthorize("hasAuthority('ADMINISTRADOR')")
     public ResponseEntity<List<PagoResponseDTO>> listarTodos() {
         return ResponseEntity.ok(pagoService.listarTodos());
+    }
+
+    @Operation(summary = "Obtener mis pagos", description = "Retorna los pagos del cliente autenticado")
+    @ApiResponse(responseCode = "200", description = "Listado obtenido correctamente",
+            content = @Content(array = @ArraySchema(schema = @Schema(implementation = PagoResponseDTO.class))))
+    @GetMapping("/mis")
+    @PreAuthorize("hasAuthority('CLIENTE') or hasAuthority('ADMINISTRADOR')")
+    public ResponseEntity<List<PagoResponseDTO>> listarMisPagos(Authentication authentication) {
+        return ResponseEntity.ok(pagoService.listarMisPagos(authentication.getName()));
     }
 
     @Operation(summary = "Obtener pago por ID", description = "Busca un pago específico por su identificador")
