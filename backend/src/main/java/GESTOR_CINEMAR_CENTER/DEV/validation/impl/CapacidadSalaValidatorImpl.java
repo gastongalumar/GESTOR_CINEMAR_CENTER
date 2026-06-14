@@ -1,11 +1,12 @@
-package GESTOR_CINEMAR_CENTER.DEV.validation;
+package GESTOR_CINEMAR_CENTER.DEV.validation.impl;
 
 import GESTOR_CINEMAR_CENTER.DEV.dto.request.sala.ActualizarSalaRequestDTO;
 import GESTOR_CINEMAR_CENTER.DEV.dto.request.sala.CrearSalaRequestDTO;
+import GESTOR_CINEMAR_CENTER.DEV.validation.interfaces.CapacidadSalaValida;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 
-public class CapacidadSalaValidator implements ConstraintValidator<CapacidadSalaValida, Object> {
+public class CapacidadSalaValidatorImpl implements ConstraintValidator<CapacidadSalaValida, Object> {
 
     @Override
     public boolean isValid(Object value, ConstraintValidatorContext context) {

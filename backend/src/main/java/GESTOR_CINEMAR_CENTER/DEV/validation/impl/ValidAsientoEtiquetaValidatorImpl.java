@@ -1,9 +1,10 @@
-package GESTOR_CINEMAR_CENTER.DEV.validation;
+package GESTOR_CINEMAR_CENTER.DEV.validation.impl;
 
+import GESTOR_CINEMAR_CENTER.DEV.validation.interfaces.ValidAsientoEtiqueta;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 
-public class ValidAsientoEtiquetaValidator implements ConstraintValidator<ValidAsientoEtiqueta, String> {
+public class ValidAsientoEtiquetaValidatorImpl implements ConstraintValidator<ValidAsientoEtiqueta, String> {
 
     private static final String ASIENTO_PATTERN = "^[A-T][1-9][0-9]?$";
 

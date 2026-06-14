@@ -4,6 +4,7 @@ import GESTOR_CINEMAR_CENTER.DEV.dto.request.sala.ActualizarSalaRequestDTO;
 import GESTOR_CINEMAR_CENTER.DEV.dto.request.sala.CrearSalaRequestDTO;
 import GESTOR_CINEMAR_CENTER.DEV.dto.response.asiento.AsientoResponseDTO;
 import GESTOR_CINEMAR_CENTER.DEV.dto.response.sala.SalaResponseDTO;
+import GESTOR_CINEMAR_CENTER.DEV.enums.EstadoReserva;
 import GESTOR_CINEMAR_CENTER.DEV.exception.RecursoNoEncontradoException;
 import GESTOR_CINEMAR_CENTER.DEV.exception.ReglaNegocioException;
 import GESTOR_CINEMAR_CENTER.DEV.mapper.AsientoMapper;
@@ -11,6 +12,7 @@ import GESTOR_CINEMAR_CENTER.DEV.mapper.SalaMapper;
 import GESTOR_CINEMAR_CENTER.DEV.model.Asiento;
 import GESTOR_CINEMAR_CENTER.DEV.model.Sala;
 import GESTOR_CINEMAR_CENTER.DEV.repository.FuncionRepository;
+import GESTOR_CINEMAR_CENTER.DEV.repository.ReservaRepository;
 import GESTOR_CINEMAR_CENTER.DEV.repository.SalaRepository;
 import GESTOR_CINEMAR_CENTER.DEV.service.AsientoService;
 import GESTOR_CINEMAR_CENTER.DEV.service.FuncionService;
@@ -32,6 +34,13 @@ public class SalaServiceImpl implements SalaService {
     private final SalaMapper salaMapper;
     private final AsientoMapper asientoMapper;
     private final FuncionRepository funcionRepository;
+    private final ReservaRepository reservaRepository;
+
+    private static final List<EstadoReserva> ESTADOS_RESERVA_ACTIVA = List.of(
+            EstadoReserva.PENDIENTE,
+            EstadoReserva.CONFIRMADA,
+            EstadoReserva.VALIDADA
+    );
 
     @Override
     public List<SalaResponseDTO> listarTodas() {
@@ -140,6 +149,11 @@ public class SalaServiceImpl implements SalaService {
         salaRepository.save(existente);
 
         if (layoutCambio) {
+            if (reservaRepository.existsReservasActivasFuturasPorSala(
+                    existente, ESTADOS_RESERVA_ACTIVA, LocalDateTime.now())) {
+                throw new ReglaNegocioException(
+                        "No se puede modificar el layout de la sala porque tiene reservas activas en funciones futuras");
+            }
             asientoService.eliminarPorSala(existente);
             generarAsientos(existente);
         }
@@ -204,5 +218,10 @@ public class SalaServiceImpl implements SalaService {
     public Sala obtenerEntidad(Long id) {
         return salaRepository.findById(id)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Sala", id));
+    }
+
+    @Override
+    public Sala obtenerSalaActiva(Long id) {
+        return obtenerEntidadActiva(id);
     }
 }

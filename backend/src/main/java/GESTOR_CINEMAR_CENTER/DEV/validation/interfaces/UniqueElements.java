@@ -1,5 +1,6 @@
-package GESTOR_CINEMAR_CENTER.DEV.validation;
+package GESTOR_CINEMAR_CENTER.DEV.validation.interfaces;
 
+import GESTOR_CINEMAR_CENTER.DEV.validation.impl.UniqueElementsValidatorImpl;
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
 
@@ -10,12 +11,12 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 @Documented
-@Constraint(validatedBy = ValidTelefonoArgentinoValidator.class)
-@Target({ElementType.FIELD, ElementType.PARAMETER})
+@Constraint(validatedBy = UniqueElementsValidatorImpl.class)
+@Target({ElementType.FIELD})
 @Retention(RetentionPolicy.RUNTIME)
-public @interface ValidTelefonoArgentino {
+public @interface UniqueElements {
 
-    String message() default "El teléfono debe estar en formato internacional argentino. Ejemplo: +54 9 351 1234567";
+    String message() default "No se permiten elementos duplicados";
 
     Class<?>[] groups() default {};
 

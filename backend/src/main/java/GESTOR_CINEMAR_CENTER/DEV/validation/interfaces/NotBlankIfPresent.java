@@ -1,5 +1,6 @@
-package GESTOR_CINEMAR_CENTER.DEV.validation;
+package GESTOR_CINEMAR_CENTER.DEV.validation.interfaces;
 
+import GESTOR_CINEMAR_CENTER.DEV.validation.impl.NotBlankIfPresentValidatorImpl;
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
 
@@ -10,12 +11,12 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 @Documented
-@Constraint(validatedBy = UniqueElementsValidator.class)
+@Constraint(validatedBy = NotBlankIfPresentValidatorImpl.class)
 @Target({ElementType.FIELD})
 @Retention(RetentionPolicy.RUNTIME)
-public @interface UniqueElements {
+public @interface NotBlankIfPresent {
 
-    String message() default "No se permiten elementos duplicados";
+    String message() default "El campo no puede estar vacío";
 
     Class<?>[] groups() default {};
 

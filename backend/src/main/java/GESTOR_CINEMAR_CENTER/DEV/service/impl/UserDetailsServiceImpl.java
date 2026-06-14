@@ -1,8 +1,10 @@
 package GESTOR_CINEMAR_CENTER.DEV.service.impl;
 
+import GESTOR_CINEMAR_CENTER.DEV.enums.EstadoUsuario;
 import GESTOR_CINEMAR_CENTER.DEV.model.Usuario;
 import GESTOR_CINEMAR_CENTER.DEV.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -22,8 +24,12 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     @Override
     @Transactional(readOnly = true)
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        Usuario usuario = usuarioRepository.findByEmail(email)
+        Usuario usuario = usuarioRepository.findByEmailIgnoreCase(email.trim().toLowerCase())
                 .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado con email: " + email));
+
+        if (usuario.getEstado() != EstadoUsuario.ACTIVO) {
+            throw new DisabledException("La cuenta de usuario no está activa");
+        }
 
         return new User(
                 usuario.getEmail(),

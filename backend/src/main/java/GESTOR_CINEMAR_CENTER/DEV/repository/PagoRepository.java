@@ -4,6 +4,7 @@ import GESTOR_CINEMAR_CENTER.DEV.enums.EstadoPago;
 import GESTOR_CINEMAR_CENTER.DEV.enums.MetodoPago;
 import GESTOR_CINEMAR_CENTER.DEV.model.Pago;
 import GESTOR_CINEMAR_CENTER.DEV.model.Reserva;
+import GESTOR_CINEMAR_CENTER.DEV.model.Cliente;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -16,8 +17,10 @@ import java.util.Optional;
 public interface PagoRepository extends JpaRepository<Pago, Long> {
     Optional<Pago> findByReserva(Reserva reserva);
     List<Pago> findByEstadoPago(EstadoPago estadoPago);
-    Optional<Pago> findByTransaccionId(String transaccionId);
     List<Pago> findByMetodoPago(MetodoPago metodoPago);
+
+    @Query("SELECT p FROM Pago p WHERE p.reserva.cliente = :cliente ORDER BY p.fechaPago DESC")
+    List<Pago> findByClienteOrderByFechaPagoDesc(@Param("cliente") Cliente cliente);
 
     // ---------------------------
     // Métodos agregados para estadísticas

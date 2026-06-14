@@ -44,4 +44,13 @@ public interface PeliculaRepository extends JpaRepository<Pelicula, Long> {
 
     @Query("SELECT p FROM Pelicula p WHERE p.activa = true AND p.genero = :genero AND p.fechaEstreno <= :fecha AND p.fechaSalida >= :fecha")
     List<Pelicula> findVigentesPorGenero(@Param("genero") GeneroPelicula genero, @Param("fecha") LocalDate fecha);
+
+    @Query("""
+            SELECT p FROM Pelicula p
+            WHERE p.activa = true
+              AND p.fechaEstreno > :hoy
+              AND p.fechaEstreno <= :limite
+            ORDER BY p.fechaEstreno ASC
+            """)
+    List<Pelicula> findProximamenteEnVentana(@Param("hoy") LocalDate hoy, @Param("limite") LocalDate limite);
 }

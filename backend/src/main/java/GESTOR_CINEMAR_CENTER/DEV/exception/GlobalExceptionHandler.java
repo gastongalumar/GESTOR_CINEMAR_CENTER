@@ -3,6 +3,7 @@ package GESTOR_CINEMAR_CENTER.DEV.exception;
 
 import GESTOR_CINEMAR_CENTER.DEV.dto.response.mensaje.ErrorResponse;
 import GESTOR_CINEMAR_CENTER.DEV.dto.response.mensaje.FieldErrorResponse;
+import GESTOR_CINEMAR_CENTER.DEV.security.AccesoDenegadoMensaje;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
@@ -11,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.InsufficientAuthenticationException;
@@ -27,6 +29,12 @@ import java.util.List;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    private final AccesoDenegadoMensaje mensajeAccesoDenegado;
+
+    public GlobalExceptionHandler(AccesoDenegadoMensaje mensajeAccesoDenegado) {
+        this.mensajeAccesoDenegado = mensajeAccesoDenegado;
+    }
 
     @ExceptionHandler(ReglaNegocioException.class)
     public ResponseEntity<ErrorResponse> handleBusiness(
@@ -108,7 +116,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleBadCredentials(
             BadCredentialsException ex, HttpServletRequest request) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(buildError(HttpStatus.UNAUTHORIZED, "Unauthorized",
+                .body(buildError(HttpStatus.UNAUTHORIZED, "No autorizado",
                         "Email o contraseña incorrectos", request));
     }
 
@@ -116,7 +124,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleDisabled(
             DisabledException ex, HttpServletRequest request) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                .body(buildError(HttpStatus.FORBIDDEN, "Forbidden",
+                .body(buildError(HttpStatus.FORBIDDEN, "Prohibido",
                         ex.getMessage(), request));
     }
 
@@ -124,15 +132,16 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleInsufficientAuth(
             Exception ex, HttpServletRequest request) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(buildError(HttpStatus.UNAUTHORIZED, "Unauthorized", ex.getMessage(), request));
+                .body(buildError(HttpStatus.UNAUTHORIZED, "No autorizado", ex.getMessage(), request));
     }
 
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ErrorResponse> handleAccessDenied(
             AccessDeniedException ex, HttpServletRequest request) {
+        String mensaje = mensajeAccesoDenegado.resolver(
+                request, SecurityContextHolder.getContext().getAuthentication());
         return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                .body(buildError(HttpStatus.FORBIDDEN, "Forbidden",
-                        "No tiene permisos para acceder a este recurso", request));
+                .body(buildError(HttpStatus.FORBIDDEN, "Prohibido", mensaje, request));
     }
 
     private ErrorResponse buildError(HttpStatus status, String error, String message,

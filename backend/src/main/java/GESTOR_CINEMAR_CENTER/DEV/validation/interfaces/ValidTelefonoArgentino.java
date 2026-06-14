@@ -1,5 +1,6 @@
-package GESTOR_CINEMAR_CENTER.DEV.validation;
+package GESTOR_CINEMAR_CENTER.DEV.validation.interfaces;
 
+import GESTOR_CINEMAR_CENTER.DEV.validation.impl.ValidTelefonoArgentinoValidatorImpl;
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
 
@@ -10,12 +11,12 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 @Documented
-@Constraint(validatedBy = ValidGeneroPeliculaValidator.class)
+@Constraint(validatedBy = ValidTelefonoArgentinoValidatorImpl.class)
 @Target({ElementType.FIELD, ElementType.PARAMETER})
 @Retention(RetentionPolicy.RUNTIME)
-public @interface ValidGeneroPelicula {
+public @interface ValidTelefonoArgentino {
 
-    String message() default "Género no permitido. Valores válidos: ACCION, AVENTURA, ANIMACION, COMEDIA, DRAMA, DOCUMENTAL, FANTASIA, MUSICAL, ROMANCE, CIENCIA_FICCION, TERROR, THRILLER, WESTERN, BIOGRAFIA, FAMILIAR";
+    String message() default "El teléfono debe estar en formato internacional argentino. Ejemplo: +54 9 351 1234567";
 
     Class<?>[] groups() default {};
 

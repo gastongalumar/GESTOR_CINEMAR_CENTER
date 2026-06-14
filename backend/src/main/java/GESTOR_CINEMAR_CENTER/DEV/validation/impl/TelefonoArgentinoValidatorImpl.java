@@ -1,8 +1,8 @@
-package GESTOR_CINEMAR_CENTER.DEV.validation;
+package GESTOR_CINEMAR_CENTER.DEV.validation.impl;
 
-public final class TelefonoArgentinoValidator {
+public final class TelefonoArgentinoValidatorImpl {
 
-    private TelefonoArgentinoValidator() {
+    private TelefonoArgentinoValidatorImpl() {
     }
 
     public static boolean esValido(String telefono) {

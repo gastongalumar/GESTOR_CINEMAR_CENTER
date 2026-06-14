@@ -8,6 +8,7 @@ import java.util.List;
 
 public interface PagoService {
     List<PagoResponseDTO> listarTodos();
+    List<PagoResponseDTO> listarMisPagos(String email);
     PagoResponseDTO buscarPorId(Long id);
     PagoResponseDTO buscarPorReserva(String numeroTicket);
     Pago buscarPagoPorReserva(Reserva reserva);

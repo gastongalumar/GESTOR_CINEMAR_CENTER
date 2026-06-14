@@ -3,7 +3,9 @@ package GESTOR_CINEMAR_CENTER.DEV.service.impl;
 import GESTOR_CINEMAR_CENTER.DEV.dto.request.auth.RegistroRequest;
 import GESTOR_CINEMAR_CENTER.DEV.dto.response.auth.AuthResponse;
 import GESTOR_CINEMAR_CENTER.DEV.dto.response.usuario.UsuarioResponseDTO;
+import GESTOR_CINEMAR_CENTER.DEV.enums.EstadoUsuario;
 import GESTOR_CINEMAR_CENTER.DEV.enums.TipoUsuario;
+import GESTOR_CINEMAR_CENTER.DEV.exception.ConflictoRecursoException;
 import GESTOR_CINEMAR_CENTER.DEV.exception.RecursoNoEncontradoException;
 import GESTOR_CINEMAR_CENTER.DEV.exception.ReglaNegocioException;
 import GESTOR_CINEMAR_CENTER.DEV.mapper.UsuarioMapper;
@@ -13,8 +15,10 @@ import GESTOR_CINEMAR_CENTER.DEV.model.Usuario;
 import GESTOR_CINEMAR_CENTER.DEV.repository.UsuarioRepository;
 import GESTOR_CINEMAR_CENTER.DEV.security.JwtUtil;
 import GESTOR_CINEMAR_CENTER.DEV.service.UsuarioService;
+import GESTOR_CINEMAR_CENTER.DEV.validation.impl.TelefonoArgentinoValidatorImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -34,11 +38,17 @@ public class UsuarioServiceImpl implements UsuarioService {
 
     @Override
     public AuthResponse login(String email, String password) {
+        String emailNormalizado = normalizarEmail(email);
+
         authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(email, password)
+                new UsernamePasswordAuthenticationToken(emailNormalizado, password)
         );
-        Usuario usuario = usuarioRepository.findByEmail(email)
-                .orElseThrow(() -> new RecursoNoEncontradoException("Usuario", "email", email));
+
+        Usuario usuario = usuarioRepository.findByEmailIgnoreCase(emailNormalizado)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Usuario", "email", emailNormalizado));
+
+        validarEstadoActivo(usuario);
+
         usuario.setFechaUltimoAcceso(LocalDateTime.now());
         usuario.setIntentosFallidos(0);
         usuarioRepository.save(usuario);
@@ -46,106 +56,64 @@ public class UsuarioServiceImpl implements UsuarioService {
     }
 
     public String validarTelefono(String telefono) {
-
         if (telefono == null || telefono.isBlank()) {
-            throw new ReglaNegocioException(
-                    "El teléfono es obligatorio"
-            );
+            throw new ReglaNegocioException("El teléfono es obligatorio");
         }
 
-        // Quitamos espacios, +, guiones, paréntesis, etc.
-        String normalizado = telefono.replaceAll("\\D", "");
-
-        // Formato internacional argentino obligatorio: 549 + 10 dígitos
-        if (!normalizado.startsWith("549")) {
+        if (!TelefonoArgentinoValidatorImpl.esValido(telefono)) {
             throw new ReglaNegocioException(
-                    "El teléfono debe estar en formato internacional argentino. Ejemplo: +54 9 351 1234567"
-            );
+                    "El teléfono debe estar en formato internacional argentino. Ejemplo: +54 9 351 1234567");
         }
 
+        String normalizado = TelefonoArgentinoValidatorImpl.normalizar(telefono);
 
-        if (normalizado.length() != 13) {
-            throw new ReglaNegocioException(
-                    "El teléfono debe tener 13 dígitos en formato internacional. Formato esperado: 549XXXXXXXXX"
-            );
+        if (usuarioRepository.existsByTelefono(normalizado)) {
+            throw new ConflictoRecursoException("El teléfono ingresado ya se encuentra registrado");
         }
-
-
-        // Sacamos el prefijo internacional 549
-        String numeroNacional = normalizado.substring(3);
-
-
-        // Evitar números tipo 5491111111111, 5492222222222, etc.
-        if (numeroNacional.matches("^(.)\\1+$")) {
-            throw new ReglaNegocioException(
-                    "El teléfono no es válido porque el número no puede tener los 10 dígitos iguales"
-            );
-        }
-
-
-        // Evitar algunos casos absurdos de secuencia
-        if (numeroNacional.equals("1234567890")
-                || numeroNacional.equals("9876543210")) {
-
-            throw new ReglaNegocioException(
-                    "El teléfono no es válido porque contiene una secuencia inválida"
-            );
-        }
-
-
-        // Comprobar duplicado (en BD ya está guardado normalizado)
-        boolean telefonoExistente = usuarioRepository.findAll()
-                .stream()
-                .map(Usuario::getTelefono)
-                .anyMatch(t -> t != null && t.equals(normalizado));
-
-
-        if (telefonoExistente) {
-            throw new ReglaNegocioException(
-                    "El teléfono ingresado ya se encuentra registrado"
-            );
-        }
-
 
         return normalizado;
     }
+
     public AuthResponse registrar(RegistroRequest request) {
-        if (usuarioRepository.existsByEmail(request.getEmail())) {
-            throw new ReglaNegocioException("El email ya está registrado");
+        String emailNormalizado = normalizarEmail(request.getEmail());
+
+        if (usuarioRepository.existsByEmailIgnoreCase(emailNormalizado)) {
+            throw new ConflictoRecursoException("El email ya está registrado");
         }
 
         String telefonoNormalizado = validarTelefono(request.getTelefono());
         String passwordHash = passwordEncoder.encode(request.getPassword());
+
         Cliente cliente = new Cliente();
-        cliente.setNombre(request.getNombre());
-        cliente.setApellido(request.getApellido());
-        cliente.setEmail(request.getEmail());
+        cliente.setNombre(request.getNombre().trim());
+        cliente.setApellido(request.getApellido().trim());
+        cliente.setEmail(emailNormalizado);
         cliente.setPassword(passwordHash);
         cliente.setTelefono(telefonoNormalizado);
         cliente.setTipo(TipoUsuario.CLIENTE);
-        cliente= usuarioRepository.save(cliente);
+        cliente.setEstado(EstadoUsuario.ACTIVO);
+        cliente = usuarioRepository.save(cliente);
         return usuarioMapper.toAuthResponse(cliente, generarToken(cliente));
     }
 
-
     public AuthResponse registrarAdministrador(RegistroRequest request) {
-        if (usuarioRepository.existsByEmail(request.getEmail())) {
-            throw new ReglaNegocioException("El email ya está registrado");
+        String emailNormalizado = normalizarEmail(request.getEmail());
+
+        if (usuarioRepository.existsByEmailIgnoreCase(emailNormalizado)) {
+            throw new ConflictoRecursoException("El email ya está registrado");
         }
 
-        // Validar y normalizar teléfono (es obligatorio)
         String telefonoNormalizado = validarTelefono(request.getTelefono());
-
         String passwordHash = passwordEncoder.encode(request.getPassword());
 
-        // Crear Administrador
         Administrador admin = new Administrador();
-        admin.setNombre(request.getNombre());
-        admin.setApellido(request.getApellido());
-        admin.setEmail(request.getEmail());
+        admin.setNombre(request.getNombre().trim());
+        admin.setApellido(request.getApellido().trim());
+        admin.setEmail(emailNormalizado);
         admin.setPassword(passwordHash);
         admin.setTelefono(telefonoNormalizado);
         admin.setTipo(TipoUsuario.ADMINISTRADOR);
+        admin.setEstado(EstadoUsuario.ACTIVO);
 
         admin = usuarioRepository.save(admin);
         return usuarioMapper.toAuthResponse(admin, generarToken(admin));
@@ -159,9 +127,22 @@ public class UsuarioServiceImpl implements UsuarioService {
         );
     }
 
+    private String normalizarEmail(String email) {
+        if (email == null) {
+            throw new ReglaNegocioException("El email es obligatorio");
+        }
+        return email.trim().toLowerCase();
+    }
+
+    private void validarEstadoActivo(Usuario usuario) {
+        if (usuario.getEstado() != EstadoUsuario.ACTIVO) {
+            throw new DisabledException("La cuenta de usuario no está activa");
+        }
+    }
+
     @Override
     public Usuario findByEmail(String email) {
-        return usuarioRepository.findByEmail(email)
+        return usuarioRepository.findByEmailIgnoreCase(normalizarEmail(email))
                 .orElseThrow(() -> new RecursoNoEncontradoException("Usuario", "email", email));
     }
 

@@ -1,10 +1,11 @@
-package GESTOR_CINEMAR_CENTER.DEV.validation;
+package GESTOR_CINEMAR_CENTER.DEV.validation.impl;
 
 import GESTOR_CINEMAR_CENTER.DEV.enums.GeneroPeliculaHelper;
+import GESTOR_CINEMAR_CENTER.DEV.validation.interfaces.ValidGeneroPelicula;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 
-public class ValidGeneroPeliculaValidator implements ConstraintValidator<ValidGeneroPelicula, String> {
+public class ValidGeneroPeliculaValidatorImpl implements ConstraintValidator<ValidGeneroPelicula, String> {
 
     @Override
     public boolean isValid(String value, ConstraintValidatorContext context) {

@@ -1,5 +1,6 @@
-package GESTOR_CINEMAR_CENTER.DEV.validation;
+package GESTOR_CINEMAR_CENTER.DEV.validation.interfaces;
 
+import GESTOR_CINEMAR_CENTER.DEV.validation.impl.ValidAsientoEtiquetaValidatorImpl;
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
 
@@ -10,12 +11,12 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 @Documented
-@Constraint(validatedBy = CapacidadSalaValidator.class)
-@Target({ElementType.TYPE})
+@Constraint(validatedBy = ValidAsientoEtiquetaValidatorImpl.class)
+@Target({ElementType.FIELD, ElementType.TYPE_USE, ElementType.PARAMETER})
 @Retention(RetentionPolicy.RUNTIME)
-public @interface CapacidadSalaValida {
+public @interface ValidAsientoEtiqueta {
 
-    String message() default "La capacidad máxima de la sala es de 320 asientos (filas x columnas)";
+    String message() default "Formato de asiento inválido. Ejemplo: A1, B12";
 
     Class<?>[] groups() default {};
 

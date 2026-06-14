@@ -14,6 +14,8 @@ public interface PeliculaService {
 
     List<PeliculaResponseDTO> listarPeliculasVigentes();
 
+    List<PeliculaResponseDTO> listarPeliculasProximamente();
+
     Pelicula obtenerPelicula(Long id);
 
     PeliculaResponseDTO buscarPorId(Long id);

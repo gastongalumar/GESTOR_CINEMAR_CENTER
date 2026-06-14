@@ -21,7 +21,5 @@ public class PagoResponseDTO {
     private String metodoPago;
     private String estado;
     private LocalDateTime fechaPago;
-    private String transaccionId;
-
 
 }

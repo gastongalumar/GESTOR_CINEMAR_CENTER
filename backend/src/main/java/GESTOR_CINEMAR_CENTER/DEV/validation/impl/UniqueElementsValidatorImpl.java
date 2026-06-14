@@ -1,5 +1,6 @@
-package GESTOR_CINEMAR_CENTER.DEV.validation;
+package GESTOR_CINEMAR_CENTER.DEV.validation.impl;
 
+import GESTOR_CINEMAR_CENTER.DEV.validation.interfaces.UniqueElements;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 
@@ -7,7 +8,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class UniqueElementsValidator implements ConstraintValidator<UniqueElements, List<String>> {
+public class UniqueElementsValidatorImpl implements ConstraintValidator<UniqueElements, List<String>> {
 
     @Override
     public boolean isValid(List<String> value, ConstraintValidatorContext context) {

@@ -1,5 +1,6 @@
-package GESTOR_CINEMAR_CENTER.DEV.validation;
+package GESTOR_CINEMAR_CENTER.DEV.validation.interfaces;
 
+import GESTOR_CINEMAR_CENTER.DEV.validation.impl.ValidMetodoPagoValidatorImpl;
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
 
@@ -10,12 +11,12 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 @Documented
-@Constraint(validatedBy = FechasPeliculaValidator.class)
-@Target({ElementType.TYPE})
+@Constraint(validatedBy = ValidMetodoPagoValidatorImpl.class)
+@Target({ElementType.FIELD, ElementType.PARAMETER})
 @Retention(RetentionPolicy.RUNTIME)
-public @interface FechasPeliculaValidas {
+public @interface ValidMetodoPago {
 
-    String message() default "La fecha de salida debe ser posterior a la fecha de estreno";
+    String message() default "Método de pago no permitido. Valores válidos: EFECTIVO, TARJETA, MERCADO_PAGO, TRANSFERENCIA";
 
     Class<?>[] groups() default {};
 
