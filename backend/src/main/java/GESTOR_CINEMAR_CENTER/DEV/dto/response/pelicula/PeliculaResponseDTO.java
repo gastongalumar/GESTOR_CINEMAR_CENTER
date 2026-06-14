@@ -1,5 +1,6 @@
 package GESTOR_CINEMAR_CENTER.DEV.dto.response.pelicula;
 
+import GESTOR_CINEMAR_CENTER.DEV.enums.GeneroPelicula;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -30,8 +31,8 @@ public class PeliculaResponseDTO {
     @Schema(description = "Duración en minutos", example = "169")
     private Integer duracionMinutos;
 
-    @Schema(description = "Género de la película", example = "Ciencia Ficción")
-    private String genero;
+    @Schema(description = "Género de la película", example = "ACCION")
+    private GeneroPelicula genero;
 
     @Schema(description = "Ruta de la imagen de la película", example = "/uploads/peliculas/abc123.jpg")
     private String rutaImagen;

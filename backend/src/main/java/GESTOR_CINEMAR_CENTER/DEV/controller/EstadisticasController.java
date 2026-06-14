@@ -2,14 +2,18 @@ package GESTOR_CINEMAR_CENTER.DEV.controller;
 
 import GESTOR_CINEMAR_CENTER.DEV.dto.response.estadisticas.*;
 import GESTOR_CINEMAR_CENTER.DEV.service.EstadisticasService;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
+@Validated
 @RequestMapping("/api/estadisticas")
 @RequiredArgsConstructor
 public class EstadisticasController {
@@ -25,7 +29,8 @@ public class EstadisticasController {
 
     @GetMapping("/reservas/por-fecha")
     @PreAuthorize("hasAuthority('ADMINISTRADOR')")
-    public ResponseEntity<List<VentaDiariaDTO>> ventasPorFecha(@RequestParam(defaultValue = "30") int dias) {
+    public ResponseEntity<List<VentaDiariaDTO>> ventasPorFecha(
+            @Min(1) @Max(365) @RequestParam(defaultValue = "30") int dias) {
         return ResponseEntity.ok(estadisticasService.ventasDiarias(dias));
     }
 

@@ -14,9 +14,11 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -29,6 +31,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
+@Validated
 @RequestMapping("/api/funciones")
 @CrossOrigin(origins = "http://localhost:4200")
 @RequiredArgsConstructor
@@ -58,7 +61,7 @@ public class FuncionController {
             content = @Content(array = @ArraySchema(schema = @Schema(implementation = FuncionResponseDTO.class))))
     @GetMapping("/pelicula/{peliculaId}")
     public ResponseEntity<List<FuncionResponseDTO>> listarPorPelicula(
-            @Parameter(description = "ID de la película", required = true) @PathVariable Long peliculaId) {
+            @Parameter(description = "ID de la película", required = true) @Positive @PathVariable Long peliculaId) {
         return ResponseEntity.ok(funcionService.listarPorPelicula(peliculaId));
     }
 
@@ -70,8 +73,17 @@ public class FuncionController {
     })
     @GetMapping("/{id}")
     public ResponseEntity<FuncionResponseDTO> obtenerPorId(
-            @Parameter(description = "ID de la función", required = true) @PathVariable Long id) {
+            @Parameter(description = "ID de la función", required = true) @Positive @PathVariable Long id) {
         return ResponseEntity.ok(funcionService.buscarPorId(id));
+    }
+
+    @Operation(summary = "Obtener asientos ocupados", description = "Retorna los asientos ya reservados para una función")
+    @ApiResponse(responseCode = "200", description = "Asientos ocupados obtenidos correctamente",
+            content = @Content(array = @ArraySchema(schema = @Schema(implementation = String.class))))
+    @GetMapping("/{funcionId}/ocupados")
+    public ResponseEntity<List<String>> obtenerAsientosOcupados(
+            @Parameter(description = "ID de la función", required = true) @Positive @PathVariable Long funcionId) {
+        return ResponseEntity.ok(funcionService.obtenerAsientosOcupados(funcionId));
     }
 
     @Operation(
@@ -106,7 +118,7 @@ public class FuncionController {
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('ADMINISTRADOR')")
     public ResponseEntity<MensajeResponse> eliminar(
-            @Parameter(description = "ID de la función", required = true) @PathVariable Long id) {
+            @Parameter(description = "ID de la función", required = true) @Positive @PathVariable Long id) {
         funcionService.eliminar(id);
         return ResponseEntity.ok(new MensajeResponse("Función eliminada correctamente"));
     }

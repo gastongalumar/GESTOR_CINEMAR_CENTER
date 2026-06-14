@@ -1,7 +1,7 @@
 package GESTOR_CINEMAR_CENTER.DEV.dto.request.sala;
 
-import GESTOR_CINEMAR_CENTER.DEV.validation.CapacidadSalaValida;
-import GESTOR_CINEMAR_CENTER.DEV.validation.NotBlankIfPresent;
+import GESTOR_CINEMAR_CENTER.DEV.validation.interfaces.CapacidadSalaValida;
+import GESTOR_CINEMAR_CENTER.DEV.validation.interfaces.NotBlankIfPresent;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;

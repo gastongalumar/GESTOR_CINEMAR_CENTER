@@ -16,13 +16,16 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
+@Validated
 @RequestMapping("/api/salas")
 @CrossOrigin(origins = "http://localhost:4200")
 @Tag(name = "Salas", description = "Operaciones de consulta y gestión de salas de proyección")
@@ -50,7 +53,7 @@ public class SalaController {
     })
     @GetMapping("/{id}")
     public ResponseEntity<SalaResponseDTO> obtenerPorId(
-            @Parameter(description = "ID de la sala", required = true) @PathVariable Long id) {
+            @Parameter(description = "ID de la sala", required = true) @Positive @PathVariable Long id) {
         return ResponseEntity.ok(salaService.buscarPorId(id));
     }
 
@@ -59,7 +62,7 @@ public class SalaController {
             content = @Content(array = @ArraySchema(schema = @Schema(implementation = AsientoResponseDTO.class))))
     @GetMapping("/{id}/asientos")
     public ResponseEntity<List<AsientoResponseDTO>> listarAsientos(
-            @Parameter(description = "ID de la sala", required = true) @PathVariable Long id) {
+            @Parameter(description = "ID de la sala", required = true) @Positive @PathVariable Long id) {
         return ResponseEntity.ok(salaService.listarAsientosPorSala(id));
     }
 
@@ -102,7 +105,7 @@ public class SalaController {
     @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('ADMINISTRADOR')")
     public ResponseEntity<SalaResponseDTO> actualizar(
-            @Parameter(description = "ID de la sala", required = true) @PathVariable Long id,
+            @Parameter(description = "ID de la sala", required = true) @Positive @PathVariable Long id,
             @Valid @RequestBody ActualizarSalaRequestDTO request) {
         return ResponseEntity.ok(salaService.actualizar(id, request));
     }
@@ -118,7 +121,7 @@ public class SalaController {
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('ADMINISTRADOR')")
     public ResponseEntity<MensajeResponse> eliminar(
-            @Parameter(description = "ID de la sala", required = true) @PathVariable Long id) {
+            @Parameter(description = "ID de la sala", required = true) @Positive @PathVariable Long id) {
         salaService.eliminar(id);
         return ResponseEntity.ok(new MensajeResponse("Sala eliminada correctamente"));
     }

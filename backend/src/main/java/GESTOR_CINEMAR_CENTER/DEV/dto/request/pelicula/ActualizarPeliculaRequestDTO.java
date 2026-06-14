@@ -1,8 +1,8 @@
 package GESTOR_CINEMAR_CENTER.DEV.dto.request.pelicula;
 
-import GESTOR_CINEMAR_CENTER.DEV.validation.FechasPeliculaValidas;
-import GESTOR_CINEMAR_CENTER.DEV.validation.NotBlankIfPresent;
-import GESTOR_CINEMAR_CENTER.DEV.validation.ValidGeneroPelicula;
+import GESTOR_CINEMAR_CENTER.DEV.validation.interfaces.FechasPeliculaValidas;
+import GESTOR_CINEMAR_CENTER.DEV.validation.interfaces.NotBlankIfPresent;
+import GESTOR_CINEMAR_CENTER.DEV.validation.interfaces.ValidGeneroPelicula;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Positive;

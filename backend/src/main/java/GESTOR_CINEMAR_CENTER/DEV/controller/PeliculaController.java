@@ -3,9 +3,9 @@ package GESTOR_CINEMAR_CENTER.DEV.controller;
 import GESTOR_CINEMAR_CENTER.DEV.dto.request.pelicula.ActualizarPeliculaRequestDTO;
 import GESTOR_CINEMAR_CENTER.DEV.dto.request.pelicula.CrearPeliculaRequestDTO;
 import GESTOR_CINEMAR_CENTER.DEV.dto.response.mensaje.MensajeResponse;
-import GESTOR_CINEMAR_CENTER.DEV.dto.response.pelicula.PeliculaPageResponse;
 import GESTOR_CINEMAR_CENTER.DEV.dto.response.pelicula.PeliculaResponseDTO;
 import GESTOR_CINEMAR_CENTER.DEV.service.PeliculaService;
+import GESTOR_CINEMAR_CENTER.DEV.validation.interfaces.ValidGeneroPelicula;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -16,8 +16,10 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -36,6 +38,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 
 @RestController
+@Validated
 @RequiredArgsConstructor
 @RequestMapping("/api/peliculas")
 @CrossOrigin(origins = "http://localhost:4200")
@@ -58,16 +61,6 @@ public class PeliculaController {
     @GetMapping("/vigentes")
     public ResponseEntity<List<PeliculaResponseDTO>> listarPeliculasVigentes() {
         return ResponseEntity.ok(peliculaService.listarPeliculasVigentes());
-    }
-
-    @Operation(summary = "Listar películas vigentes paginadas", description = "Retorna películas en cartelera con paginación")
-    @ApiResponse(responseCode = "200", description = "Página obtenida correctamente",
-            content = @Content(schema = @Schema(implementation = PeliculaPageResponse.class)))
-    @GetMapping("/vigentes/paged")
-    public ResponseEntity<PeliculaPageResponse> listarVigentesPaginado(
-            @Parameter(description = "Número de página (base 0)") @RequestParam(defaultValue = "0") int page,
-            @Parameter(description = "Cantidad de elementos por página") @RequestParam(defaultValue = "8") int size) {
-        return ResponseEntity.ok(peliculaService.listarVigentesPaginado(page, size));
     }
 
     @Operation(summary = "Obtener película por ID", description = "Busca una película específica por su identificador")
@@ -121,7 +114,7 @@ public class PeliculaController {
     @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('ADMINISTRADOR')")
     public ResponseEntity<PeliculaResponseDTO> actualizar(
-            @Parameter(description = "ID de la película", required = true) @PathVariable Long id,
+            @Parameter(description = "ID de la película", required = true) @Positive @PathVariable Long id,
             @Valid @RequestBody ActualizarPeliculaRequestDTO request) {
         return ResponseEntity.ok(peliculaService.actualizar(id, request));
     }
@@ -137,7 +130,7 @@ public class PeliculaController {
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('ADMINISTRADOR')")
     public ResponseEntity<MensajeResponse> eliminar(
-            @Parameter(description = "ID de la película", required = true) @PathVariable Long id) {
+            @Parameter(description = "ID de la película", required = true) @Positive @PathVariable Long id) {
         peliculaService.eliminar(id);
         return ResponseEntity.ok(new MensajeResponse("Película eliminada correctamente"));
     }
@@ -147,7 +140,7 @@ public class PeliculaController {
     @PostMapping(value = "/{id}/imagen", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasAuthority('ADMINISTRADOR')")
     public ResponseEntity<MensajeResponse> subirImagen(
-            @Parameter(description = "ID de la película", required = true) @PathVariable Long id,
+            @Parameter(description = "ID de la película", required = true) @Positive @PathVariable Long id,
             @Parameter(description = "Archivo de imagen (JPEG, PNG, WEBP. Máx 5MB)") @RequestParam("file") MultipartFile file) {
         String ruta = peliculaService.guardarImagen(id, file);
         return ResponseEntity.ok(new MensajeResponse("Imagen guardada correctamente: " + ruta));
@@ -162,12 +155,13 @@ public class PeliculaController {
         return ResponseEntity.ok(peliculaService.filtrarVigentesPorNombre(nombre));
     }
 
-    @Operation(summary = "Filtrar películas por género", description = "Busca películas cuyo género contiene el texto especificado")
+    @Operation(summary = "Filtrar películas por género", description = "Busca películas vigentes del género especificado")
     @ApiResponse(responseCode = "200", description = "Listado obtenido correctamente",
             content = @Content(array = @ArraySchema(schema = @Schema(implementation = PeliculaResponseDTO.class))))
     @GetMapping("/filtro/genero")
     public ResponseEntity<List<PeliculaResponseDTO>> filtrarPorGenero(
-            @Parameter(description = "Género de la película", required = true) @RequestParam String genero) {
+            @Parameter(description = "Género de la película", required = true, example = "ACCION")
+            @NotBlank @ValidGeneroPelicula @RequestParam String genero) {
         return ResponseEntity.ok(peliculaService.filtrarVigentesPorGenero(genero));
     }
 
@@ -179,7 +173,7 @@ public class PeliculaController {
     })
     @GetMapping("/filtro/funcion/{funcionId}")
     public ResponseEntity<List<PeliculaResponseDTO>> filtrarPorFuncion(
-            @Parameter(description = "ID de la función", required = true) @PathVariable Long funcionId) {
+            @Parameter(description = "ID de la función", required = true) @Positive @PathVariable Long funcionId) {
         return ResponseEntity.ok(peliculaService.filtrarPorFuncion(funcionId));
     }
 }

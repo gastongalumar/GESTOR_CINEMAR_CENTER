@@ -11,11 +11,12 @@ public class LoginRequest {
     @Schema(description = "Email del usuario", example = "cliente@email.com")
     @NotBlank(message = "El email es obligatorio")
     @Email(message = "El email no es válido")
+    @Size(max = 255, message = "El email no puede superar 255 caracteres")
     private String email;
 
     @Schema(description = "Contraseña del usuario", example = "123456")
     @NotBlank(message = "La contraseña es obligatoria")
-    @Size(min = 6, message = "La contraseña debe tener al menos 6 caracteres")
+    @Size(min = 6, max = 100, message = "La contraseña debe tener entre 6 y 100 caracteres")
     private String password;
 
     public LoginRequest() {}

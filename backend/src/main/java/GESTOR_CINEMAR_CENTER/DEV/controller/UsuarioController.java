@@ -15,11 +15,15 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Positive;
 
 import java.util.List;
 
 @RestController
+@Validated
 @RequestMapping("/api/usuarios")
 @CrossOrigin(origins = "http://localhost:4200")
 @RequiredArgsConstructor
@@ -47,7 +51,7 @@ public class UsuarioController {
     @GetMapping("/{id}")
     @PreAuthorize("hasAuthority('ADMINISTRADOR')")
     public ResponseEntity<UsuarioResponseDTO> buscarPorId(
-            @Parameter(description = "ID del usuario", required = true) @PathVariable Long id) {
+            @Parameter(description = "ID del usuario", required = true) @Positive @PathVariable Long id) {
         return ResponseEntity.ok(usuarioService.buscarPorId(id));
     }
 
@@ -67,7 +71,9 @@ public class UsuarioController {
     @GetMapping("/rol/{rol}")
     @PreAuthorize("hasAuthority('ADMINISTRADOR')")
     public ResponseEntity<List<UsuarioResponseDTO>> listarPorRol(
-            @Parameter(description = "Rol del usuario (CLIENTE o ADMINISTRADOR)", required = true) @PathVariable String rol) {
+            @Parameter(description = "Rol del usuario (CLIENTE o ADMINISTRADOR)", required = true)
+            @Pattern(regexp = "CLIENTE|ADMINISTRADOR", message = "Rol inválido")
+            @PathVariable String rol) {
         TipoUsuario tipo = TipoUsuario.valueOf(rol.toUpperCase());
         return ResponseEntity.ok(usuarioService.listarPorRol(tipo));
     }
