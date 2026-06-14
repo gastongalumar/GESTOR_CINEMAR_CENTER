@@ -16,4 +16,5 @@ public interface FuncionService {
     FuncionResponseDTO crear(CrearFuncionRequestDTO request);
     void eliminar(Long id);
     boolean existeFuncionFuturaPorSala(Sala sala);
+    List<String> obtenerAsientosOcupados(Long funcionId);
 }

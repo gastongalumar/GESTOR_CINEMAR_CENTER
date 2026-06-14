@@ -4,11 +4,14 @@ import GESTOR_CINEMAR_CENTER.DEV.dto.request.pelicula.ActualizarPeliculaRequestD
 import GESTOR_CINEMAR_CENTER.DEV.dto.request.pelicula.CrearPeliculaRequestDTO;
 import GESTOR_CINEMAR_CENTER.DEV.dto.response.pelicula.PeliculaPageResponse;
 import GESTOR_CINEMAR_CENTER.DEV.dto.response.pelicula.PeliculaResponseDTO;
+import GESTOR_CINEMAR_CENTER.DEV.enums.GeneroPelicula;
+import GESTOR_CINEMAR_CENTER.DEV.enums.GeneroPeliculaHelper;
 import GESTOR_CINEMAR_CENTER.DEV.model.Pelicula;
 import org.mapstruct.BeanMapping;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
+import org.mapstruct.Named;
 import org.mapstruct.NullValuePropertyMappingStrategy;
 import org.springframework.data.domain.Page;
 
@@ -19,14 +22,21 @@ public interface PeliculaMapper {
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "activa", ignore = true)
+    @Mapping(target = "genero", source = "genero", qualifiedByName = "stringToGenero")
     Pelicula toEntity(CrearPeliculaRequestDTO request);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    @Mapping(target = "genero", source = "genero", qualifiedByName = "stringToGenero")
     void actualizarEntity(ActualizarPeliculaRequestDTO request, @MappingTarget Pelicula pelicula);
 
     PeliculaResponseDTO toResponse(Pelicula pelicula);
 
     List<PeliculaResponseDTO> toResponseList(List<Pelicula> peliculas);
+
+    @Named("stringToGenero")
+    default GeneroPelicula stringToGenero(String genero) {
+        return genero == null ? null : GeneroPeliculaHelper.fromString(genero);
+    }
 
     default PeliculaPageResponse toPageResponse(Page<Pelicula> page) {
         if (page == null) {
@@ -41,4 +51,3 @@ public interface PeliculaMapper {
         return response;
     }
 }
-

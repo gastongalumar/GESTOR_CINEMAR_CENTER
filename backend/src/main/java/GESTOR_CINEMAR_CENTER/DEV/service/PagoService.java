@@ -12,4 +12,5 @@ public interface PagoService {
     PagoResponseDTO buscarPorReserva(String numeroTicket);
     Pago buscarPagoPorReserva(Reserva reserva);
     Pago crearPago(Reserva reserva, double monto, String metodoPago);
+    void actualizarMetodoPago(Reserva reserva, String metodoPago);
 }

@@ -4,21 +4,22 @@ package GESTOR_CINEMAR_CENTER.DEV.exception;
 import GESTOR_CINEMAR_CENTER.DEV.dto.response.mensaje.ErrorResponse;
 import GESTOR_CINEMAR_CENTER.DEV.dto.response.mensaje.FieldErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.InsufficientAuthenticationException;
 import org.springframework.validation.FieldError;
-
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -32,6 +33,13 @@ public class GlobalExceptionHandler {
             ReglaNegocioException ex, HttpServletRequest request) {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(buildError(HttpStatus.BAD_REQUEST, "Bad Request", ex.getMessage(), request));
+    }
+
+    @ExceptionHandler(ConflictoRecursoException.class)
+    public ResponseEntity<ErrorResponse> handleConflict(
+            ConflictoRecursoException ex, HttpServletRequest request) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(buildError(HttpStatus.CONFLICT, "Conflict", ex.getMessage(), request));
     }
 
     @ExceptionHandler(RecursoNoEncontradoException.class)
@@ -60,12 +68,56 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ErrorResponse> handleConstraintViolation(
+            ConstraintViolationException ex, HttpServletRequest request) {
+        ErrorResponse error = buildError(HttpStatus.BAD_REQUEST, "Validation Failed",
+                "Error de validación", request);
+        List<FieldErrorResponse> fieldErrors = ex.getConstraintViolations().stream()
+                .map(this::toFieldError)
+                .toList();
+        error.setFieldErrors(fieldErrors);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ErrorResponse> handleTypeMismatch(
+            MethodArgumentTypeMismatchException ex, HttpServletRequest request) {
+        String message = "El parámetro '" + ex.getName() + "' tiene un formato inválido";
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(buildError(HttpStatus.BAD_REQUEST, "Bad Request", message, request));
+    }
+
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<ErrorResponse> handleMissingParam(
+            MissingServletRequestParameterException ex, HttpServletRequest request) {
+        String message = "Falta el parámetro obligatorio: " + ex.getParameterName();
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(buildError(HttpStatus.BAD_REQUEST, "Bad Request", message, request));
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ErrorResponse> handleDataIntegrity(
+            DataIntegrityViolationException ex, HttpServletRequest request) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(buildError(HttpStatus.CONFLICT, "Conflict",
+                        "La operación viola una restricción de integridad de datos", request));
+    }
+
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<ErrorResponse> handleBadCredentials(
             BadCredentialsException ex, HttpServletRequest request) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(buildError(HttpStatus.UNAUTHORIZED, "Unauthorized",
                         "Email o contraseña incorrectos", request));
+    }
+
+    @ExceptionHandler(DisabledException.class)
+    public ResponseEntity<ErrorResponse> handleDisabled(
+            DisabledException ex, HttpServletRequest request) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(buildError(HttpStatus.FORBIDDEN, "Forbidden",
+                        ex.getMessage(), request));
     }
 
     @ExceptionHandler({InsufficientAuthenticationException.class})
@@ -79,7 +131,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleAccessDenied(
             AccessDeniedException ex, HttpServletRequest request) {
         return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                .body(buildError(HttpStatus.FORBIDDEN, "Forbidn",
+                .body(buildError(HttpStatus.FORBIDDEN, "Forbidden",
                         "No tiene permisos para acceder a este recurso", request));
     }
 
@@ -96,6 +148,15 @@ public class GlobalExceptionHandler {
 
     private FieldErrorResponse toFieldError(FieldError fieldError) {
         return new FieldErrorResponse(fieldError.getField(), fieldError.getDefaultMessage());
+    }
+
+    private FieldErrorResponse toFieldError(ConstraintViolation<?> violation) {
+        String field = violation.getPropertyPath().toString();
+        int dotIndex = field.lastIndexOf('.');
+        if (dotIndex >= 0) {
+            field = field.substring(dotIndex + 1);
+        }
+        return new FieldErrorResponse(field, violation.getMessage());
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)

@@ -11,16 +11,13 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public interface ReservaService {
-    ReservaResponseDTO crear(CrearReservaRequestDTO request);
+    ReservaResponseDTO crear(CrearReservaRequestDTO request, String emailAutenticado);
     List<ReservaResponseDTO> listarPorCliente(Long clienteId);
     List<ReservaResponseDTO> listarReservasPorEmail(String email);
     Reserva findByTicketEntity(String numeroTicket);
     ReservaResponseDTO buscarReservaPorTicket(String numeroTicket);
-    PagoResponseDTO buscarPagoPorTicket(String numeroTicket);
     ValidacionTicketResponseDTO validarTicket(String numeroTicket, boolean marcarUsado);
-    ReservaResponseDTO actualizarMetodoPago(String numeroTicket, ActualizarMetodoPagoRequestDTO request);
     void cancelar(String numeroTicket);
-    List<String> obtenerAsientosOcupados(Long funcionId);
     
     // Métodos para filtrado de reservas (admin)
     List<ReservaResponseDTO> listarTodasReservas();

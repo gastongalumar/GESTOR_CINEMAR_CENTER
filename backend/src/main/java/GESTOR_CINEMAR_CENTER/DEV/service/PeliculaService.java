@@ -18,8 +18,6 @@ public interface PeliculaService {
 
     PeliculaResponseDTO buscarPorId(Long id);
 
-    PeliculaPageResponse listarVigentesPaginado(int page, int size);
-
     PeliculaResponseDTO crear(CrearPeliculaRequestDTO request);
 
     PeliculaResponseDTO actualizar(Long id, ActualizarPeliculaRequestDTO request);

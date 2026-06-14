@@ -19,5 +19,5 @@ public interface SalaService {
     List<AsientoResponseDTO> listarAsientosPorSala(Long salaId);
     void asegurarAsientosDeSala(Sala sala);
     Sala obtenerEntidad(Long id);
-
+    Sala obtenerSalaActiva(Long id);
 }

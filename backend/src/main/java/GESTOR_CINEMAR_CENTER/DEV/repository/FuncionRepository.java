@@ -3,7 +3,9 @@ package GESTOR_CINEMAR_CENTER.DEV.repository;
 import GESTOR_CINEMAR_CENTER.DEV.model.Funcion;
 import GESTOR_CINEMAR_CENTER.DEV.model.Pelicula;
 import GESTOR_CINEMAR_CENTER.DEV.model.Sala;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -16,6 +18,10 @@ public interface FuncionRepository extends JpaRepository<Funcion, Long> {
 
     // Buscar función activa por id
     Optional<Funcion> findByIdAndActivaTrue(Long id);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT f FROM Funcion f WHERE f.id = :id AND f.activa = true")
+    Optional<Funcion> findByIdAndActivaTrueForUpdate(@Param("id") Long id);
 
     // Listados filtrados por activa
     List<Funcion> findByActivaTrueAndPelicula(Pelicula pelicula);

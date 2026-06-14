@@ -1,6 +1,7 @@
 package GESTOR_CINEMAR_CENTER.DEV.repository;
 
 import GESTOR_CINEMAR_CENTER.DEV.model.Pelicula;
+import GESTOR_CINEMAR_CENTER.DEV.enums.GeneroPelicula;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -18,6 +19,7 @@ public interface PeliculaRepository extends JpaRepository<Pelicula, Long> {
     // Búsquedas activas por id y nombre
     Optional<Pelicula> findByIdAndActivaTrue(Long id);
     boolean existsByNombreAndActivaTrue(String nombre);
+    boolean existsByNombreIgnoreCaseAndActivaTrue(String nombre);
     Optional<Pelicula> findByNombreAndActivaTrue(String nombre);
 
     // Listado de todas las activas
@@ -35,13 +37,11 @@ public interface PeliculaRepository extends JpaRepository<Pelicula, Long> {
     @Query("SELECT p FROM Pelicula p WHERE p.activa = true AND p.nombre LIKE %:nombre%")
     List<Pelicula> findByNombreContainsIgnoreCase(@Param("nombre") String nombre);
 
-    @Query("SELECT p FROM Pelicula p WHERE p.activa = true AND p.genero LIKE %:genero%")
-    List<Pelicula> findByGeneroContainsIgnoreCase(@Param("genero") String genero);
+    List<Pelicula> findByActivaTrueAndGenero(GeneroPelicula genero);
 
-    // Vigentes + filtros de nombre/género
     @Query("SELECT p FROM Pelicula p WHERE p.activa = true AND p.nombre LIKE %:nombre% AND p.fechaEstreno <= :fecha AND p.fechaSalida >= :fecha")
     List<Pelicula> findVigentesPorNombre(@Param("nombre") String nombre, @Param("fecha") LocalDate fecha);
 
-    @Query("SELECT p FROM Pelicula p WHERE p.activa = true AND p.genero LIKE %:genero% AND p.fechaEstreno <= :fecha AND p.fechaSalida >= :fecha")
-    List<Pelicula> findVigentesPorGenero(@Param("genero") String genero, @Param("fecha") LocalDate fecha);
+    @Query("SELECT p FROM Pelicula p WHERE p.activa = true AND p.genero = :genero AND p.fechaEstreno <= :fecha AND p.fechaSalida >= :fecha")
+    List<Pelicula> findVigentesPorGenero(@Param("genero") GeneroPelicula genero, @Param("fecha") LocalDate fecha);
 }

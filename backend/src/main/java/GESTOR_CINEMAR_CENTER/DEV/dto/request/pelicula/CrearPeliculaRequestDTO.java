@@ -1,5 +1,7 @@
 package GESTOR_CINEMAR_CENTER.DEV.dto.request.pelicula;
 
+import GESTOR_CINEMAR_CENTER.DEV.validation.FechasPeliculaValidas;
+import GESTOR_CINEMAR_CENTER.DEV.validation.ValidGeneroPelicula;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
@@ -13,6 +15,7 @@ import java.time.LocalDate;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@FechasPeliculaValidas
 @Schema(description = "DTO para crear o editar una película")
 public class CrearPeliculaRequestDTO {
 
@@ -34,9 +37,11 @@ public class CrearPeliculaRequestDTO {
     @Schema(description = "Duración en minutos", example = "169")
     @NotNull(message = "La duración es obligatoria")
     @Min(value = 1, message = "La duración debe ser mayor a 0")
+    @Max(value = 600, message = "La duración no puede superar 600 minutos")
     private Integer duracionMinutos;
 
-    @Schema(description = "Género de la película", example = "Ciencia Ficción")
-    @Size(max = 100, message = "El género no puede superar 100 caracteres")
+    @Schema(description = "Género de la película", example = "ACCION")
+    @NotBlank(message = "El género es obligatorio")
+    @ValidGeneroPelicula
     private String genero;
 }

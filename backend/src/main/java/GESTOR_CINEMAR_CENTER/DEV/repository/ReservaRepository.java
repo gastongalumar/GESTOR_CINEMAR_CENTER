@@ -4,6 +4,7 @@ import GESTOR_CINEMAR_CENTER.DEV.enums.EstadoReserva;
 import GESTOR_CINEMAR_CENTER.DEV.model.Cliente;
 import GESTOR_CINEMAR_CENTER.DEV.model.Funcion;
 import GESTOR_CINEMAR_CENTER.DEV.model.Reserva;
+import GESTOR_CINEMAR_CENTER.DEV.model.Sala;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -63,4 +64,14 @@ public interface ReservaRepository extends JpaRepository<Reserva, Long> {
     // Puedes añadir otros métodos filtrados por rango de fechas si los necesitas
     @Query("SELECT COUNT(a) FROM Reserva r JOIN r.asientos a WHERE r.fechaEmision BETWEEN :inicio AND :fin")
     Long countEntradasTotalesPorPeriodo(@Param("inicio") LocalDateTime inicio, @Param("fin") LocalDateTime fin);
+
+    @Query("SELECT COUNT(r) > 0 FROM Reserva r WHERE r.funcion = :funcion AND r.estadoReserva IN :estados")
+    boolean existsByFuncionAndEstadoReservaIn(@Param("funcion") Funcion funcion,
+                                                @Param("estados") List<EstadoReserva> estados);
+
+    @Query("SELECT COUNT(r) > 0 FROM Reserva r JOIN r.funcion f WHERE f.sala = :sala " +
+            "AND r.estadoReserva IN :estados AND f.horario > :ahora")
+    boolean existsReservasActivasFuturasPorSala(@Param("sala") Sala sala,
+                                                @Param("estados") List<EstadoReserva> estados,
+                                                @Param("ahora") LocalDateTime ahora);
 }
