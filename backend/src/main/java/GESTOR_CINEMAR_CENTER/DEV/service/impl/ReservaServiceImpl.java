@@ -228,6 +228,11 @@ public class ReservaServiceImpl implements ReservaService {
             throw new ReglaNegocioException("No se puede cancelar una reserva cuyo ticket ya fue validado");
         }
 
+        if (!reserva.getFuncion().getHorario().isAfter(LocalDateTime.now().plusDays(1))) {
+            throw new ReglaNegocioException(
+                    "No se puede cancelar una reserva cuando faltan menos de 24 horas para el inicio de la función");
+        }
+
         reserva.setEstadoReserva(EstadoReserva.CANCELADA);
         reservaRepository.save(reserva);
     }

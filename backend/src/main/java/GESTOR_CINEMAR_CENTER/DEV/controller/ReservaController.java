@@ -117,6 +117,7 @@ public class ReservaController {
             @ApiResponse(responseCode = "200", description = "Reserva cancelada correctamente",
                     content = @Content(schema = @Schema(implementation = MensajeResponse.class))),
             @ApiResponse(responseCode = "404", description = "Ticket no encontrado"),
+            @ApiResponse(responseCode = "400", description = "Reserva no cancelable (ya cancelada, validada o con menos de 24 h de anticipación)"),
             @ApiResponse(responseCode = "401", description = "No autenticado")
     })
     @DeleteMapping("/ticket/{numeroTicket}")
