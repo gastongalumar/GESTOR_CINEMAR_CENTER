@@ -1,0 +1,207 @@
+package GESTOR_CINEMAR_CENTER.DEV.service.impl;
+
+import GESTOR_CINEMAR_CENTER.DEV.dto.request.pelicula.ActualizarPeliculaRequestDTO;
+import GESTOR_CINEMAR_CENTER.DEV.dto.request.pelicula.CrearPeliculaRequestDTO;
+import GESTOR_CINEMAR_CENTER.DEV.dto.response.pelicula.PeliculaPageResponse;
+import GESTOR_CINEMAR_CENTER.DEV.dto.response.pelicula.PeliculaResponseDTO;
+import GESTOR_CINEMAR_CENTER.DEV.enums.GeneroPelicula;
+import GESTOR_CINEMAR_CENTER.DEV.enums.GeneroPeliculaHelper;
+import GESTOR_CINEMAR_CENTER.DEV.exception.RecursoNoEncontradoException;
+import GESTOR_CINEMAR_CENTER.DEV.exception.ReglaNegocioException;
+import GESTOR_CINEMAR_CENTER.DEV.mapper.PeliculaMapper;
+import GESTOR_CINEMAR_CENTER.DEV.model.Funcion;
+import GESTOR_CINEMAR_CENTER.DEV.model.Pelicula;
+import GESTOR_CINEMAR_CENTER.DEV.repository.FuncionRepository;
+import GESTOR_CINEMAR_CENTER.DEV.repository.PeliculaRepository;
+import GESTOR_CINEMAR_CENTER.DEV.service.ImagenesService;
+import GESTOR_CINEMAR_CENTER.DEV.service.PeliculaService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+
+@Service("peliculaService")
+@RequiredArgsConstructor
+public class PeliculaServiceImpl implements PeliculaService {
+
+    private final PeliculaRepository peliculaRepository;
+    private final FuncionRepository funcionRepository;
+    private final PeliculaMapper peliculaMapper;
+    private final ImagenesService imagenesService;
+
+    // Pelicula activa o 404
+    @Override
+    public Pelicula obtenerPelicula(Long id) {
+        return peliculaRepository.findByIdAndActivaTrue(id)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Película", id));
+    }
+
+    @Override
+    public List<PeliculaResponseDTO> listarPeliculas() {
+        return peliculaMapper.toResponseList(peliculaRepository.findByActivaTrue());
+    }
+
+    @Override
+    public List<PeliculaResponseDTO> listarPeliculasVigentes() {
+        return peliculaMapper.toResponseList(
+                peliculaRepository.findVigentesEnFecha(LocalDate.now()));
+    }
+
+    @Override
+    public List<PeliculaResponseDTO> listarPeliculasProximamente() {
+        LocalDate hoy = LocalDate.now();
+        return peliculaMapper.toResponseList(
+                peliculaRepository.findProximamenteEnVentana(hoy, hoy.plusDays(20)));
+    }
+
+    @Override
+    public PeliculaResponseDTO buscarPorId(Long id) {
+        return peliculaMapper.toResponse(obtenerPelicula(id));
+    }
+
+    // Si ya hay otra activa con el mismo nombre, no dejo crear
+    private void validarNombreDisponible(String nombre) {
+        if (peliculaRepository.existsByNombreIgnoreCaseAndActivaTrue(nombre.trim())) {
+            throw new ReglaNegocioException("Ya existe una película activa con ese nombre");
+        }
+    }
+
+    private void validarFechas(LocalDate fechaEstreno, LocalDate fechaSalida) {
+        if (!fechaSalida.isAfter(fechaEstreno)) {
+            throw new ReglaNegocioException("La fecha de salida de cartelera debe ser al menos un día posterior a la fecha de estreno");
+        }
+    }
+
+    // Al cambiar fechas, reviso que ninguna funcion activa quede afuera del rango
+    private void validarFechasConFunciones(Pelicula pelicula, LocalDate nuevaFechaEstreno, LocalDate nuevaFechaSalida) {
+        List<Funcion> funciones = funcionRepository.findByActivaTrueAndPelicula(pelicula);
+
+        for (Funcion funcion : funciones) {
+            LocalDate fechaFuncion = funcion.getHorario().toLocalDate();
+
+            if (fechaFuncion.isBefore(nuevaFechaEstreno)) {
+                throw new ReglaNegocioException(
+                        "La nueva fecha de estreno (" + nuevaFechaEstreno + ") es posterior a la función del "
+                        + fechaFuncion + " en sala '" + funcion.getSala().getNombre() + "'. Primero eliminá o reprogramá esa función."
+                );
+            }
+
+            if (fechaFuncion.isAfter(nuevaFechaSalida)) {
+                throw new ReglaNegocioException(
+                        "La nueva fecha de salida de cartelera (" + nuevaFechaSalida + ") es anterior a la función del "
+                        + fechaFuncion + " en sala '" + funcion.getSala().getNombre() + "'. Primero eliminá o reprogramá esa función."
+                );
+            }
+        }
+    }
+
+    @Override
+    public PeliculaResponseDTO crear(CrearPeliculaRequestDTO request) {
+        validarNombreDisponible(request.getNombre());
+        validarFechas(request.getFechaEstreno(), request.getFechaSalida());
+
+        Pelicula pelicula = peliculaMapper.toEntity(request);
+        pelicula.setActiva(true);
+        return peliculaMapper.toResponse(peliculaRepository.save(pelicula));
+    }
+
+    @Override
+    public PeliculaResponseDTO actualizar(Long id, ActualizarPeliculaRequestDTO request) {
+        Pelicula existente = obtenerPelicula(id);
+
+        if (request.getNombre() != null && !existente.getNombre().equalsIgnoreCase(request.getNombre().trim())) {
+            validarNombreDisponible(request.getNombre().trim());
+        }
+
+        LocalDate fechaEstreno = request.getFechaEstreno() != null ? request.getFechaEstreno()
+                : existente.getFechaEstreno();
+        LocalDate fechaSalida = request.getFechaSalida() != null ? request.getFechaSalida()
+                : existente.getFechaSalida();
+
+        if (request.getFechaEstreno() != null
+                && fechaEstreno.isBefore(LocalDate.now().plusDays(1))) {
+            throw new ReglaNegocioException(
+                    "La fecha de estreno debe ser al menos 1 día en el futuro (a partir de " +
+                    LocalDate.now().plusDays(1) + ")");
+        }
+
+        // Salida tiene que ser despues del estreno
+        validarFechas(fechaEstreno, fechaSalida);
+
+        // Y que las funciones ya cargadas sigan entrando en el rango nuevo
+        validarFechasConFunciones(existente, fechaEstreno, fechaSalida);
+
+        peliculaMapper.actualizarEntity(request, existente);
+        return peliculaMapper.toResponse(peliculaRepository.save(existente));
+    }
+
+    @Override
+    public void eliminar(Long id) {
+        Pelicula pelicula = obtenerPelicula(id);
+
+        boolean tieneFuncionesFuturas = funcionRepository.existsByPeliculaActivaFutura(pelicula, LocalDateTime.now());
+        if (tieneFuncionesFuturas) {
+            throw new ReglaNegocioException(
+                    "No se puede desactivar la película porque tiene funciones futuras activas asociadas");
+        }
+
+        pelicula.setActiva(false);
+        peliculaRepository.save(pelicula);
+    }
+
+    @Override
+    public String guardarImagen(Long id, MultipartFile file) {
+        Pelicula pelicula = obtenerPelicula(id);
+        String ruta = imagenesService.guardarImagenPelicula(file);
+        pelicula.setRutaImagen(ruta);
+        peliculaRepository.save(pelicula);
+        return ruta;
+    }
+
+    @Override
+    public void eliminarImagenDePelicula(Long id) {
+        Pelicula pelicula = obtenerPelicula(id);
+        if (pelicula.getRutaImagen() != null) {
+            imagenesService.eliminarImagen(pelicula.getRutaImagen());
+            pelicula.setRutaImagen(null);
+            peliculaRepository.save(pelicula);
+        }
+    }
+
+    @Override
+    public List<PeliculaResponseDTO> filtrarPorNombre(String nombre) {
+        return peliculaMapper.toResponseList(peliculaRepository.findByNombreContainsIgnoreCase(nombre));
+    }
+
+    @Override
+    public List<PeliculaResponseDTO> filtrarPorGenero(String genero) {
+        GeneroPelicula generoPelicula = GeneroPeliculaHelper.fromString(genero);
+        return peliculaMapper.toResponseList(peliculaRepository.findByActivaTrueAndGenero(generoPelicula));
+    }
+
+    @Override
+    public List<PeliculaResponseDTO> filtrarVigentesPorNombre(String nombre) {
+        return peliculaMapper.toResponseList(
+                peliculaRepository.findVigentesPorNombre(nombre, LocalDate.now()));
+    }
+
+    @Override
+    public List<PeliculaResponseDTO> filtrarVigentesPorGenero(String genero) {
+        GeneroPelicula generoPelicula = GeneroPeliculaHelper.fromString(genero);
+        return peliculaMapper.toResponseList(
+                peliculaRepository.findVigentesPorGenero(generoPelicula, LocalDate.now()));
+    }
+
+    @Override
+    public List<PeliculaResponseDTO> filtrarPorFuncion(Long funcionId) {
+        Funcion funcion = funcionRepository.findByIdAndActivaTrue(funcionId)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Función", funcionId));
+        return peliculaMapper.toResponseList(List.of(funcion.getPelicula()));
+    }
+}

@@ -1,0 +1,19 @@
+package GESTOR_CINEMAR_CENTER.DEV.enums;
+
+public enum GeneroPelicula {
+    ACCION,
+    AVENTURA,
+    ANIMACION,
+    COMEDIA,
+    DRAMA,
+    DOCUMENTAL,
+    FANTASIA,
+    MUSICAL,
+    ROMANCE,
+    CIENCIA_FICCION,
+    TERROR,
+    THRILLER,
+    WESTERN,
+    BIOGRAFIA,
+    FAMILIAR
+}
