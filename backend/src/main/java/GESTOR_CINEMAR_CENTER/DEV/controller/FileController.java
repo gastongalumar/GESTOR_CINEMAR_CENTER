@@ -1,5 +1,6 @@
 package GESTOR_CINEMAR_CENTER.DEV.controller;
 
+import io.swagger.v3.oas.annotations.Hidden;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -16,6 +17,7 @@ import java.nio.file.Paths;
 
 @RestController
 @RequestMapping("/uploads")
+@Hidden
 @CrossOrigin(origins = "http://localhost:4200")
 public class FileController {
 

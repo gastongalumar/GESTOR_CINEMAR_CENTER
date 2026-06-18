@@ -56,7 +56,7 @@ public class EstadisticasServiceImpl implements EstadisticasService {
 
         List<Pago> pagos = pagoRepository.findAll();
 
-        // Agrupar por fecha
+        // Agrupo los pagos por dia para el grafico
         Map<LocalDate, List<Pago>> pagosPorFecha = pagos.stream()
                 .filter(p -> p.getFechaPago() != null && p.getFechaPago().toLocalDate().isAfter(fechaInicio.minusDays(1)))
                 .collect(Collectors.groupingBy(p -> p.getFechaPago().toLocalDate()));
@@ -134,7 +134,7 @@ public class EstadisticasServiceImpl implements EstadisticasService {
         }
 
         return resultado.stream()
-                .filter(v -> v.getTotalVentas() > 0) // Filtrar películas sin ventas
+                .filter(v -> v.getTotalVentas() > 0) // sin ventas no las muestro
                 .sorted(Comparator.comparingDouble(VentaPeliculaDTO::getTotalVentas).reversed())
                 .collect(Collectors.toList());
     }
@@ -263,9 +263,8 @@ public class EstadisticasServiceImpl implements EstadisticasService {
                 .collect(Collectors.toList());
     }
 
-    // Helper para obtener cantidad de asientos de una sala
+    // Metodo auxiliar que quedo de una version anterior (no se usa)
     private List<Object> repositoryAsientos(Long salaId) {
-        // Placeholder; deberías usar asientoRepository si existe
         return new ArrayList<>();
     }
 }

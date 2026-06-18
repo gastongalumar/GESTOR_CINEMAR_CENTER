@@ -56,7 +56,7 @@ public class SecurityConfig {
                         .authenticationEntryPoint(autenticacionJson))
                 .authorizeHttpRequests(auth -> auth
 
-                        // 🔓 PÚBLICOS — documentación, archivos y auth
+                        // swagger, login y registro sin token
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .requestMatchers("/error").permitAll()
                         .requestMatchers("/uploads/**").permitAll()
@@ -64,78 +64,79 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/registro").permitAll()
 
-                        // 🔓 PÚBLICOS — catálogo de películas (listados)
+                        // listados de peliculas publicos
                         .requestMatchers(HttpMethod.GET, "/api/peliculas").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/peliculas/vigentes").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/peliculas/proximamente").permitAll()
 
-                        // 🔓 PÚBLICOS — catálogo de funciones (listados)
-                        .requestMatchers(HttpMethod.GET, "/api/funciones").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/funciones/vigentes").permitAll()
+                        // funciones: hace falta estar logueado
+                        .requestMatchers(HttpMethod.GET, "/api/funciones").hasAnyAuthority("CLIENTE", "ADMINISTRADOR")
+                        .requestMatchers(HttpMethod.GET, "/api/funciones/vigentes").hasAnyAuthority("CLIENTE", "ADMINISTRADOR")
 
-                        // 👑 SOLO ADMIN — registro de administradores
+                        // solo un admin puede crear otro admin
                         .requestMatchers(HttpMethod.POST, "/api/auth/registro-admin").hasAuthority("ADMINISTRADOR")
 
-                        // 👥 AUTENTICADO — consulta detalle y filtros de películas
-                        .requestMatchers(HttpMethod.GET, "/api/peliculas/**").authenticated()
+                        // detalle y filtros de peliculas
+                        .requestMatchers(HttpMethod.GET, "/api/peliculas/**").hasAnyAuthority("CLIENTE", "ADMINISTRADOR")
 
-                        // 👥 AUTENTICADO — consulta detalle de funciones (por id, por película, ocupados)
-                        .requestMatchers(HttpMethod.GET, "/api/funciones/**").authenticated()
+                        // resto de consultas de funciones
+                        .requestMatchers(HttpMethod.GET, "/api/funciones/**").hasAnyAuthority("CLIENTE", "ADMINISTRADOR")
 
-                        // 👥 AUTENTICADO — consulta de salas
-                        .requestMatchers(HttpMethod.GET, "/api/salas/**").authenticated()
+                        // salas
+                        .requestMatchers(HttpMethod.GET, "/api/salas/**").hasAnyAuthority("CLIENTE", "ADMINISTRADOR")
 
-                        // 👤 SOLO CLIENTE — reservas y pagos
+                        // reservar y pagar: solo clientes
                         .requestMatchers(HttpMethod.POST, "/api/reservas").hasAuthority("CLIENTE")
                         .requestMatchers(HttpMethod.POST, "/api/pagos/**").hasAuthority("CLIENTE")
 
-                        // 👥 CLIENTE o ADMIN — reservas propias y tickets
-                        .requestMatchers(HttpMethod.GET, "/api/reservas/mis").hasAnyAuthority("CLIENTE", "ADMINISTRADOR")
+                        // tickets y consultas propias
+                        .requestMatchers(HttpMethod.GET, "/api/reservas/mis").hasAuthority("CLIENTE")
                         .requestMatchers(HttpMethod.GET, "/api/reservas/ticket/**").hasAnyAuthority("CLIENTE", "ADMINISTRADOR")
                         .requestMatchers(HttpMethod.PUT, "/api/reservas/ticket/**").hasAnyAuthority("CLIENTE", "ADMINISTRADOR")
                         .requestMatchers(HttpMethod.DELETE, "/api/reservas/ticket/**").hasAnyAuthority("CLIENTE", "ADMINISTRADOR")
                         .requestMatchers(HttpMethod.GET, "/api/pagos/ticket/*/pago").hasAnyAuthority("CLIENTE", "ADMINISTRADOR")
-                        .requestMatchers(HttpMethod.GET, "/api/pagos/mis").hasAnyAuthority("CLIENTE", "ADMINISTRADOR")
+                        .requestMatchers(HttpMethod.GET, "/api/pagos/mis").hasAuthority("CLIENTE")
 
-                        // 👑 SOLO ADMIN — CRUD películas (incluye POST /{id}/imagen)
+                        // alta, edicion y baja de peliculas
                         .requestMatchers(HttpMethod.POST, "/api/peliculas/**").hasAuthority("ADMINISTRADOR")
                         .requestMatchers(HttpMethod.PUT, "/api/peliculas/**").hasAuthority("ADMINISTRADOR")
                         .requestMatchers(HttpMethod.DELETE, "/api/peliculas/**").hasAuthority("ADMINISTRADOR")
 
-                        // 👑 SOLO ADMIN — CRUD funciones
+                        // funciones (admin)
                         .requestMatchers(HttpMethod.POST, "/api/funciones/**").hasAuthority("ADMINISTRADOR")
                         .requestMatchers(HttpMethod.PUT, "/api/funciones/**").hasAuthority("ADMINISTRADOR")
                         .requestMatchers(HttpMethod.DELETE, "/api/funciones/**").hasAuthority("ADMINISTRADOR")
 
-                        // 👑 SOLO ADMIN — CRUD salas
+                        // salas (admin)
                         .requestMatchers(HttpMethod.POST, "/api/salas/**").hasAuthority("ADMINISTRADOR")
                         .requestMatchers(HttpMethod.PUT, "/api/salas/**").hasAuthority("ADMINISTRADOR")
                         .requestMatchers(HttpMethod.DELETE, "/api/salas/**").hasAuthority("ADMINISTRADOR")
 
-                        // 👑 SOLO ADMIN — personalización del sitio
+                        // tema visual del sitio
                         .requestMatchers(HttpMethod.POST, "/api/customizacion/**").hasAuthority("ADMINISTRADOR")
                         .requestMatchers(HttpMethod.PUT, "/api/customizacion/**").hasAuthority("ADMINISTRADOR")
                         .requestMatchers(HttpMethod.DELETE, "/api/customizacion/**").hasAuthority("ADMINISTRADOR")
 
-                        // 👑 SOLO ADMIN — moderación de reservas
+                        // panel de reservas del admin
                         .requestMatchers(HttpMethod.GET, "/api/reservas/admin/todas").hasAuthority("ADMINISTRADOR")
                         .requestMatchers(HttpMethod.GET, "/api/reservas/admin/**").hasAuthority("ADMINISTRADOR")
                         .requestMatchers(HttpMethod.GET, "/api/reservas/cliente/**").hasAuthority("ADMINISTRADOR")
                         .requestMatchers(HttpMethod.POST, "/api/reservas/validar/**").hasAuthority("ADMINISTRADOR")
 
-                        // 👑 SOLO ADMIN — estadísticas
+                        // reportes
                         .requestMatchers(HttpMethod.GET, "/api/estadisticas/**").hasAuthority("ADMINISTRADOR")
 
-                        // 👑 SOLO ADMIN — consulta de pagos
+                        // listado general de pagos
                         .requestMatchers(HttpMethod.GET, "/api/pagos/**").hasAuthority("ADMINISTRADOR")
 
-                        // 👑 SOLO ADMIN — gestión de usuarios
+                        // usuarios: el cliente solo puede cambiar su nombre
+                        .requestMatchers(HttpMethod.PUT, "/api/usuarios/mi-nombre").hasAnyAuthority("CLIENTE", "ADMINISTRADOR")
                         .requestMatchers(HttpMethod.GET, "/api/usuarios/**").hasAuthority("ADMINISTRADOR")
                         .requestMatchers(HttpMethod.POST, "/api/usuarios/**").hasAuthority("ADMINISTRADOR")
                         .requestMatchers(HttpMethod.PUT, "/api/usuarios/**").hasAuthority("ADMINISTRADOR")
                         .requestMatchers(HttpMethod.DELETE, "/api/usuarios/**").hasAuthority("ADMINISTRADOR")
 
-                        // 🚫 CUALQUIER OTRA RUTA
+                        // si no matchea nada de arriba, se rechaza
                         .anyRequest().denyAll()
                 )
                 .authenticationProvider(authenticationProvider())

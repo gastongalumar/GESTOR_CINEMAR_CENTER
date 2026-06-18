@@ -20,7 +20,7 @@ public class EstadisticasController {
 
     private final EstadisticasService estadisticasService;
 
-    // Requiere rol ADMIN según SecurityConfig; se puede controlar también desde SecurityConfig
+    // El rol real lo controla SecurityConfig
     @GetMapping("/dashboard/resumen")
     @PreAuthorize("hasAuthority('ADMINISTRADOR')")
     public ResponseEntity<DashboardResumenDTO> obtenerResumen() {

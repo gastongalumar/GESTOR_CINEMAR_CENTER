@@ -53,15 +53,10 @@ public interface ReservaRepository extends JpaRepository<Reserva, Long> {
     List<Reserva> findByFechaEmisionBetween(@Param("inicio") LocalDateTime inicio,
                                              @Param("fin") LocalDateTime fin);
 
-    // ---------------------------
-    // Métodos agregados para estadísticas
-    // ---------------------------
-
-    // Total de entradas vendidas = total de asientos asociados a reservas
+    // Consultas para estadisticas
     @Query("SELECT COUNT(a) FROM Reserva r JOIN r.asientos a")
     Long countEntradasTotales();
 
-    // Puedes añadir otros métodos filtrados por rango de fechas si los necesitas
     @Query("SELECT COUNT(a) FROM Reserva r JOIN r.asientos a WHERE r.fechaEmision BETWEEN :inicio AND :fin")
     Long countEntradasTotalesPorPeriodo(@Param("inicio") LocalDateTime inicio, @Param("fin") LocalDateTime fin);
 
@@ -74,4 +69,10 @@ public interface ReservaRepository extends JpaRepository<Reserva, Long> {
     boolean existsReservasActivasFuturasPorSala(@Param("sala") Sala sala,
                                                 @Param("estados") List<EstadoReserva> estados,
                                                 @Param("ahora") LocalDateTime ahora);
+
+    @Query("SELECT COUNT(r) > 0 FROM Reserva r JOIN r.funcion f " +
+            "WHERE r.cliente.id = :clienteId AND r.estadoReserva IN :estados AND f.horario > :ahora")
+    boolean existsReservasActivasFuturasPorCliente(@Param("clienteId") Long clienteId,
+                                                   @Param("estados") List<EstadoReserva> estados,
+                                                   @Param("ahora") LocalDateTime ahora);
 }

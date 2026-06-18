@@ -4,7 +4,6 @@ import GESTOR_CINEMAR_CENTER.DEV.dto.request.auth.LoginRequest;
 import GESTOR_CINEMAR_CENTER.DEV.dto.request.auth.RegistroRequest;
 import GESTOR_CINEMAR_CENTER.DEV.dto.response.auth.AuthResponse;
 import GESTOR_CINEMAR_CENTER.DEV.service.UsuarioService;
-import GESTOR_CINEMAR_CENTER.DEV.service.impl.UsuarioServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;

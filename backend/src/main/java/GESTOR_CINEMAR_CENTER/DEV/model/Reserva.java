@@ -61,7 +61,7 @@ public class Reserva {
 
 
 
-    //tendria que mover esta logica al service
+    // Esto lo movi al service, aca quedo comentado por las dudas
     /*
     @PrePersist
     protected void onCreate() {

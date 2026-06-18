@@ -6,6 +6,7 @@ import GESTOR_CINEMAR_CENTER.DEV.dto.response.customizacion.CustomizacionRespons
 import GESTOR_CINEMAR_CENTER.DEV.dto.response.mensaje.ActualizarResponse;
 import GESTOR_CINEMAR_CENTER.DEV.dto.response.mensaje.MensajeResponse;
 import GESTOR_CINEMAR_CENTER.DEV.service.CustomizacionService;
+import io.swagger.v3.oas.annotations.Hidden;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -18,6 +19,7 @@ import java.io.IOException;
 @RestController
 @Validated
 @RequestMapping("/api/customizacion")
+@Hidden
 @CrossOrigin(origins = "http://localhost:4200")
 public class CustomizacionController {
 

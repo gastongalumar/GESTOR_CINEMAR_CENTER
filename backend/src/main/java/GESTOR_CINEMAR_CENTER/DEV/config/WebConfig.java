@@ -5,6 +5,6 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
-    // Los archivos estáticos de /uploads/** los sirve FileController con validación de rutas.
+    // Los uploads los sirve FileController, no hace falta mapear recursos estaticos aca
 }
 

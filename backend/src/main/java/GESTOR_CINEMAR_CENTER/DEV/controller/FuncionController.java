@@ -1,6 +1,7 @@
 package GESTOR_CINEMAR_CENTER.DEV.controller;
 
 import GESTOR_CINEMAR_CENTER.DEV.dto.response.mensaje.MensajeResponse;
+import GESTOR_CINEMAR_CENTER.DEV.dto.request.funcion.ActualizarHorarioFuncionRequestDTO;
 import GESTOR_CINEMAR_CENTER.DEV.dto.request.funcion.CrearFuncionRequestDTO;
 import GESTOR_CINEMAR_CENTER.DEV.dto.request.funcion.CrearFuncionesPorRangoRequestDTO;
 import GESTOR_CINEMAR_CENTER.DEV.dto.response.funcion.FuncionResponseDTO;
@@ -24,6 +25,7 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -87,6 +89,15 @@ public class FuncionController {
         return ResponseEntity.ok(funcionService.obtenerAsientosOcupados(funcionId));
     }
 
+    @Operation(summary = "Obtener asientos libres", description = "Retorna los asientos disponibles para reservar en una función")
+    @ApiResponse(responseCode = "200", description = "Asientos libres obtenidos correctamente",
+            content = @Content(array = @ArraySchema(schema = @Schema(implementation = String.class))))
+    @GetMapping("/{funcionId}/libres")
+    public ResponseEntity<List<String>> obtenerAsientosLibres(
+            @Parameter(description = "ID de la función", required = true) @Positive @PathVariable Long funcionId) {
+        return ResponseEntity.ok(funcionService.obtenerAsientosLibres(funcionId));
+    }
+
     @Operation(
             summary = "Crear una nueva función",
             description = "Programa una nueva función de proyección en una sala. Requiere rol ADMINISTRADOR",
@@ -130,6 +141,30 @@ public class FuncionController {
     public ResponseEntity<List<FuncionResponseDTO>> crearFuncionesPorRango(
             @Valid @RequestBody CrearFuncionesPorRangoRequestDTO request) {
         return ResponseEntity.ok(funcionService.crearFuncionesPorRango(request));
+    }
+
+    @Operation(
+            summary = "Actualizar horario de una función",
+            description = "Modifica únicamente el horario de una función existente. No se permite si tiene reservas activas. Requiere rol ADMINISTRADOR",
+            security = @SecurityRequirement(name = "bearerAuth"),
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    required = true,
+                    content = @Content(schema = @Schema(implementation = ActualizarHorarioFuncionRequestDTO.class))
+            )
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Horario actualizado correctamente",
+                    content = @Content(schema = @Schema(implementation = FuncionResponseDTO.class))),
+            @ApiResponse(responseCode = "400", description = "Datos inválidos o regla de negocio incumplida"),
+            @ApiResponse(responseCode = "403", description = "Acceso denegado"),
+            @ApiResponse(responseCode = "404", description = "Función no encontrada")
+    })
+    @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('ADMINISTRADOR')")
+    public ResponseEntity<FuncionResponseDTO> actualizarHorario(
+            @Parameter(description = "ID de la función", required = true) @Positive @PathVariable Long id,
+            @Valid @RequestBody ActualizarHorarioFuncionRequestDTO request) {
+        return ResponseEntity.ok(funcionService.actualizarHorario(id, request));
     }
 
     @Operation(summary = "Eliminar una función", description = "Elimina una función de proyección del sistema. Requiere rol ADMINISTRADOR",

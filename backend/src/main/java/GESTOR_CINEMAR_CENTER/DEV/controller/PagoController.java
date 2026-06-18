@@ -49,7 +49,6 @@ public class PagoController {
     @ApiResponse(responseCode = "200", description = "Listado obtenido correctamente",
             content = @Content(array = @ArraySchema(schema = @Schema(implementation = PagoResponseDTO.class))))
     @GetMapping("/mis")
-    @PreAuthorize("hasAuthority('CLIENTE') or hasAuthority('ADMINISTRADOR')")
     public ResponseEntity<List<PagoResponseDTO>> listarMisPagos(Authentication authentication) {
         return ResponseEntity.ok(pagoService.listarMisPagos(authentication.getName()));
     }

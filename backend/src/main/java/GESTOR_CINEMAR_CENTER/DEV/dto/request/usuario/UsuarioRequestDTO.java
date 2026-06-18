@@ -13,15 +13,19 @@ import lombok.Getter;
 public class UsuarioRequestDTO {
 
     @NotBlank(message = "El nombre es obligatorio")
-    @Size(max = 100, message = "El nombre no puede superar 100 caracteres")
-    @Pattern(regexp = "^[\\p{L}\\s'.-]+$", message = "El nombre solo puede contener letras, espacios y caracteres .'-")
-    @Schema(description = "Nombre del usuario", example = "Juan", requiredMode = Schema.RequiredMode.REQUIRED)
+    @Size(max = 20, message = "El nombre no puede superar 20 caracteres")
+    @Pattern(
+            regexp = "^(?!.*[.'-]{2})[\\p{L}\\s.'-]+$",
+            message = "El apellido solo puede contener letras, espacios y un solo carácter especial seguido (. '-)"
+    )    @Schema(description = "Nombre del usuario", example = "Juan", requiredMode = Schema.RequiredMode.REQUIRED)
     private String nombre;
 
     @NotBlank(message = "El apellido es obligatorio")
-    @Size(max = 100, message = "El apellido no puede superar 100 caracteres")
-    @Pattern(regexp = "^[\\p{L}\\s'.-]+$", message = "El apellido solo puede contener letras, espacios y caracteres .'-")
-    @Schema(description = "Apellido del usuario", example = "Pérez", requiredMode = Schema.RequiredMode.REQUIRED)
+    @Size(max = 20, message = "El apellido no puede superar 20 caracteres")
+    @Pattern(
+            regexp = "^(?!.*[.'-]{2})[\\p{L}\\s.'-]+$",
+            message = "El apellido solo puede contener letras, espacios y un solo carácter especial seguido (. '-)"
+    )    @Schema(description = "Apellido del usuario", example = "Pérez", requiredMode = Schema.RequiredMode.REQUIRED)
     private String apellido;
 
     @NotBlank(message = "El email es obligatorio")
@@ -31,7 +35,7 @@ public class UsuarioRequestDTO {
     private String email;
 
     @NotBlank(message = "La contraseña es obligatoria")
-    @Size(min = 6, max = 100, message = "La contraseña debe tener entre 6 y 100 caracteres")
+    @Size(min = 6, max = 20, message = "La contraseña debe tener entre 6 y 20 caracteres")
     @Schema(description = "Contraseña del usuario", example = "password123", requiredMode = Schema.RequiredMode.REQUIRED)
     private String password;
 

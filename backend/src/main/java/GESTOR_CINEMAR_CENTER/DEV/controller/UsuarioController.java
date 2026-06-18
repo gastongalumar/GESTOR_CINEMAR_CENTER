@@ -1,5 +1,7 @@
 package GESTOR_CINEMAR_CENTER.DEV.controller;
 
+import GESTOR_CINEMAR_CENTER.DEV.dto.request.usuario.ActualizarNombreUsuarioRequestDTO;
+import GESTOR_CINEMAR_CENTER.DEV.dto.response.mensaje.MensajeResponse;
 import GESTOR_CINEMAR_CENTER.DEV.dto.response.usuario.UsuarioResponseDTO;
 import GESTOR_CINEMAR_CENTER.DEV.enums.TipoUsuario;
 import GESTOR_CINEMAR_CENTER.DEV.service.UsuarioService;
@@ -15,8 +17,10 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Positive;
 
@@ -32,6 +36,28 @@ import java.util.List;
 public class UsuarioController {
 
     private final UsuarioService usuarioService;
+
+    @Operation(
+            summary = "Actualizar mi nombre y apellido",
+            description = "Modifica el nombre y apellido del usuario autenticado según el token JWT",
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    required = true,
+                    content = @Content(schema = @Schema(implementation = ActualizarNombreUsuarioRequestDTO.class))
+            )
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Nombre y apellido actualizados correctamente",
+                    content = @Content(schema = @Schema(implementation = UsuarioResponseDTO.class))),
+            @ApiResponse(responseCode = "400", description = "Datos inválidos"),
+            @ApiResponse(responseCode = "403", description = "Cuenta inactiva")
+    })
+    @PutMapping("/mi-nombre")
+    @PreAuthorize("hasAnyAuthority('CLIENTE', 'ADMINISTRADOR')")
+    public ResponseEntity<UsuarioResponseDTO> actualizarMiNombre(
+            Authentication authentication,
+            @Valid @RequestBody ActualizarNombreUsuarioRequestDTO request) {
+        return ResponseEntity.ok(usuarioService.actualizarMiNombre(authentication.getName(), request));
+    }
 
     @Operation(summary = "Listar todos los usuarios", description = "Retorna el listado completo de usuarios en el sistema")
     @ApiResponse(responseCode = "200", description = "Listado obtenido correctamente",
@@ -76,5 +102,21 @@ public class UsuarioController {
             @PathVariable String rol) {
         TipoUsuario tipo = TipoUsuario.valueOf(rol.toUpperCase());
         return ResponseEntity.ok(usuarioService.listarPorRol(tipo));
+    }
+
+    @Operation(summary = "Desactivar usuario", description = "Realiza un borrado lógico del usuario. No se permite desactivar la propia cuenta ni si tiene reservas activas con funciones futuras")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Usuario desactivado correctamente",
+                    content = @Content(schema = @Schema(implementation = MensajeResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Regla de negocio incumplida"),
+            @ApiResponse(responseCode = "404", description = "Usuario no encontrado")
+    })
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('ADMINISTRADOR')")
+    public ResponseEntity<MensajeResponse> eliminar(
+            Authentication authentication,
+            @Parameter(description = "ID del usuario", required = true) @Positive @PathVariable Long id) {
+        usuarioService.eliminarUsuario(id, authentication.getName());
+        return ResponseEntity.ok(new MensajeResponse("Usuario desactivado correctamente"));
     }
 }

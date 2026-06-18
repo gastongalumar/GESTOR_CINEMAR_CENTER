@@ -22,16 +22,11 @@ public interface PagoRepository extends JpaRepository<Pago, Long> {
     @Query("SELECT p FROM Pago p WHERE p.reserva.cliente = :cliente ORDER BY p.fechaPago DESC")
     List<Pago> findByClienteOrderByFechaPagoDesc(@Param("cliente") Cliente cliente);
 
-    // ---------------------------
-    // Métodos agregados para estadísticas
-    // ---------------------------
-
-    // Suma total de los montos de todos los pagos (null -> 0)
+    // Queries para el dashboard
     @Query("SELECT COALESCE(SUM(p.monto), 0) FROM Pago p")
     Double sumTotalVentas();
 
-    // Suma de montos para una fecha (solo fecha, ignora hora).
-    // Usa FUNCTION('DATE', ...) para extraer la parte fecha (compatible con varios dialectos).
+    // Ventas de un dia puntual (comparo solo la fecha, sin la hora)
     @Query("SELECT COALESCE(SUM(p.monto), 0) FROM Pago p WHERE FUNCTION('DATE', p.fechaPago) = :fecha")
     Double sumVentasPorFecha(@Param("fecha") LocalDate fecha);
 }

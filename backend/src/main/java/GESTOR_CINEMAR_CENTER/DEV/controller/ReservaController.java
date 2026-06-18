@@ -43,7 +43,6 @@ public class ReservaController {
     @ApiResponse(responseCode = "200", description = "Listado obtenido correctamente",
             content = @Content(array = @ArraySchema(schema = @Schema(implementation = ReservaResponseDTO.class))))
     @GetMapping("/mis")
-    @PreAuthorize("hasAuthority('CLIENTE') or hasAuthority('ADMINISTRADOR')")
     public ResponseEntity<List<ReservaResponseDTO>> listarMisReservas(Authentication authentication) {
         String email = authentication.getName();
         return ResponseEntity.ok(reservaService.listarReservasPorEmail(email));

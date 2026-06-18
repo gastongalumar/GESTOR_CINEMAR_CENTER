@@ -1,5 +1,6 @@
 package GESTOR_CINEMAR_CENTER.DEV.service;
 
+import GESTOR_CINEMAR_CENTER.DEV.dto.request.funcion.ActualizarHorarioFuncionRequestDTO;
 import GESTOR_CINEMAR_CENTER.DEV.dto.request.funcion.CrearFuncionRequestDTO;
 import GESTOR_CINEMAR_CENTER.DEV.dto.request.funcion.CrearFuncionesPorRangoRequestDTO;
 import GESTOR_CINEMAR_CENTER.DEV.dto.response.funcion.FuncionResponseDTO;
@@ -16,7 +17,9 @@ public interface FuncionService {
     FuncionResponseDTO buscarPorId(Long id);
     FuncionResponseDTO crear(CrearFuncionRequestDTO request);
     List<FuncionResponseDTO> crearFuncionesPorRango(CrearFuncionesPorRangoRequestDTO request);
+    FuncionResponseDTO actualizarHorario(Long id, ActualizarHorarioFuncionRequestDTO request);
     void eliminar(Long id);
     boolean existeFuncionFuturaPorSala(Sala sala);
     List<String> obtenerAsientosOcupados(Long funcionId);
+    List<String> obtenerAsientosLibres(Long funcionId);
 }

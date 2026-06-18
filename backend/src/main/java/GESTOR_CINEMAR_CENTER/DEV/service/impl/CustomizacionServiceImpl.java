@@ -83,7 +83,7 @@ public class CustomizacionServiceImpl implements CustomizacionService {
 
         String rutaRelativa = "/uploads/" + tipo + "/" + fileName;
 
-        // Guardar la ruta en la base de datos
+        // Persisto la ruta relativa en la BD
         Customizacion custom = obtenerEntidad();
         if ("logos".equals(tipo)) {
             custom.setLogoUrl(rutaRelativa);

@@ -16,7 +16,7 @@ import java.util.Optional;
 @Repository
 public interface PeliculaRepository extends JpaRepository<Pelicula, Long> {
 
-    // Búsquedas activas por id y nombre
+    // Solo peliculas que no estan dadas de baja
     Optional<Pelicula> findByIdAndActivaTrue(Long id);
     boolean existsByNombreAndActivaTrue(String nombre);
     boolean existsByNombreIgnoreCaseAndActivaTrue(String nombre);
@@ -25,7 +25,7 @@ public interface PeliculaRepository extends JpaRepository<Pelicula, Long> {
     // Listado de todas las activas
     List<Pelicula> findByActivaTrue();
 
-    // Vigentes: activas + dentro del rango de cartelera
+    // En cartelera hoy
     @Query("SELECT p FROM Pelicula p WHERE p.activa = true AND p.fechaEstreno <= :fecha AND p.fechaSalida >= :fecha")
     List<Pelicula> findVigentesEnFecha(@Param("fecha") LocalDate fecha);
 

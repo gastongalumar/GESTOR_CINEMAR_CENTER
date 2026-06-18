@@ -35,10 +35,7 @@ public class PeliculaServiceImpl implements PeliculaService {
     private final PeliculaMapper peliculaMapper;
     private final ImagenesService imagenesService;
 
-    /**
-     * Obtiene la entidad Pelicula solo si está activa.
-     * Lanza RecursoNoEncontradoException si no existe o está desactivada.
-     */
+    // Pelicula activa o 404
     @Override
     public Pelicula obtenerPelicula(Long id) {
         return peliculaRepository.findByIdAndActivaTrue(id)
@@ -68,10 +65,7 @@ public class PeliculaServiceImpl implements PeliculaService {
         return peliculaMapper.toResponse(obtenerPelicula(id));
     }
 
-    /**
-     * Valida que no exista otra película ACTIVA con el mismo nombre.
-     * Las películas desactivadas no bloquean la creación.
-     */
+    // Si ya hay otra activa con el mismo nombre, no dejo crear
     private void validarNombreDisponible(String nombre) {
         if (peliculaRepository.existsByNombreIgnoreCaseAndActivaTrue(nombre.trim())) {
             throw new ReglaNegocioException("Ya existe una película activa con ese nombre");
@@ -84,11 +78,7 @@ public class PeliculaServiceImpl implements PeliculaService {
         }
     }
 
-    /**
-     * Valida que las nuevas fechas de la película no dejen funciones activas fuera del rango.
-     * Si una función activa tiene horario antes de la nueva fechaEstreno o después de la nueva
-     * fechaSalida, se lanza una excepción indicando cuál función genera el conflicto.
-     */
+    // Al cambiar fechas, reviso que ninguna funcion activa quede afuera del rango
     private void validarFechasConFunciones(Pelicula pelicula, LocalDate nuevaFechaEstreno, LocalDate nuevaFechaSalida) {
         List<Funcion> funciones = funcionRepository.findByActivaTrueAndPelicula(pelicula);
 
@@ -141,10 +131,10 @@ public class PeliculaServiceImpl implements PeliculaService {
                     LocalDate.now().plusDays(1) + ")");
         }
 
-        // Validar rango mínimo entre fechas
+        // Salida tiene que ser despues del estreno
         validarFechas(fechaEstreno, fechaSalida);
 
-        // Validar que las nuevas fechas no dejen funciones activas fuera del rango
+        // Y que las funciones ya cargadas sigan entrando en el rango nuevo
         validarFechasConFunciones(existente, fechaEstreno, fechaSalida);
 
         peliculaMapper.actualizarEntity(request, existente);

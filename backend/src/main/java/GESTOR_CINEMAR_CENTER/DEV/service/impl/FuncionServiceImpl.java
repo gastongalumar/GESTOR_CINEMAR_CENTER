@@ -1,5 +1,6 @@
 package GESTOR_CINEMAR_CENTER.DEV.service.impl;
 
+import GESTOR_CINEMAR_CENTER.DEV.dto.request.funcion.ActualizarHorarioFuncionRequestDTO;
 import GESTOR_CINEMAR_CENTER.DEV.dto.request.funcion.CrearFuncionRequestDTO;
 import GESTOR_CINEMAR_CENTER.DEV.dto.request.funcion.CrearFuncionesPorRangoRequestDTO;
 import GESTOR_CINEMAR_CENTER.DEV.dto.response.funcion.FuncionResponseDTO;
@@ -13,6 +14,7 @@ import GESTOR_CINEMAR_CENTER.DEV.model.Pelicula;
 import GESTOR_CINEMAR_CENTER.DEV.model.Sala;
 import GESTOR_CINEMAR_CENTER.DEV.repository.FuncionRepository;
 import GESTOR_CINEMAR_CENTER.DEV.repository.ReservaRepository;
+import GESTOR_CINEMAR_CENTER.DEV.service.AsientoService;
 import GESTOR_CINEMAR_CENTER.DEV.service.FuncionService;
 import GESTOR_CINEMAR_CENTER.DEV.service.PeliculaService;
 import GESTOR_CINEMAR_CENTER.DEV.service.SalaService;
@@ -24,7 +26,9 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Service("funcionService")
 @RequiredArgsConstructor
@@ -34,7 +38,10 @@ public class FuncionServiceImpl implements FuncionService {
     private final ReservaRepository reservaRepository;
     private final PeliculaService peliculaService;
     private final SalaService salaService;
+    private final AsientoService asientoService;
     private final FuncionMapper funcionMapper;
+
+    private static final int MAX_DURACION_PELICULA_MINUTOS = 600;
 
     private static final List<EstadoReserva> ESTADOS_RESERVA_ACTIVA = List.of(
             EstadoReserva.PENDIENTE,
@@ -42,10 +49,7 @@ public class FuncionServiceImpl implements FuncionService {
             EstadoReserva.VALIDADA
     );
 
-    /**
-     * Obtiene la entidad Funcion solo si está activa.
-     * Lanza RecursoNoEncontradoException si no existe o está desactivada.
-     */
+    // Busca la funcion activa o tira 404
     @Override
     public Funcion obtenerFuncion(Long id) {
         return funcionRepository.findByIdAndActivaTrue(id)
@@ -80,15 +84,16 @@ public class FuncionServiceImpl implements FuncionService {
         Sala sala = salaService.obtenerSalaActiva(request.getSalaId());
         Pelicula pelicula = peliculaService.obtenerPelicula(request.getPeliculaId());
 
-        validarFechaDentroDeCartelera(request.getHorario().toLocalDate(), pelicula);
-
         LocalDateTime inicioNueva = request.getHorario();
         LocalDateTime finNueva = inicioNueva.plusMinutes(pelicula.getDuracionMinutos());
 
-        List<Funcion> funcionesMismaSala = funcionRepository.findByActivaTrueAndSalaAndHorarioBetween(
-                sala,
-                inicioNueva.toLocalDate().atStartOfDay(),
-                inicioNueva.toLocalDate().plusDays(1).atStartOfDay());
+        validarFechaDentroDeCartelera(inicioNueva.toLocalDate(), pelicula);
+        if (!finNueva.toLocalDate().equals(inicioNueva.toLocalDate())) {
+            validarFechaDentroDeCartelera(finNueva.toLocalDate(), pelicula);
+        }
+
+        List<Funcion> funcionesMismaSala = obtenerFuncionesCandidatasSolapamiento(
+                sala, inicioNueva, finNueva, null);
 
         validarSinSolapamiento(inicioNueva, finNueva, funcionesMismaSala);
 
@@ -130,12 +135,15 @@ public class FuncionServiceImpl implements FuncionService {
             }
         }
 
-        List<Funcion> funcionesExistentes = funcionRepository.findByActivaTrueAndSalaAndHorarioBetween(
-                sala,
-                request.getFechaDesde().atStartOfDay(),
-                request.getFechaHasta().plusDays(1).atStartOfDay());
-
         int duracionMinutos = pelicula.getDuracionMinutos();
+        LocalDateTime minInicio = horariosPropuestos.stream().min(LocalDateTime::compareTo).orElseThrow();
+        LocalDateTime maxFin = horariosPropuestos.stream()
+                .max(LocalDateTime::compareTo)
+                .orElseThrow()
+                .plusMinutes(duracionMinutos);
+
+        List<Funcion> funcionesExistentes = obtenerFuncionesCandidatasSolapamiento(
+                sala, minInicio, maxFin, null);
         for (LocalDateTime inicioPropuesto : horariosPropuestos) {
             LocalDateTime finPropuesto = inicioPropuesto.plusMinutes(duracionMinutos);
             validarSinSolapamiento(inicioPropuesto, finPropuesto, funcionesExistentes);
@@ -201,6 +209,25 @@ public class FuncionServiceImpl implements FuncionService {
         return horarios;
     }
 
+    private List<Funcion> obtenerFuncionesCandidatasSolapamiento(
+            Sala sala,
+            LocalDateTime inicio,
+            LocalDateTime fin,
+            Long excluirFuncionId) {
+
+        LocalDateTime ventanaInicio = inicio.minusMinutes(MAX_DURACION_PELICULA_MINUTOS);
+        List<Funcion> candidatas = funcionRepository.findByActivaTrueAndSalaAndHorarioBetween(
+                sala, ventanaInicio, fin);
+
+        if (excluirFuncionId == null) {
+            return candidatas;
+        }
+
+        return candidatas.stream()
+                .filter(f -> !f.getId().equals(excluirFuncionId))
+                .toList();
+    }
+
     private void validarSinSolapamiento(
             LocalDateTime inicioNueva,
             LocalDateTime finNueva,
@@ -215,17 +242,59 @@ public class FuncionServiceImpl implements FuncionService {
                 throw new ReglaNegocioException(
                         "Conflicto de horario en la sala: ya existe la función de '"
                                 + funcionExistente.getPelicula().getNombre()
-                                + "' de " + inicioExistente.toLocalDate() + " "
-                                + inicioExistente.toLocalTime() + " a " + finExistente.toLocalTime()
+                                + "' de " + formatearRangoHorario(inicioExistente, finExistente)
                                 + ". No se creó ninguna función del rango.");
             }
         }
     }
 
-    /**
-     * Borrado lógico: marca la función como inactiva en lugar de eliminarla
-     * físicamente.
-     */
+    private String formatearRangoHorario(LocalDateTime inicio, LocalDateTime fin) {
+        if (inicio.toLocalDate().equals(fin.toLocalDate())) {
+            return inicio.toLocalDate() + " " + inicio.toLocalTime() + " a " + fin.toLocalTime();
+        }
+        return inicio.toLocalDate() + " " + inicio.toLocalTime()
+                + " a " + fin.toLocalDate() + " " + fin.toLocalTime();
+    }
+
+    @Override
+    @Transactional
+    public FuncionResponseDTO actualizarHorario(Long id, ActualizarHorarioFuncionRequestDTO request) {
+        Funcion funcion = obtenerFuncion(id);
+
+        if (reservaRepository.existsByFuncionAndEstadoReservaIn(funcion, ESTADOS_RESERVA_ACTIVA)) {
+            throw new ReglaNegocioException(
+                    "No se puede modificar el horario de la función porque tiene reservas activas asociadas");
+        }
+
+        Pelicula pelicula = funcion.getPelicula();
+        Sala sala = funcion.getSala();
+        LocalDateTime inicioNuevo = request.getHorario();
+        LocalDateTime finNuevo = inicioNuevo.plusMinutes(pelicula.getDuracionMinutos());
+
+        validarFechaDentroDeCartelera(inicioNuevo.toLocalDate(), pelicula);
+        if (!finNuevo.toLocalDate().equals(inicioNuevo.toLocalDate())) {
+            validarFechaDentroDeCartelera(finNuevo.toLocalDate(), pelicula);
+        }
+
+        if (!inicioNuevo.isAfter(LocalDateTime.now())) {
+            throw new ReglaNegocioException("El horario debe ser futuro");
+        }
+
+        List<Funcion> funcionesMismaSala = obtenerFuncionesCandidatasSolapamiento(
+                sala, inicioNuevo, finNuevo, id);
+        validarSinSolapamiento(inicioNuevo, finNuevo, funcionesMismaSala);
+
+        boolean horarioOcupado = funcionRepository.findByActivaTrueAndSala(sala).stream()
+                .anyMatch(f -> !f.getId().equals(id) && f.getHorario().equals(inicioNuevo));
+        if (horarioOcupado) {
+            throw new ReglaNegocioException("Ya existe una función activa en esa sala a esa hora exacta");
+        }
+
+        funcion.setHorario(inicioNuevo);
+        return funcionMapper.toResponse(funcionRepository.save(funcion));
+    }
+
+    // No borramos de la base, solo la marcamos inactiva
     @Override
     @Transactional
     public void eliminar(Long id) {
@@ -257,6 +326,20 @@ public class FuncionServiceImpl implements FuncionService {
                 .flatMap(reserva -> reserva.getAsientos().stream())
                 .map(Asiento::getEtiqueta)
                 .distinct()
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<String> obtenerAsientosLibres(Long funcionId) {
+        Funcion funcion = obtenerFuncion(funcionId);
+        salaService.asegurarAsientosDeSala(funcion.getSala());
+
+        Set<String> ocupados = new HashSet<>(obtenerAsientosOcupados(funcionId));
+
+        return asientoService.obtenerPorSala(funcion.getSala()).stream()
+                .map(Asiento::getEtiqueta)
+                .filter(etiqueta -> !ocupados.contains(etiqueta))
                 .toList();
     }
 }

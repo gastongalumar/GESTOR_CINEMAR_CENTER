@@ -19,7 +19,7 @@ public class JwtUtil {
     private Long expiration;
 
     private Key getSigningKey() {
-        // Decodificar la clave Base64
+        // La clave del yaml viene en base64
         byte[] keyBytes = Base64.getDecoder().decode(secret);
         return Keys.hmacShaKeyFor(keyBytes);
     }

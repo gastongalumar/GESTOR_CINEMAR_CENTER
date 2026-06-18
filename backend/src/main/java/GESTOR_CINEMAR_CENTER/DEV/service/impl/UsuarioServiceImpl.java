@@ -1,9 +1,11 @@
 package GESTOR_CINEMAR_CENTER.DEV.service.impl;
 
 import GESTOR_CINEMAR_CENTER.DEV.dto.request.auth.RegistroRequest;
+import GESTOR_CINEMAR_CENTER.DEV.dto.request.usuario.ActualizarNombreUsuarioRequestDTO;
 import GESTOR_CINEMAR_CENTER.DEV.dto.response.auth.AuthResponse;
 import GESTOR_CINEMAR_CENTER.DEV.dto.response.usuario.UsuarioResponseDTO;
 import GESTOR_CINEMAR_CENTER.DEV.enums.EstadoUsuario;
+import GESTOR_CINEMAR_CENTER.DEV.enums.EstadoReserva;
 import GESTOR_CINEMAR_CENTER.DEV.enums.TipoUsuario;
 import GESTOR_CINEMAR_CENTER.DEV.exception.ConflictoRecursoException;
 import GESTOR_CINEMAR_CENTER.DEV.exception.RecursoNoEncontradoException;
@@ -12,6 +14,7 @@ import GESTOR_CINEMAR_CENTER.DEV.mapper.UsuarioMapper;
 import GESTOR_CINEMAR_CENTER.DEV.model.Administrador;
 import GESTOR_CINEMAR_CENTER.DEV.model.Cliente;
 import GESTOR_CINEMAR_CENTER.DEV.model.Usuario;
+import GESTOR_CINEMAR_CENTER.DEV.repository.ReservaRepository;
 import GESTOR_CINEMAR_CENTER.DEV.repository.UsuarioRepository;
 import GESTOR_CINEMAR_CENTER.DEV.security.JwtUtil;
 import GESTOR_CINEMAR_CENTER.DEV.service.UsuarioService;
@@ -22,6 +25,7 @@ import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -31,10 +35,17 @@ import java.util.List;
 public class UsuarioServiceImpl implements UsuarioService {
 
     private final UsuarioRepository usuarioRepository;
+    private final ReservaRepository reservaRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final AuthenticationManager authenticationManager;
     private final UsuarioMapper usuarioMapper;
+
+    private static final List<EstadoReserva> ESTADOS_RESERVA_ACTIVA = List.of(
+            EstadoReserva.PENDIENTE,
+            EstadoReserva.CONFIRMADA,
+            EstadoReserva.VALIDADA
+    );
 
     @Override
     public AuthResponse login(String email, String password) {
@@ -152,10 +163,42 @@ public class UsuarioServiceImpl implements UsuarioService {
     }
 
     @Override
-    public void eliminarUsuario(Long id) {
-        Usuario usuario = usuarioRepository.findById(id)
-                .orElseThrow(() -> new RecursoNoEncontradoException("Usuario", id));
-        usuarioRepository.delete(usuario);
+    @Transactional
+    public UsuarioResponseDTO actualizarMiNombre(String email, ActualizarNombreUsuarioRequestDTO request) {
+        Usuario usuario = findByEmail(email);
+
+        if (usuario.getEstado() != EstadoUsuario.ACTIVO) {
+            throw new DisabledException("La cuenta de usuario no está activa");
+        }
+
+        usuario.setNombre(request.getNombre().trim());
+        usuario.setApellido(request.getApellido().trim());
+        return usuarioMapper.toDTO(usuarioRepository.save(usuario));
+    }
+
+    @Override
+    @Transactional
+    public void eliminarUsuario(Long id, String emailAdministrador) {
+        Usuario administrador = findByEmail(emailAdministrador);
+
+        if (administrador.getId().equals(id)) {
+            throw new ReglaNegocioException("No puede desactivar su propia cuenta");
+        }
+
+        Usuario usuario = findById(id);
+
+        if (usuario.getEstado() == EstadoUsuario.INACTIVO) {
+            throw new ReglaNegocioException("El usuario ya está inactivo");
+        }
+
+        if (reservaRepository.existsReservasActivasFuturasPorCliente(
+                id, ESTADOS_RESERVA_ACTIVA, LocalDateTime.now())) {
+            throw new ReglaNegocioException(
+                    "No se puede desactivar el usuario porque tiene reservas activas con funciones futuras");
+        }
+
+        usuario.setEstado(EstadoUsuario.INACTIVO);
+        usuarioRepository.save(usuario);
     }
 
     @Override

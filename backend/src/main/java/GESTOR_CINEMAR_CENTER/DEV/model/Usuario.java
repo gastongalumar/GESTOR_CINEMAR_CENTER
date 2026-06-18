@@ -38,8 +38,7 @@ public abstract class Usuario {
 
     private String telefono;
 
-    // Mantengo el campo tipo (enum) si lo necesitas a nivel de modelo.
-    // NOTA: no está ligado al discriminator; son dos columnas distintas.
+    // El tipo de usuario va en otra columna, no confundir con el discriminator de JPA
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private TipoUsuario tipo;
