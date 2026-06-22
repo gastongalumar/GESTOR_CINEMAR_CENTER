@@ -51,7 +51,9 @@ public interface FuncionRepository extends JpaRepository<Funcion, Long> {
     List<Funcion> findVigentesPorPelicula(@Param("peliculaId") Long peliculaId, @Param("fecha") LocalDateTime fecha);
 
     // Para el dashboard de estadisticas
-    @Query("SELECT COUNT(f) FROM Funcion f WHERE f.horario > CURRENT_TIMESTAMP")
+    long countByActivaTrue();
+
+    @Query("SELECT COUNT(f) FROM Funcion f WHERE f.activa = true AND f.horario > CURRENT_TIMESTAMP")
     Long countVigentes();
 
     // Lo usa SalaService al intentar cambiar el layout
