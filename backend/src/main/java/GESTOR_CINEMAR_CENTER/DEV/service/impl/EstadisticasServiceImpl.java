@@ -1,9 +1,12 @@
 package GESTOR_CINEMAR_CENTER.DEV.service.impl;
 
 import GESTOR_CINEMAR_CENTER.DEV.dto.response.estadisticas.*;
+import GESTOR_CINEMAR_CENTER.DEV.enums.EstadoPago;
+import GESTOR_CINEMAR_CENTER.DEV.enums.EstadoReserva;
 import GESTOR_CINEMAR_CENTER.DEV.model.Funcion;
 import GESTOR_CINEMAR_CENTER.DEV.model.Pago;
 import GESTOR_CINEMAR_CENTER.DEV.model.Pelicula;
+import GESTOR_CINEMAR_CENTER.DEV.model.Reserva;
 import GESTOR_CINEMAR_CENTER.DEV.model.Sala;
 import GESTOR_CINEMAR_CENTER.DEV.repository.*;
 import GESTOR_CINEMAR_CENTER.DEV.service.EstadisticasService;
@@ -19,23 +22,28 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class EstadisticasServiceImpl implements EstadisticasService {
 
+    private static final Set<EstadoReserva> ESTADOS_RESERVA_EXCLUIDOS = Set.of(
+            EstadoReserva.CANCELADA,
+            EstadoReserva.EXPIRADA,
+            EstadoReserva.REEMBOLSADA
+    );
+
     private final ReservaRepository reservaRepository;
     private final PagoRepository pagoRepository;
     private final FuncionRepository funcionRepository;
     private final PeliculaRepository peliculaRepository;
     private final SalaRepository salaRepository;
-    private final AsientoRepository asientoRepository;
 
     @Override
     public DashboardResumenDTO obtenerResumen() {
-        long totalReservas = reservaRepository.count();
+        long totalReservas = reservaRepository.countReservasActivas() != null ? reservaRepository.countReservasActivas() : 0;
         long totalEntradas = reservaRepository.countEntradasTotales() != null ? reservaRepository.countEntradasTotales() : 0;
         double totalVentas = pagoRepository.sumTotalVentas() != null ? pagoRepository.sumTotalVentas() : 0;
         double ventasHoy = pagoRepository.sumVentasPorFecha(LocalDate.now()) != null ? pagoRepository.sumVentasPorFecha(LocalDate.now()) : 0;
-        long totalPeliculas = peliculaRepository.count();
-        long totalFunciones = funcionRepository.count();
+        long totalPeliculas = peliculaRepository.countByActivaTrue();
+        long totalFunciones = funcionRepository.countByActivaTrue();
         long funcionesVigentes = funcionRepository.countVigentes() != null ? funcionRepository.countVigentes() : 0;
-        long totalSalas = salaRepository.count();
+        long totalSalas = salaRepository.countByActivaTrue();
 
         return new DashboardResumenDTO(
                 totalReservas,
@@ -52,11 +60,9 @@ public class EstadisticasServiceImpl implements EstadisticasService {
     @Override
     public List<VentaDiariaDTO> ventasDiarias(int dias) {
         LocalDate fechaInicio = LocalDate.now().minusDays(dias);
-        LocalDateTime inicioDateTime = fechaInicio.atStartOfDay();
 
-        List<Pago> pagos = pagoRepository.findAll();
+        List<Pago> pagos = pagosContabilizables();
 
-        // Agrupo los pagos por dia para el grafico
         Map<LocalDate, List<Pago>> pagosPorFecha = pagos.stream()
                 .filter(p -> p.getFechaPago() != null && p.getFechaPago().toLocalDate().isAfter(fechaInicio.minusDays(1)))
                 .collect(Collectors.groupingBy(p -> p.getFechaPago().toLocalDate()));
@@ -67,13 +73,11 @@ public class EstadisticasServiceImpl implements EstadisticasService {
             List<Pago> pagosDia = pagosPorFecha.getOrDefault(fecha, new ArrayList<>());
 
             long reservasDelDia = pagosDia.stream()
-                    .filter(p -> p.getReserva() != null)
                     .map(Pago::getReserva)
                     .distinct()
                     .count();
 
             long entradasDelDia = pagosDia.stream()
-                    .filter(p -> p.getReserva() != null)
                     .flatMap(p -> p.getReserva().getAsientos().stream())
                     .count();
 
@@ -94,7 +98,7 @@ public class EstadisticasServiceImpl implements EstadisticasService {
 
     @Override
     public List<VentaPeliculaDTO> ventasPorPelicula() {
-        List<Pelicula> peliculas = peliculaRepository.findAll();
+        List<Pelicula> peliculas = peliculaRepository.findByActivaTrue();
         List<VentaPeliculaDTO> resultado = new ArrayList<>();
 
         for (Pelicula pelicula : peliculas) {
@@ -105,9 +109,7 @@ public class EstadisticasServiceImpl implements EstadisticasService {
             double totalVentas = 0;
 
             for (Funcion funcion : funcionesDePelicula) {
-                List<Pago> pagosFuncion = pagoRepository.findAll().stream()
-                        .filter(p -> p.getReserva() != null && p.getReserva().getFuncion().getId().equals(funcion.getId()))
-                        .collect(Collectors.toList());
+                List<Pago> pagosFuncion = pagosContabilizablesPorFuncion(funcion.getId());
 
                 totalReservas += pagosFuncion.stream()
                         .map(Pago::getReserva)
@@ -115,7 +117,6 @@ public class EstadisticasServiceImpl implements EstadisticasService {
                         .count();
 
                 totalEntradas += pagosFuncion.stream()
-                        .filter(p -> p.getReserva() != null)
                         .flatMap(p -> p.getReserva().getAsientos().stream())
                         .count();
 
@@ -134,14 +135,14 @@ public class EstadisticasServiceImpl implements EstadisticasService {
         }
 
         return resultado.stream()
-                .filter(v -> v.getTotalVentas() > 0) // sin ventas no las muestro
+                .filter(v -> v.getTotalVentas() > 0)
                 .sorted(Comparator.comparingDouble(VentaPeliculaDTO::getTotalVentas).reversed())
                 .collect(Collectors.toList());
     }
 
     @Override
     public List<VentaSalaDTO> ventasPorSala() {
-        List<Sala> salas = salaRepository.findAll();
+        List<Sala> salas = salaRepository.findByActivaTrue();
         List<VentaSalaDTO> resultado = new ArrayList<>();
 
         for (Sala sala : salas) {
@@ -153,12 +154,9 @@ public class EstadisticasServiceImpl implements EstadisticasService {
             int capacidad = sala.getCapacidad() != null ? sala.getCapacidad() : 0;
 
             for (Funcion funcion : funcionesDeSala) {
-                List<Pago> pagosFuncion = pagoRepository.findAll().stream()
-                        .filter(p -> p.getReserva() != null && p.getReserva().getFuncion().getId().equals(funcion.getId()))
-                        .collect(Collectors.toList());
+                List<Pago> pagosFuncion = pagosContabilizablesPorFuncion(funcion.getId());
 
                 totalEntradas += pagosFuncion.stream()
-                        .filter(p -> p.getReserva() != null)
                         .flatMap(p -> p.getReserva().getAsientos().stream())
                         .count();
 
@@ -189,22 +187,14 @@ public class EstadisticasServiceImpl implements EstadisticasService {
     public List<OcupacionFuncionDTO> ocupacionFunciones(boolean soloVigentes) {
         List<Funcion> funciones = soloVigentes
                 ? funcionRepository.findByActivaTrueAndHorarioAfter(LocalDateTime.now())
-                : funcionRepository.findAll();
+                : funcionRepository.findByActivaTrue();
 
         List<OcupacionFuncionDTO> resultado = new ArrayList<>();
 
         for (Funcion funcion : funciones) {
-            int asientosOcupados = (int) funciones.stream()
-                    .filter(f -> f.getId().equals(funcion.getId()))
-                    .flatMap(f -> f.getSala().getId() != null ? repositoryAsientos(f.getSala().getId()).stream() : new ArrayList<>().stream())
-                    .count();
+            List<Pago> pagosFuncion = pagosContabilizablesPorFuncion(funcion.getId());
 
-            List<Pago> pagosFuncion = pagoRepository.findAll().stream()
-                    .filter(p -> p.getReserva() != null && p.getReserva().getFuncion().getId().equals(funcion.getId()))
-                    .collect(Collectors.toList());
-
-            asientosOcupados = (int) pagosFuncion.stream()
-                    .filter(p -> p.getReserva() != null)
+            int asientosOcupados = (int) pagosFuncion.stream()
                     .flatMap(p -> p.getReserva().getAsientos().stream())
                     .count();
 
@@ -233,14 +223,14 @@ public class EstadisticasServiceImpl implements EstadisticasService {
 
     @Override
     public List<MetodoPagoDTO> metodosPago() {
-        List<Pago> todosLosPagos = pagoRepository.findAll();
+        List<Pago> pagosValidos = pagosContabilizables();
 
-        long totalPagos = todosLosPagos.size();
+        long totalPagos = pagosValidos.size();
         if (totalPagos == 0) {
             return new ArrayList<>();
         }
 
-        Map<String, Long> contegoPorMetodo = todosLosPagos.stream()
+        Map<String, Long> conteoPorMetodo = pagosValidos.stream()
                 .filter(p -> p.getMetodoPago() != null)
                 .collect(Collectors.groupingBy(
                         p -> p.getMetodoPago().toString(),
@@ -249,7 +239,7 @@ public class EstadisticasServiceImpl implements EstadisticasService {
 
         List<MetodoPagoDTO> resultado = new ArrayList<>();
 
-        for (Map.Entry<String, Long> entry : contegoPorMetodo.entrySet()) {
+        for (Map.Entry<String, Long> entry : conteoPorMetodo.entrySet()) {
             int porcentaje = (int) ((entry.getValue() * 100) / totalPagos);
             resultado.add(new MetodoPagoDTO(
                     entry.getKey(),
@@ -263,8 +253,25 @@ public class EstadisticasServiceImpl implements EstadisticasService {
                 .collect(Collectors.toList());
     }
 
-    // Metodo auxiliar que quedo de una version anterior (no se usa)
-    private List<Object> repositoryAsientos(Long salaId) {
-        return new ArrayList<>();
+    private List<Pago> pagosContabilizables() {
+        return pagoRepository.findAll().stream()
+                .filter(this::esPagoContabilizable)
+                .collect(Collectors.toList());
+    }
+
+    private List<Pago> pagosContabilizablesPorFuncion(Long funcionId) {
+        return pagosContabilizables().stream()
+                .filter(p -> p.getReserva().getFuncion().getId().equals(funcionId))
+                .collect(Collectors.toList());
+    }
+
+    private boolean esReservaContabilizable(Reserva reserva) {
+        return reserva != null && !ESTADOS_RESERVA_EXCLUIDOS.contains(reserva.getEstadoReserva());
+    }
+
+    private boolean esPagoContabilizable(Pago pago) {
+        return pago != null
+                && pago.getEstadoPago() == EstadoPago.COMPLETADO
+                && esReservaContabilizable(pago.getReserva());
     }
 }

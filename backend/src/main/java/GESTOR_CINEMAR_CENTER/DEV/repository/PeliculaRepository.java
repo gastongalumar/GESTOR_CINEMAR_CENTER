@@ -25,6 +25,8 @@ public interface PeliculaRepository extends JpaRepository<Pelicula, Long> {
     // Listado de todas las activas
     List<Pelicula> findByActivaTrue();
 
+    long countByActivaTrue();
+
     // En cartelera hoy
     @Query("SELECT p FROM Pelicula p WHERE p.activa = true AND p.fechaEstreno <= :fecha AND p.fechaSalida >= :fecha")
     List<Pelicula> findVigentesEnFecha(@Param("fecha") LocalDate fecha);

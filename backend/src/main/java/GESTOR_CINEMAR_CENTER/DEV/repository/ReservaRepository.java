@@ -45,19 +45,52 @@ public interface ReservaRepository extends JpaRepository<Reserva, Long> {
     List<Reserva> findByFuncion(Funcion funcion);*/
 
     @EntityGraph(attributePaths = {"asientos", "funcion", "cliente"})
-    @Query("SELECT r FROM Reserva r WHERE r.funcion.sala.id = :salaId AND r.estadoReserva != 'CANCELADA'")
+    @Query("""
+            SELECT r FROM Reserva r
+            WHERE r.funcion.sala.id = :salaId
+              AND r.estadoReserva <> GESTOR_CINEMAR_CENTER.DEV.enums.EstadoReserva.CANCELADA
+            """)
     List<Reserva> findBySalaId(@Param("salaId") Long salaId);
 
     @EntityGraph(attributePaths = {"asientos", "funcion", "cliente"})
-    @Query("SELECT r FROM Reserva r WHERE r.fechaEmision BETWEEN :inicio AND :fin AND r.estadoReserva != 'CANCELADA'")
+    @Query("""
+            SELECT r FROM Reserva r
+            WHERE r.fechaEmision BETWEEN :inicio AND :fin
+              AND r.estadoReserva <> GESTOR_CINEMAR_CENTER.DEV.enums.EstadoReserva.CANCELADA
+            """)
     List<Reserva> findByFechaEmisionBetween(@Param("inicio") LocalDateTime inicio,
                                              @Param("fin") LocalDateTime fin);
 
-    // Consultas para estadisticas
-    @Query("SELECT COUNT(a) FROM Reserva r JOIN r.asientos a")
+    // Consultas para estadisticas (excluye reservas canceladas, expiradas o reembolsadas)
+    @Query("""
+            SELECT COUNT(r) FROM Reserva r
+            WHERE r.estadoReserva NOT IN (
+                GESTOR_CINEMAR_CENTER.DEV.enums.EstadoReserva.CANCELADA,
+                GESTOR_CINEMAR_CENTER.DEV.enums.EstadoReserva.EXPIRADA,
+                GESTOR_CINEMAR_CENTER.DEV.enums.EstadoReserva.REEMBOLSADA
+            )
+            """)
+    Long countReservasActivas();
+
+    @Query("""
+            SELECT COUNT(a) FROM Reserva r JOIN r.asientos a
+            WHERE r.estadoReserva NOT IN (
+                GESTOR_CINEMAR_CENTER.DEV.enums.EstadoReserva.CANCELADA,
+                GESTOR_CINEMAR_CENTER.DEV.enums.EstadoReserva.EXPIRADA,
+                GESTOR_CINEMAR_CENTER.DEV.enums.EstadoReserva.REEMBOLSADA
+            )
+            """)
     Long countEntradasTotales();
 
-    @Query("SELECT COUNT(a) FROM Reserva r JOIN r.asientos a WHERE r.fechaEmision BETWEEN :inicio AND :fin")
+    @Query("""
+            SELECT COUNT(a) FROM Reserva r JOIN r.asientos a
+            WHERE r.fechaEmision BETWEEN :inicio AND :fin
+              AND r.estadoReserva NOT IN (
+                  GESTOR_CINEMAR_CENTER.DEV.enums.EstadoReserva.CANCELADA,
+                  GESTOR_CINEMAR_CENTER.DEV.enums.EstadoReserva.EXPIRADA,
+                  GESTOR_CINEMAR_CENTER.DEV.enums.EstadoReserva.REEMBOLSADA
+              )
+            """)
     Long countEntradasTotalesPorPeriodo(@Param("inicio") LocalDateTime inicio, @Param("fin") LocalDateTime fin);
 
     @Query("SELECT COUNT(r) > 0 FROM Reserva r WHERE r.funcion = :funcion AND r.estadoReserva IN :estados")

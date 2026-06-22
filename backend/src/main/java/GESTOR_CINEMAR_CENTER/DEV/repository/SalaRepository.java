@@ -16,6 +16,8 @@ public interface SalaRepository extends JpaRepository<Sala, Long> {
 
     List<Sala> findByActivaTrue();
 
+    long countByActivaTrue();
+
     Optional<Sala> findByIdAndActivaTrue(Long id);
 
     Optional<Sala> findByNombreAndActivaTrue(String nombre);
