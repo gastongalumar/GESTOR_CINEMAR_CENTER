@@ -37,6 +37,7 @@ public interface ReservaMapper {
     @Mapping(target = "fechaValidacion", ignore = true)
     @Mapping(target = "estadoReserva", ignore = true)
     @Mapping(target = "metodoPago", ignore = true)
+    @Mapping(target = "pagada", ignore = true)
     @Mapping(target = "asientos", ignore = true)
     @Mapping(source = "cliente", target = "cliente")
     @Mapping(source = "funcion", target = "funcion")

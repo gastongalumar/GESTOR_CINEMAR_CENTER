@@ -198,8 +198,9 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGenericException(
             Exception ex, HttpServletRequest request) {
+        ex.printStackTrace();
+        String msg = ex.getClass().getSimpleName() + ": " + (ex.getMessage() != null ? ex.getMessage() : "Error sin mensaje");
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(buildError(HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error",
-                        "Ha ocurrido un error inesperado", request));
+                .body(buildError(HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error", msg, request));
     }
 }

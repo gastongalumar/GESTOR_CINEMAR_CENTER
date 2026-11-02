@@ -22,14 +22,22 @@ public class AuthResponse {
     @Schema(description = "ID del usuario autenticado", example = "1")
     private Long id;
 
+    @Schema(description = "URL relativa de la foto de perfil", example = "/uploads/perfiles/abc.jpg")
+    private String fotoPerfilUrl;
+
     public AuthResponse() {}
 
     public AuthResponse(String token, String tipo, String email, String nombre, Long id) {
+        this(token, tipo, email, nombre, id, null);
+    }
+
+    public AuthResponse(String token, String tipo, String email, String nombre, Long id, String fotoPerfilUrl) {
         this.token = token;
         this.tipo = tipo;
         this.email = email;
         this.nombre = nombre;
         this.id = id;
+        this.fotoPerfilUrl = fotoPerfilUrl;
     }
 
     public String getToken() {
@@ -70,5 +78,13 @@ public class AuthResponse {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public String getFotoPerfilUrl() {
+        return fotoPerfilUrl;
+    }
+
+    public void setFotoPerfilUrl(String fotoPerfilUrl) {
+        this.fotoPerfilUrl = fotoPerfilUrl;
     }
 }

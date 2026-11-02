@@ -1,0 +1,21 @@
+# Copiá este archivo a application-local.yaml (no se sube a git)
+# y completá los valores locales. Luego arrancá con:
+#   --spring.profiles.active=local
+#
+spring:
+  datasource:
+    password: TU_PASSWORD_MYSQL
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: TU_GOOGLE_CLIENT_ID
+            client-secret: TU_GOOGLE_CLIENT_SECRET
+
+jwt:
+  secret: TU_JWT_SECRET_BASE64
+
+mercadopago:
+  access-token: TU_MERCADOPAGO_ACCESS_TOKEN
+  notification-url: https://TU_TUNEL/api/pagos/webhook

@@ -47,6 +47,11 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-webmvc</artifactId>
         </dependency>
+        <!-- Login con Google (OAuth2). En Spring Boot 4 el starter canónico es este. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security-oauth2-client</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>com.mysql</groupId>
@@ -97,6 +102,13 @@
             <artifactId>jjwt-jackson</artifactId>
             <version>0.11.5</version>
             <scope>runtime</scope>
+        </dependency>
+
+        <!-- Mercado Pago SDK -->
+        <dependency>
+            <groupId>com.mercadopago</groupId>
+            <artifactId>sdk-java</artifactId>
+            <version>2.1.28</version>
         </dependency>
 
 

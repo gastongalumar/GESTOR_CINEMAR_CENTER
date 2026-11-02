@@ -50,6 +50,9 @@ public class Reserva {
     @Column(nullable = false)
     private EstadoReserva estadoReserva = EstadoReserva.CONFIRMADA;
 
+    @Column(name = "pagada")
+    private Boolean pagada = Boolean.FALSE;
+
     @ManyToMany
     @JoinTable(
             name = "reserva_asiento",

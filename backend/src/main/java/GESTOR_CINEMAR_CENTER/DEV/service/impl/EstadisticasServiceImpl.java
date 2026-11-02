@@ -106,16 +106,17 @@ public class EstadisticasServiceImpl implements EstadisticasService {
 
             for (Funcion funcion : funcionesDePelicula) {
                 List<Pago> pagosFuncion = pagoRepository.findAll().stream()
-                        .filter(p -> p.getReserva() != null && p.getReserva().getFuncion().getId().equals(funcion.getId()))
+                        .filter(p -> p.getReserva() != null && p.getReserva().getFuncion() != null && funcion.getId().equals(p.getReserva().getFuncion().getId()))
                         .collect(Collectors.toList());
 
                 totalReservas += pagosFuncion.stream()
                         .map(Pago::getReserva)
+                        .filter(Objects::nonNull)
                         .distinct()
                         .count();
 
                 totalEntradas += pagosFuncion.stream()
-                        .filter(p -> p.getReserva() != null)
+                        .filter(p -> p.getReserva() != null && p.getReserva().getAsientos() != null)
                         .flatMap(p -> p.getReserva().getAsientos().stream())
                         .count();
 
@@ -154,11 +155,11 @@ public class EstadisticasServiceImpl implements EstadisticasService {
 
             for (Funcion funcion : funcionesDeSala) {
                 List<Pago> pagosFuncion = pagoRepository.findAll().stream()
-                        .filter(p -> p.getReserva() != null && p.getReserva().getFuncion().getId().equals(funcion.getId()))
+                        .filter(p -> p.getReserva() != null && p.getReserva().getFuncion() != null && funcion.getId().equals(p.getReserva().getFuncion().getId()))
                         .collect(Collectors.toList());
 
                 totalEntradas += pagosFuncion.stream()
-                        .filter(p -> p.getReserva() != null)
+                        .filter(p -> p.getReserva() != null && p.getReserva().getAsientos() != null)
                         .flatMap(p -> p.getReserva().getAsientos().stream())
                         .count();
 
@@ -194,32 +195,31 @@ public class EstadisticasServiceImpl implements EstadisticasService {
         List<OcupacionFuncionDTO> resultado = new ArrayList<>();
 
         for (Funcion funcion : funciones) {
-            int asientosOcupados = (int) funciones.stream()
-                    .filter(f -> f.getId().equals(funcion.getId()))
-                    .flatMap(f -> f.getSala().getId() != null ? repositoryAsientos(f.getSala().getId()).stream() : new ArrayList<>().stream())
-                    .count();
-
             List<Pago> pagosFuncion = pagoRepository.findAll().stream()
-                    .filter(p -> p.getReserva() != null && p.getReserva().getFuncion().getId().equals(funcion.getId()))
+                    .filter(p -> p.getReserva() != null && p.getReserva().getFuncion() != null && funcion.getId().equals(p.getReserva().getFuncion().getId()))
                     .collect(Collectors.toList());
 
-            asientosOcupados = (int) pagosFuncion.stream()
-                    .filter(p -> p.getReserva() != null)
+            int asientosOcupados = (int) pagosFuncion.stream()
+                    .filter(p -> p.getReserva() != null && p.getReserva().getAsientos() != null)
                     .flatMap(p -> p.getReserva().getAsientos().stream())
                     .count();
 
-            int capacidad = funcion.getSala().getCapacidad() != null ? funcion.getSala().getCapacidad() : 0;
+            int capacidad = (funcion.getSala() != null && funcion.getSala().getCapacidad() != null) ? funcion.getSala().getCapacidad() : 0;
             int pctOcupacion = (capacidad > 0) ? (asientosOcupados * 100) / capacidad : 0;
 
             double totalVentas = pagosFuncion.stream()
                     .mapToDouble(p -> p.getMonto() != null ? p.getMonto() : 0)
                     .sum();
 
+            String peliculaNombre = (funcion.getPelicula() != null) ? funcion.getPelicula().getNombre() : "Película";
+            String salaNombre = (funcion.getSala() != null) ? funcion.getSala().getNombre() : "Sala";
+            String horarioStr = (funcion.getHorario() != null) ? funcion.getHorario().toString() : "";
+
             resultado.add(new OcupacionFuncionDTO(
                     funcion.getId(),
-                    funcion.getPelicula().getNombre(),
-                    funcion.getSala().getNombre(),
-                    funcion.getHorario().toString(),
+                    peliculaNombre,
+                    salaNombre,
+                    horarioStr,
                     funcion.getPrecio() != null ? funcion.getPrecio() : 0,
                     asientosOcupados,
                     capacidad,

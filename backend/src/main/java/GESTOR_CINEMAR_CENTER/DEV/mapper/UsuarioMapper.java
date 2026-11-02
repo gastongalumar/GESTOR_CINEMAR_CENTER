@@ -14,6 +14,7 @@ public interface UsuarioMapper {
     @Mapping(source = "usuario.tipo", target = "tipo", qualifiedByName = "enumName")
     @Mapping(source = "usuario.email", target = "email")
     @Mapping(source = "usuario.id", target = "id")
+    @Mapping(source = "usuario.fotoPerfilUrl", target = "fotoPerfilUrl")
     @Mapping(source = "token", target = "token")
     AuthResponse toAuthResponse(Usuario usuario, String token);
 

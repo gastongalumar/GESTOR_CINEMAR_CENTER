@@ -22,10 +22,14 @@ public interface PeliculaMapper {
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "activa", ignore = true)
+    @Mapping(target = "rutaImagen", ignore = true)
     @Mapping(target = "genero", source = "genero", qualifiedByName = "stringToGenero")
     Pelicula toEntity(CrearPeliculaRequestDTO request);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "activa", ignore = true)
+    @Mapping(target = "rutaImagen", ignore = true)
     @Mapping(target = "genero", source = "genero", qualifiedByName = "stringToGenero")
     void actualizarEntity(ActualizarPeliculaRequestDTO request, @MappingTarget Pelicula pelicula);
 

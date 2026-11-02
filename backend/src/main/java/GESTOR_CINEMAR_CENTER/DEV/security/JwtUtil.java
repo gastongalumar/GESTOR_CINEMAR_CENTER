@@ -19,16 +19,45 @@ public class JwtUtil {
     private Long expiration;
 
     private Key getSigningKey() {
-        // Decodificar la clave Base64
-        byte[] keyBytes = Base64.getDecoder().decode(secret);
-        return Keys.hmacShaKeyFor(keyBytes);
+        try {
+            byte[] keyBytes = Base64.getDecoder().decode(secret);
+            if (keyBytes.length >= 32) {
+                return Keys.hmacShaKeyFor(keyBytes);
+            }
+        } catch (IllegalArgumentException ignored) {
+        }
+        return Keys.hmacShaKeyFor(secret.getBytes(java.nio.charset.StandardCharsets.UTF_8));
     }
 
     public String generateToken(String email, String tipo, Long id) {
-        return Jwts.builder()
+        return generateToken(email, tipo, id, null, null, null);
+    }
+
+    public String generateToken(String email, String tipo, Long id, String nombre, String apellido) {
+        return generateToken(email, tipo, id, nombre, apellido, null);
+    }
+
+    public String generateToken(String email, String tipo, Long id, String nombre, String apellido, String fotoPerfilUrl) {
+        String nombreLimpio = nombre != null ? nombre.trim() : "";
+        String apellidoLimpio = apellido != null ? apellido.trim() : "";
+        String nombreCompleto = (nombreLimpio + " " + apellidoLimpio).trim();
+        if (nombreCompleto.isBlank()) {
+            nombreCompleto = email != null ? email : "";
+        }
+
+        var builder = Jwts.builder()
                 .setSubject(email)
                 .claim("tipo", tipo)
                 .claim("userId", id)
+                .claim("nombre", nombreLimpio.isBlank() ? nombreCompleto : nombreLimpio)
+                .claim("apellido", apellidoLimpio)
+                .claim("nombreCompleto", nombreCompleto);
+
+        if (fotoPerfilUrl != null && !fotoPerfilUrl.isBlank()) {
+            builder.claim("fotoPerfilUrl", fotoPerfilUrl.trim());
+        }
+
+        return builder
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)

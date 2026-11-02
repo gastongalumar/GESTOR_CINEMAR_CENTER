@@ -38,6 +38,10 @@ public abstract class Usuario {
 
     private String telefono;
 
+    /** Ruta relativa de la foto de perfil (ej. /uploads/perfiles/uuid.jpg). */
+    @Column(length = 500)
+    private String fotoPerfilUrl;
+
     // Mantengo el campo tipo (enum) si lo necesitas a nivel de modelo.
     // NOTA: no está ligado al discriminator; son dos columnas distintas.
     @Enumerated(EnumType.STRING)

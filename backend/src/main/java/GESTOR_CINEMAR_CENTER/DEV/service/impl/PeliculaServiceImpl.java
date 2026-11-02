@@ -118,6 +118,10 @@ public class PeliculaServiceImpl implements PeliculaService {
 
         Pelicula pelicula = peliculaMapper.toEntity(request);
         pelicula.setActiva(true);
+        if (pelicula.getSinopsis() == null || pelicula.getSinopsis().isBlank()) {
+            pelicula.setSinopsis(
+                    "Sinopsis pendiente. Próximamente se publicará la descripción oficial de la película.");
+        }
         return peliculaMapper.toResponse(peliculaRepository.save(pelicula));
     }
 
@@ -134,12 +138,8 @@ public class PeliculaServiceImpl implements PeliculaService {
         LocalDate fechaSalida = request.getFechaSalida() != null ? request.getFechaSalida()
                 : existente.getFechaSalida();
 
-        if (request.getFechaEstreno() != null
-                && fechaEstreno.isBefore(LocalDate.now().plusDays(1))) {
-            throw new ReglaNegocioException(
-                    "La fecha de estreno debe ser al menos 1 día en el futuro (a partir de " +
-                    LocalDate.now().plusDays(1) + ")");
-        }
+        // En actualización se permiten fechas ya pasadas (películas en cartelera).
+        // El alta sigue validando @Future en CrearPeliculaRequestDTO.
 
         // Validar rango mínimo entre fechas
         validarFechas(fechaEstreno, fechaSalida);
