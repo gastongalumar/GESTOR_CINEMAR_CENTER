@@ -1,4 +1,4 @@
-package GESTOR_CINEMAR_CENTER.DEV.controller;
+﻿package GESTOR_CINEMAR_CENTER.DEV.controller;
 
 import GESTOR_CINEMAR_CENTER.DEV.dto.request.usuario.ActualizarNombreUsuarioRequestDTO;
 import GESTOR_CINEMAR_CENTER.DEV.dto.response.mensaje.MensajeResponse;
@@ -15,11 +15,13 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Positive;
@@ -31,7 +33,7 @@ import java.util.List;
 @RequestMapping("/api/usuarios")
 @CrossOrigin(origins = "http://localhost:4200")
 @RequiredArgsConstructor
-@Tag(name = "Usuarios", description = "Operaciones de administración y consulta de usuarios. Requiere rol ADMINISTRADOR")
+@Tag(name = "Usuarios", description = "Consulta de usuarios (admin) y gestión del propio perfil")
 @SecurityRequirement(name = "bearerAuth")
 public class UsuarioController {
 
@@ -39,11 +41,7 @@ public class UsuarioController {
 
     @Operation(
             summary = "Actualizar mi nombre y apellido",
-            description = "Modifica el nombre y apellido del usuario autenticado según el token JWT",
-            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                    required = true,
-                    content = @Content(schema = @Schema(implementation = ActualizarNombreUsuarioRequestDTO.class))
-            )
+            description = "Modifica el nombre y apellido del usuario autenticado según el token JWT"
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Nombre y apellido actualizados correctamente",
@@ -57,6 +55,35 @@ public class UsuarioController {
             Authentication authentication,
             @Valid @RequestBody ActualizarNombreUsuarioRequestDTO request) {
         return ResponseEntity.ok(usuarioService.actualizarMiNombre(authentication.getName(), request));
+    }
+
+    @Operation(summary = "Obtener mi perfil", description = "Retorna los datos del usuario autenticado")
+    @ApiResponse(responseCode = "200", description = "Perfil obtenido",
+            content = @Content(schema = @Schema(implementation = UsuarioResponseDTO.class)))
+    @GetMapping("/me")
+    @PreAuthorize("hasAnyAuthority('CLIENTE', 'ADMINISTRADOR')")
+    public ResponseEntity<UsuarioResponseDTO> miPerfil(Authentication authentication) {
+        return ResponseEntity.ok(usuarioService.obtenerMiPerfil(authentication.getName()));
+    }
+
+    @Operation(summary = "Subir foto de perfil", description = "JPEG, PNG o WEBP hasta 5MB")
+    @ApiResponse(responseCode = "200", description = "Foto actualizada",
+            content = @Content(schema = @Schema(implementation = UsuarioResponseDTO.class)))
+    @PostMapping(value = "/me/foto", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAnyAuthority('CLIENTE', 'ADMINISTRADOR')")
+    public ResponseEntity<UsuarioResponseDTO> subirFotoPerfil(
+            Authentication authentication,
+            @RequestParam("foto") MultipartFile foto) {
+        return ResponseEntity.ok(usuarioService.actualizarFotoPerfil(authentication.getName(), foto));
+    }
+
+    @Operation(summary = "Eliminar foto de perfil")
+    @ApiResponse(responseCode = "200", description = "Foto eliminada",
+            content = @Content(schema = @Schema(implementation = UsuarioResponseDTO.class)))
+    @DeleteMapping("/me/foto")
+    @PreAuthorize("hasAnyAuthority('CLIENTE', 'ADMINISTRADOR')")
+    public ResponseEntity<UsuarioResponseDTO> eliminarFotoPerfil(Authentication authentication) {
+        return ResponseEntity.ok(usuarioService.eliminarFotoPerfil(authentication.getName()));
     }
 
     @Operation(summary = "Listar todos los usuarios", description = "Retorna el listado completo de usuarios en el sistema")
@@ -104,19 +131,42 @@ public class UsuarioController {
         return ResponseEntity.ok(usuarioService.listarPorRol(tipo));
     }
 
-    @Operation(summary = "Desactivar usuario", description = "Realiza un borrado lógico del usuario. No se permite desactivar la propia cuenta ni si tiene reservas activas con funciones futuras")
+    @Operation(summary = "Dar de baja un usuario", description = "Pasa el estado a INACTIVO. No aplica al admin del sistema ni a la propia cuenta.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Usuario desactivado correctamente",
-                    content = @Content(schema = @Schema(implementation = MensajeResponse.class))),
-            @ApiResponse(responseCode = "400", description = "Regla de negocio incumplida"),
-            @ApiResponse(responseCode = "404", description = "Usuario no encontrado")
+            @ApiResponse(responseCode = "200", description = "Usuario dado de baja",
+                    content = @Content(schema = @Schema(implementation = UsuarioResponseDTO.class))),
+            @ApiResponse(responseCode = "400", description = "Acción no permitida")
+    })
+    @PutMapping("/{id}/baja")
+    @PreAuthorize("hasAuthority('ADMINISTRADOR')")
+    public ResponseEntity<UsuarioResponseDTO> darDeBaja(
+            @Parameter(description = "ID del usuario", required = true) @Positive @PathVariable Long id,
+            Authentication authentication) {
+        return ResponseEntity.ok(usuarioService.darDeBaja(id, authentication.getName()));
+    }
+
+    @Operation(summary = "Reactivar un usuario", description = "Pasa el estado a ACTIVO")
+    @ApiResponse(responseCode = "200", description = "Usuario reactivado",
+            content = @Content(schema = @Schema(implementation = UsuarioResponseDTO.class)))
+    @PutMapping("/{id}/activar")
+    @PreAuthorize("hasAuthority('ADMINISTRADOR')")
+    public ResponseEntity<UsuarioResponseDTO> reactivar(
+            @Parameter(description = "ID del usuario", required = true) @Positive @PathVariable Long id,
+            Authentication authentication) {
+        return ResponseEntity.ok(usuarioService.reactivar(id, authentication.getName()));
+    }
+
+    @Operation(summary = "Eliminar administrador", description = "Borra un administrador. El admin del sistema (admin@mail.com) no puede eliminarse.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Administrador eliminado"),
+            @ApiResponse(responseCode = "400", description = "Acción no permitida")
     })
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('ADMINISTRADOR')")
     public ResponseEntity<MensajeResponse> eliminar(
-            Authentication authentication,
-            @Parameter(description = "ID del usuario", required = true) @Positive @PathVariable Long id) {
+            @Parameter(description = "ID del administrador", required = true) @Positive @PathVariable Long id,
+            Authentication authentication) {
         usuarioService.eliminarUsuario(id, authentication.getName());
-        return ResponseEntity.ok(new MensajeResponse("Usuario desactivado correctamente"));
+        return ResponseEntity.ok(new MensajeResponse("Administrador eliminado correctamente"));
     }
 }

@@ -24,4 +24,6 @@ public interface ReservaService {
     List<ReservaResponseDTO> filtrarReservasPorFuncion(Long funcionId);
     List<ReservaResponseDTO> filtrarReservasPorSala(Long salaId);
     List<ReservaResponseDTO> filtrarReservasPorFecha(LocalDateTime inicio, LocalDateTime fin);
+
+    ReservaResponseDTO marcarComoPagada(Long reservaId);
 }

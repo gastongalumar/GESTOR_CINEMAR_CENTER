@@ -17,6 +17,7 @@ import GESTOR_CINEMAR_CENTER.DEV.model.Usuario;
 import GESTOR_CINEMAR_CENTER.DEV.repository.ReservaRepository;
 import GESTOR_CINEMAR_CENTER.DEV.repository.UsuarioRepository;
 import GESTOR_CINEMAR_CENTER.DEV.security.JwtUtil;
+import GESTOR_CINEMAR_CENTER.DEV.service.ImagenesService;
 import GESTOR_CINEMAR_CENTER.DEV.service.UsuarioService;
 import GESTOR_CINEMAR_CENTER.DEV.validation.impl.TelefonoArgentinoValidatorImpl;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +27,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -34,12 +36,16 @@ import java.util.List;
 @RequiredArgsConstructor
 public class UsuarioServiceImpl implements UsuarioService {
 
+    /** Admin sembrado en DataInitializer: no se puede borrar ni dar de baja. */
+    public static final String EMAIL_ADMIN_PROTEGIDO = "admin@mail.com";
+
     private final UsuarioRepository usuarioRepository;
     private final ReservaRepository reservaRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final AuthenticationManager authenticationManager;
     private final UsuarioMapper usuarioMapper;
+    private final ImagenesService imagenesService;
 
     private static final List<EstadoReserva> ESTADOS_RESERVA_ACTIVA = List.of(
             EstadoReserva.PENDIENTE,
@@ -131,10 +137,14 @@ public class UsuarioServiceImpl implements UsuarioService {
     }
 
     private String generarToken(Usuario usuario) {
+        String tipoStr = usuario.getTipo() != null ? usuario.getTipo().name() : (usuario instanceof Administrador ? "ADMINISTRADOR" : "CLIENTE");
         return jwtUtil.generateToken(
                 usuario.getEmail(),
-                usuario.getTipo().name(),
-                usuario.getId()
+                tipoStr,
+                usuario.getId(),
+                usuario.getNombre(),
+                usuario.getApellido(),
+                usuario.getFotoPerfilUrl()
         );
     }
 
@@ -146,7 +156,7 @@ public class UsuarioServiceImpl implements UsuarioService {
     }
 
     private void validarEstadoActivo(Usuario usuario) {
-        if (usuario.getEstado() != EstadoUsuario.ACTIVO) {
+        if (usuario.getEstado() != null && usuario.getEstado() != EstadoUsuario.ACTIVO) {
             throw new DisabledException("La cuenta de usuario no está activa");
         }
     }
@@ -178,27 +188,65 @@ public class UsuarioServiceImpl implements UsuarioService {
 
     @Override
     @Transactional
-    public void eliminarUsuario(Long id, String emailAdministrador) {
-        Usuario administrador = findByEmail(emailAdministrador);
+    public void eliminarUsuario(Long id, String emailAdminAutenticado) {
+        Usuario usuario = findById(id);
+        validarNoEsAdminProtegido(usuario);
+        validarNoEsUnoMismo(usuario, emailAdminAutenticado);
 
-        if (administrador.getId().equals(id)) {
-            throw new ReglaNegocioException("No puede desactivar su propia cuenta");
+        if (usuario.getTipo() != TipoUsuario.ADMINISTRADOR) {
+            throw new ReglaNegocioException("Solo se pueden eliminar cuentas de administrador. Para clientes usá dar de baja.");
         }
 
+        usuarioRepository.delete(usuario);
+    }
+
+    @Override
+    @Transactional
+    public UsuarioResponseDTO darDeBaja(Long id, String emailAdminAutenticado) {
         Usuario usuario = findById(id);
+        validarNoEsAdminProtegido(usuario);
+        validarNoEsUnoMismo(usuario, emailAdminAutenticado);
 
         if (usuario.getEstado() == EstadoUsuario.INACTIVO) {
-            throw new ReglaNegocioException("El usuario ya está inactivo");
+            throw new ReglaNegocioException("El usuario ya está dado de baja");
         }
 
         if (reservaRepository.existsReservasActivasFuturasPorCliente(
                 id, ESTADOS_RESERVA_ACTIVA, LocalDateTime.now())) {
             throw new ReglaNegocioException(
-                    "No se puede desactivar el usuario porque tiene reservas activas con funciones futuras");
+                    "No se puede dar de baja el usuario porque tiene reservas activas con funciones futuras");
         }
 
         usuario.setEstado(EstadoUsuario.INACTIVO);
-        usuarioRepository.save(usuario);
+        return usuarioMapper.toDTO(usuarioRepository.save(usuario));
+    }
+
+    @Override
+    public UsuarioResponseDTO reactivar(Long id, String emailAdminAutenticado) {
+        Usuario usuario = findById(id);
+        validarNoEsAdminProtegido(usuario);
+
+        if (usuario.getEstado() == EstadoUsuario.ACTIVO) {
+            throw new ReglaNegocioException("El usuario ya está activo");
+        }
+
+        usuario.setEstado(EstadoUsuario.ACTIVO);
+        usuario.setIntentosFallidos(0);
+        return usuarioMapper.toDTO(usuarioRepository.save(usuario));
+    }
+
+    private void validarNoEsAdminProtegido(Usuario usuario) {
+        if (EMAIL_ADMIN_PROTEGIDO.equalsIgnoreCase(usuario.getEmail())) {
+            throw new ReglaNegocioException("No se puede modificar ni eliminar el administrador del sistema");
+        }
+    }
+
+    private void validarNoEsUnoMismo(Usuario usuario, String emailAdminAutenticado) {
+        if (emailAdminAutenticado != null
+                && usuario.getEmail() != null
+                && usuario.getEmail().equalsIgnoreCase(emailAdminAutenticado.trim())) {
+            throw new ReglaNegocioException("No podés aplicar esta acción sobre tu propia cuenta");
+        }
     }
 
     @Override
@@ -222,5 +270,47 @@ public class UsuarioServiceImpl implements UsuarioService {
     public List<UsuarioResponseDTO> listarPorRol(TipoUsuario tipo) {
         List<Usuario> usuarios = usuarioRepository.findByTipo(tipo);
         return usuarioMapper.toDTOList(usuarios);
+    }
+
+    @Override
+    public UsuarioResponseDTO obtenerMiPerfil(String emailAutenticado) {
+        return usuarioMapper.toDTO(findByEmail(emailAutenticado));
+    }
+
+    @Override
+    public UsuarioResponseDTO actualizarFotoPerfil(String emailAutenticado, MultipartFile file) {
+        Usuario usuario = findByEmail(emailAutenticado);
+        String anterior = usuario.getFotoPerfilUrl();
+        String nueva = imagenesService.guardarImagenPerfil(file);
+        usuario.setFotoPerfilUrl(nueva);
+        usuarioRepository.save(usuario);
+
+        if (anterior != null && !anterior.isBlank() && !anterior.equals(nueva)) {
+            try {
+                imagenesService.eliminarImagen(anterior);
+            } catch (Exception ignored) {
+                // No bloquea el flujo si falla borrar la imagen vieja.
+            }
+        }
+
+        return usuarioMapper.toDTO(usuario);
+    }
+
+    @Override
+    public UsuarioResponseDTO eliminarFotoPerfil(String emailAutenticado) {
+        Usuario usuario = findByEmail(emailAutenticado);
+        String anterior = usuario.getFotoPerfilUrl();
+        usuario.setFotoPerfilUrl(null);
+        usuarioRepository.save(usuario);
+
+        if (anterior != null && !anterior.isBlank()) {
+            try {
+                imagenesService.eliminarImagen(anterior);
+            } catch (Exception ignored) {
+                // No bloquea el flujo si falla borrar el archivo.
+            }
+        }
+
+        return usuarioMapper.toDTO(usuario);
     }
 }

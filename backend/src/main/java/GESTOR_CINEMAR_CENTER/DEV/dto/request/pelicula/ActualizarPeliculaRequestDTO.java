@@ -41,4 +41,32 @@ public class ActualizarPeliculaRequestDTO {
     @Schema(description = "Género de la película", example = "DRAMA")
     @ValidGeneroPelicula
     private String genero;
+
+    @Schema(description = "Sinopsis de la película", example = "Un grupo de exploradores viaja a través de un agujero de gusano en el espacio.")
+    @Size(max = 2000, message = "La sinopsis no puede superar 2000 caracteres")
+    private String sinopsis;
+
+    @Schema(description = "Descripción detallada de la película")
+    @Size(max = 5000, message = "La descripción no puede superar 5000 caracteres")
+    private String descripcion;
+
+    @Schema(description = "Director de la película", example = "Christopher Nolan")
+    @Size(max = 200, message = "El director no puede superar 200 caracteres")
+    private String director;
+
+    @Schema(description = "Elenco principal", example = "Matthew McConaughey, Anne Hathaway")
+    @Size(max = 500, message = "El elenco no puede superar 500 caracteres")
+    private String elenco;
+
+    @Schema(description = "Clasificación etaria", example = "ATP")
+    @Size(max = 100, message = "La clasificación no puede superar 100 caracteres")
+    private String clasificacion;
+
+    @Schema(description = "Nominaciones o premios relevantes")
+    @Size(max = 1000, message = "Las nominaciones no pueden superar 1000 caracteres")
+    private String nominaciones;
+
+    @Schema(description = "URL del tráiler (YouTube)", example = "https://www.youtube.com/watch?v=zSWdZVtFT9E")
+    @Size(max = 500, message = "La URL del tráiler no puede superar 500 caracteres")
+    private String urlTrailer;
 }

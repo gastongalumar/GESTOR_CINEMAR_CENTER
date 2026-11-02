@@ -31,3 +31,10 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Local secrets / uploads ###
+**/application-local.yaml
+uploads/fondos/
+uploads/logos/
+uploads/peliculas/
+uploads/perfiles/

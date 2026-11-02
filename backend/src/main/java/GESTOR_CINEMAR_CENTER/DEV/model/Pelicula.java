@@ -39,6 +39,27 @@ public class Pelicula {
     @Column
     private String rutaImagen;
 
+    @Column(length = 2000)
+    private String sinopsis;
+
+    @Column(length = 5000)
+    private String descripcion;
+
+    @Column(length = 200)
+    private String director;
+
+    @Column(length = 500)
+    private String elenco;
+
+    @Column(length = 100)
+    private String clasificacion;
+
+    @Column(length = 1000)
+    private String nominaciones;
+
+    @Column(length = 500)
+    private String urlTrailer;
+
     @Column(nullable = false)
     private boolean activa = true;
 }

@@ -38,6 +38,10 @@ public abstract class Usuario {
 
     private String telefono;
 
+    /** Ruta relativa de la foto de perfil (ej. /uploads/perfiles/uuid.jpg). */
+    @Column(length = 500)
+    private String fotoPerfilUrl;
+
     // El tipo de usuario va en otra columna, no confundir con el discriminator de JPA
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

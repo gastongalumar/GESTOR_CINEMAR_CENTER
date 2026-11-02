@@ -32,6 +32,35 @@ public class ImagenesServiceImpl implements ImagenesService {
 
     @Override
     public String guardarImagenPelicula(MultipartFile file) {
+        return guardarEnCarpeta(file, "peliculas", 1200);
+    }
+
+    @Override
+    public String guardarImagenPerfil(MultipartFile file) {
+        return guardarEnCarpeta(file, "perfiles", 512);
+    }
+
+    @Override
+    public void eliminarImagen(String rutaImagen) {
+        if (rutaImagen == null || rutaImagen.isBlank() || !rutaImagen.startsWith("/uploads/")) {
+            return;
+        }
+
+        try {
+            Path base = Paths.get(uploadDir).toAbsolutePath().normalize();
+            String relative = rutaImagen.substring("/uploads/".length());
+            Path filePath = base.resolve(relative).normalize();
+
+            if (filePath.startsWith(base) && Files.exists(filePath) && Files.isRegularFile(filePath)) {
+                Files.delete(filePath);
+            }
+
+        } catch (IOException e) {
+            throw new GuardadoImagenException("Error al eliminar la imagen");
+        }
+    }
+
+    private String guardarEnCarpeta(MultipartFile file, String carpeta, int maxDim) {
         validarArchivo(file);
 
         try {
@@ -39,7 +68,7 @@ public class ImagenesServiceImpl implements ImagenesService {
             String fileName = UUID.randomUUID() + "." + ext;
 
             Path base = Paths.get(uploadDir).toAbsolutePath().normalize();
-            Path uploadPath = base.resolve("peliculas");
+            Path uploadPath = base.resolve(carpeta);
 
             if (!Files.exists(uploadPath)) {
                 Files.createDirectories(uploadPath);
@@ -52,32 +81,12 @@ public class ImagenesServiceImpl implements ImagenesService {
             }
 
             Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
-            resizeImageIfNeeded(filePath);
+            resizeImageIfNeeded(filePath, maxDim);
 
-            return "/uploads/peliculas/" + fileName;
+            return "/uploads/" + carpeta + "/" + fileName;
 
         } catch (IOException e) {
             throw new GuardadoImagenException("Error al guardar la imagen");
-        }
-    }
-
-    @Override
-    public void eliminarImagen(String rutaImagen) {
-        if (rutaImagen == null || rutaImagen.isBlank() || !rutaImagen.startsWith("/uploads/")) {
-            return;
-        }
-
-        try {
-            Path base = Paths.get(uploadDir).toAbsolutePath().normalize();
-            String filename = rutaImagen.substring("/uploads/peliculas/".length());
-            Path filePath = base.resolve("peliculas").resolve(filename).normalize();
-
-            if (filePath.startsWith(base) && Files.exists(filePath)) {
-                Files.delete(filePath);
-            }
-
-        } catch (IOException e) {
-            throw new GuardadoImagenException("Error al eliminar la imagen");
         }
     }
 
@@ -104,9 +113,8 @@ public class ImagenesServiceImpl implements ImagenesService {
         }
     }
 
-    private void resizeImageIfNeeded(Path filePath) {
+    private void resizeImageIfNeeded(Path filePath, int maxDim) {
         try {
-            final int maxDim = 1200;
             BufferedImage img = ImageIO.read(filePath.toFile());
             if (img == null) {
                 return;

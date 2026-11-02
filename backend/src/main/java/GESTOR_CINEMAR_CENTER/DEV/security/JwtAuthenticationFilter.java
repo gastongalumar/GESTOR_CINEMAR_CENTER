@@ -63,14 +63,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     SecurityContextHolder.getContext().setAuthentication(authToken);
                 }
             }
-
-            filterChain.doFilter(request, response);
         } catch (DisabledException ex) {
             escritorError.write(response, request, HttpStatus.FORBIDDEN, ex.getMessage());
+            return;
         } catch (UsernameNotFoundException ex) {
             escritorError.write(response, request, HttpStatus.UNAUTHORIZED, "Token inválido: usuario no encontrado");
+            return;
         } catch (JwtException | IllegalArgumentException ex) {
             escritorError.write(response, request, HttpStatus.UNAUTHORIZED, "Token inválido o expirado");
+            return;
+        } catch (Exception ex) {
+            SecurityContextHolder.clearContext();
         }
+
+        filterChain.doFilter(request, response);
     }
 }

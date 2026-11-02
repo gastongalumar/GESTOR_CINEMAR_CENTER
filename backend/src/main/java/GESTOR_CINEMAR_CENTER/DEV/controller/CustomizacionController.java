@@ -40,17 +40,15 @@ public class CustomizacionController {
     }
 
     @PostMapping("/logo")
-    public ResponseEntity<ActualizarResponse> subirLogo(@RequestParam("logo") MultipartFile file) throws IOException {
-        String rutaRel = customizacionService.guardarImagen(file, "logos");
-        String url = ServletUriComponentsBuilder.fromCurrentContextPath().path(rutaRel).toUriString();
-        return ResponseEntity.ok(new ActualizarResponse(rutaRel, url));
+    public ResponseEntity<CustomizacionResponse> subirLogo(@RequestParam("logo") MultipartFile file) throws IOException {
+        customizacionService.guardarImagen(file, "logos");
+        return ResponseEntity.ok(customizacionService.obtener());
     }
 
     @PostMapping("/fondo")
-    public ResponseEntity<ActualizarResponse> subirFondo(@RequestParam("fondo") MultipartFile file) throws IOException {
-        String rutaRel = customizacionService.guardarImagen(file, "fondos");
-        String url = ServletUriComponentsBuilder.fromCurrentContextPath().path(rutaRel).toUriString();
-        return ResponseEntity.ok(new ActualizarResponse(rutaRel, url));
+    public ResponseEntity<CustomizacionResponse> subirFondo(@RequestParam("fondo") MultipartFile file) throws IOException {
+        customizacionService.guardarImagen(file, "fondos");
+        return ResponseEntity.ok(customizacionService.obtener());
     }
 
     @DeleteMapping("/logo")

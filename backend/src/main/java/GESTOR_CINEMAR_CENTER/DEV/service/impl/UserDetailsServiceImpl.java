@@ -27,14 +27,16 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         Usuario usuario = usuarioRepository.findByEmailIgnoreCase(email.trim().toLowerCase())
                 .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado con email: " + email));
 
-        if (usuario.getEstado() != EstadoUsuario.ACTIVO) {
+        if (usuario.getEstado() != null && usuario.getEstado() != EstadoUsuario.ACTIVO) {
             throw new DisabledException("La cuenta de usuario no está activa");
         }
+
+        String rol = usuario.getTipo() != null ? usuario.getTipo().name() : (usuario instanceof GESTOR_CINEMAR_CENTER.DEV.model.Administrador ? "ADMINISTRADOR" : "CLIENTE");
 
         return new User(
                 usuario.getEmail(),
                 usuario.getPassword(),
-                Collections.singletonList(new SimpleGrantedAuthority(usuario.getTipo().toString()))
+                Collections.singletonList(new SimpleGrantedAuthority(rol))
         );
     }
 }

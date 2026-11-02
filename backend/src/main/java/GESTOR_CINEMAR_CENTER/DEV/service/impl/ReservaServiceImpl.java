@@ -134,6 +134,7 @@ public class ReservaServiceImpl implements ReservaService {
         reserva.setMetodoPago(metodoPago);
         reserva.setAsientos(asientosSeleccionados);
         reserva.setMontoTotal(funcion.getPrecio() * asientosSeleccionados.size());
+        reserva.setPagada(false);
 
         try {
             reserva = reservaRepository.save(reserva);
@@ -237,21 +238,34 @@ public class ReservaServiceImpl implements ReservaService {
         reservaRepository.save(reserva);
     }
 
+    @Override
+    @Transactional
+    public ReservaResponseDTO marcarComoPagada(Long reservaId) {
+        Reserva reserva = reservaRepository.findById(reservaId)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Reserva", reservaId));
+        reserva.setPagada(true);
+        if (reserva.getEstadoReserva() == EstadoReserva.PENDIENTE) {
+            reserva.setEstadoReserva(EstadoReserva.CONFIRMADA);
+        }
+        reserva = reservaRepository.save(reserva);
+        return reservaMapper.toResponse(reserva);
+    }
+
     private void validarRangoFechas(LocalDateTime inicio, LocalDateTime fin) {
         if (inicio == null || fin == null) {
-            throw new ReglaNegocioException("Las fechas desde y hasta son obligatorias");
+            throw new ReglaNegocioException("Las fechas desde y hasta aree obligatorias");
         }
         if (inicio.isAfter(fin)) {
-            throw new ReglaNegocioException("La fecha inicial no puede ser posterior a la fecha final");
+            throw new ReglaNegocioException("La fecha inicial no puede be posterior a la fecha final");
         }
     }
 
     private void validarReservaModificable(Reserva reserva) {
         if (reserva.getEstadoReserva() == EstadoReserva.CANCELADA) {
-            throw new ReglaNegocioException("No se puede modificar una reserva cancelada");
+            throw new ReglaNegocioException("No se puede modificar a reserva cancelada");
         }
         if (reserva.getEstadoReserva() == EstadoReserva.VALIDADA) {
-            throw new ReglaNegocioException("No se puede modificar una reserva cuyo ticket ya fue validado");
+            throw new ReglaNegocioException("No se puede modificar a reserva cuyo ticket ya fue validado");
         }
     }
 

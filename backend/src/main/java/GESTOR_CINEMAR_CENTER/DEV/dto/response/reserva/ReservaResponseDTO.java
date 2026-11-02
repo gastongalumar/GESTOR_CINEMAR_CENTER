@@ -59,6 +59,9 @@ public class ReservaResponseDTO {
     @Schema(description = "Estado de la reserva")
     private EstadoReserva estadoReserva;
 
+    @Schema(description = "Indica si la reserva fue pagada", example = "true")
+    private boolean pagada;
+
     @Schema(
             description = "Asientos seleccionados",
             example = "[\"A1\", \"A2\", \"A3\"]"

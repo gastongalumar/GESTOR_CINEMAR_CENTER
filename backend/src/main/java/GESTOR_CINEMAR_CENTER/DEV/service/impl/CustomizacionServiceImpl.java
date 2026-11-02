@@ -24,7 +24,8 @@ import javax.imageio.ImageIO;
 @Service("customizacionService")
 public class CustomizacionServiceImpl implements CustomizacionService {
 
-    private static final long MAX_FILE_SIZE = 5 * 1024 * 1024;
+    private static final long MAX_IMAGE_SIZE = 5 * 1024 * 1024;
+    private static final long MAX_VIDEO_SIZE = 50 * 1024 * 1024;
 
     private final CustomizacionRepository customizacionRepository;
     private final CustomizacionMapper customizacionMapper;
@@ -47,6 +48,13 @@ public class CustomizacionServiceImpl implements CustomizacionService {
     public CustomizacionResponse guardar(CustomizacionRequest request) {
         Customizacion custom = obtenerEntidad();
         customizacionMapper.updateEntity(request, custom);
+        // Asegurar que si viene una URL absoluta (ej: http://localhost:8080/uploads/...), guardamos la ruta relativa
+        if (custom.getLogoUrl() != null && custom.getLogoUrl().contains("/uploads/")) {
+            custom.setLogoUrl(custom.getLogoUrl().substring(custom.getLogoUrl().indexOf("/uploads/")));
+        }
+        if (custom.getFondoUrl() != null && custom.getFondoUrl().contains("/uploads/")) {
+            custom.setFondoUrl(custom.getFondoUrl().substring(custom.getFondoUrl().indexOf("/uploads/")));
+        }
         return customizacionMapper.toResponse(customizacionRepository.save(custom));
     }
 
@@ -55,18 +63,28 @@ public class CustomizacionServiceImpl implements CustomizacionService {
         if (file == null || file.isEmpty()) {
             throw new ReglaNegocioException("No se recibió ningún archivo");
         }
-        if (file.getSize() > MAX_FILE_SIZE) {
-            throw new ReglaNegocioException("El archivo supera el tamaño máximo permitido (5MB)");
-        }
+
         String contentType = file.getContentType();
-        if (contentType == null
-                || (!contentType.equals("image/jpeg")
-                && !contentType.equals("image/png")
-                && !contentType.equals("image/webp"))) {
-            throw new ReglaNegocioException("Tipo de archivo no permitido. Solo se aceptan JPEG, PNG o WEBP");
+        boolean esVideo = "video/mp4".equals(contentType) || "video/webm".equals(contentType);
+        boolean esImagen = "image/jpeg".equals(contentType)
+                || "image/png".equals(contentType)
+                || "image/webp".equals(contentType);
+
+        if (esVideo && !"fondos".equals(tipo)) {
+            throw new ReglaNegocioException("Los videos solo se aceptan como fondo de pantalla");
+        }
+        if (!esVideo && !esImagen) {
+            throw new ReglaNegocioException(
+                    "Tipo de archivo no permitido. Se aceptan JPEG, PNG, WEBP o video MP4/WEBM");
         }
 
-        String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
+        long maxSize = esVideo ? MAX_VIDEO_SIZE : MAX_IMAGE_SIZE;
+        if (file.getSize() > maxSize) {
+            String limite = esVideo ? "50MB" : "5MB";
+            throw new ReglaNegocioException("El archivo supera el tamaño máximo permitido (" + limite + ")");
+        }
+
+        String fileName = UUID.randomUUID() + "." + extensionPara(contentType);
         Path uploadPath = Paths.get(uploadDir, tipo);
         if (!Files.exists(uploadPath)) {
             Files.createDirectories(uploadPath);
@@ -75,10 +93,12 @@ public class CustomizacionServiceImpl implements CustomizacionService {
         Path filePath = uploadPath.resolve(fileName);
         Files.copy(file.getInputStream(), filePath);
 
-        try {
-            resizeImageIfNeeded(filePath);
-        } catch (Exception e) {
-            System.err.println("No se pudo redimensionar la imagen: " + e.getMessage());
+        if (esImagen) {
+            try {
+                resizeImageIfNeeded(filePath);
+            } catch (Exception e) {
+                System.err.println("No se pudo redimensionar la imagen: " + e.getMessage());
+            }
         }
 
         String rutaRelativa = "/uploads/" + tipo + "/" + fileName;
@@ -107,10 +127,10 @@ public class CustomizacionServiceImpl implements CustomizacionService {
         } else if ("fondos".equals(tipo)) {
             ruta = custom.getFondoUrl();
         }
-        if (ruta != null && !ruta.isEmpty() && ruta.startsWith("/uploads/")) {
+        if (ruta != null && !ruta.isEmpty() && ruta.contains("/uploads/")) {
             try {
                 Path base = Paths.get(uploadDir).toAbsolutePath().normalize();
-                String relative = ruta.replace("/uploads/", "");
+                String relative = ruta.substring(ruta.indexOf("/uploads/") + 9);
                 Path filePath = base.resolve(relative).normalize();
                 if (filePath.startsWith(base) && Files.exists(filePath)) {
                     Files.delete(filePath);
@@ -118,13 +138,13 @@ public class CustomizacionServiceImpl implements CustomizacionService {
             } catch (IOException e) {
                 System.err.println("No se pudo borrar el archivo: " + e.getMessage());
             }
-            if ("logos".equals(tipo)) {
-                custom.setLogoUrl(null);
-            } else if ("fondos".equals(tipo)) {
-                custom.setFondoUrl(null);
-            }
-            customizacionRepository.save(custom);
         }
+        if ("logos".equals(tipo)) {
+            custom.setLogoUrl(null);
+        } else if ("fondos".equals(tipo)) {
+            custom.setFondoUrl(null);
+        }
+        customizacionRepository.save(custom);
     }
 
     private Customizacion obtenerEntidad() {
@@ -162,6 +182,24 @@ public class CustomizacionServiceImpl implements CustomizacionService {
         }
         if (!ImageIO.write(resized, ext, filePath.toFile())) {
             ImageIO.write(resized, "jpg", filePath.toFile());
+        }
+    }
+
+    private String extensionPara(String contentType) {
+        if (contentType == null) {
+            return "jpg";
+        }
+        switch (contentType) {
+            case "image/png":
+                return "png";
+            case "image/webp":
+                return "webp";
+            case "video/mp4":
+                return "mp4";
+            case "video/webm":
+                return "webm";
+            default:
+                return "jpg";
         }
     }
 
