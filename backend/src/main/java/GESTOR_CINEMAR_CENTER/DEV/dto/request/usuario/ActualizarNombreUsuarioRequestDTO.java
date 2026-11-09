@@ -1,6 +1,7 @@
 package GESTOR_CINEMAR_CENTER.DEV.dto.request.usuario;
 
 import GESTOR_CINEMAR_CENTER.DEV.validation.interfaces.ValidNombrePersona;
+import GESTOR_CINEMAR_CENTER.DEV.validation.interfaces.ValidTelefonoArgentino;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -13,7 +14,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Schema(description = "DTO para actualizar el nombre y apellido del usuario autenticado")
+@Schema(description = "DTO para actualizar nombre, apellido y teléfono del usuario autenticado")
 public class ActualizarNombreUsuarioRequestDTO {
 
     @Schema(description = "Nuevo nombre del usuario", example = "Juan")
@@ -27,4 +28,12 @@ public class ActualizarNombreUsuarioRequestDTO {
     @Size(max = 20, message = "El apellido no puede superar 20 caracteres")
     @ValidNombrePersona
     private String apellido;
+
+    @Schema(
+            description = "Teléfono nacional opcional (área sin 0 + número sin 15). Ej. 0223 / 5678912 → 2235678912. Vacío para borrarlo.",
+            example = "2235678912"
+    )
+    @Size(max = 30, message = "El teléfono no puede superar 30 caracteres")
+    @ValidTelefonoArgentino
+    private String telefono;
 }

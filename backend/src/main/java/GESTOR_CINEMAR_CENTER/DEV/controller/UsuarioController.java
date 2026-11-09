@@ -40,14 +40,15 @@ public class UsuarioController {
     private final UsuarioService usuarioService;
 
     @Operation(
-            summary = "Actualizar mi nombre y apellido",
-            description = "Modifica el nombre y apellido del usuario autenticado según el token JWT"
+            summary = "Actualizar mis datos de perfil",
+            description = "Modifica nombre, apellido y teléfono del usuario autenticado según el token JWT"
     )
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Nombre y apellido actualizados correctamente",
+            @ApiResponse(responseCode = "200", description = "Perfil actualizado correctamente",
                     content = @Content(schema = @Schema(implementation = UsuarioResponseDTO.class))),
             @ApiResponse(responseCode = "400", description = "Datos inválidos"),
-            @ApiResponse(responseCode = "403", description = "Cuenta inactiva")
+            @ApiResponse(responseCode = "403", description = "Cuenta inactiva"),
+            @ApiResponse(responseCode = "409", description = "Teléfono ya registrado")
     })
     @PutMapping("/mi-nombre")
     @PreAuthorize("hasAnyAuthority('CLIENTE', 'ADMINISTRADOR', 'SUPERADMIN')")

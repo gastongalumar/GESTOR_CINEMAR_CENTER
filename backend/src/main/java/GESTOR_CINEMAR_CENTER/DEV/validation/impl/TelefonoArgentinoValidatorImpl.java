@@ -5,18 +5,20 @@ public final class TelefonoArgentinoValidatorImpl {
     private TelefonoArgentinoValidatorImpl() {
     }
 
+    /**
+     * Acepta teléfono nacional de 10 dígitos (código de área sin 0 + número sin 15).
+     * Ejemplo UI: área 0223 + número 5678912 → 2235678912.
+     * También acepta 549 + 10 dígitos por compatibilidad.
+     */
     public static boolean esValido(String telefono) {
         if (telefono == null || telefono.isBlank()) {
             return false;
         }
 
-        String normalizado = telefono.replaceAll("\\D", "");
-
-        if (!normalizado.startsWith("549") || normalizado.length() != 13) {
+        String numeroNacional = aNumeroNacional(telefono);
+        if (numeroNacional == null || numeroNacional.length() != 10) {
             return false;
         }
-
-        String numeroNacional = normalizado.substring(3);
 
         if (numeroNacional.matches("^(.)\\1+$")) {
             return false;
@@ -26,6 +28,23 @@ public final class TelefonoArgentinoValidatorImpl {
     }
 
     public static String normalizar(String telefono) {
-        return telefono.replaceAll("\\D", "");
+        String numeroNacional = aNumeroNacional(telefono);
+        return numeroNacional != null ? numeroNacional : telefono.replaceAll("\\D", "");
+    }
+
+    private static String aNumeroNacional(String telefono) {
+        String n = telefono.replaceAll("\\D", "");
+
+        if (n.startsWith("549") && n.length() == 13) {
+            return n.substring(3);
+        }
+        // Si viene con 0 de área (02235678912) → sacar el 0
+        if (n.startsWith("0") && n.length() == 11) {
+            return n.substring(1);
+        }
+        if (n.length() == 10) {
+            return n;
+        }
+        return null;
     }
 }

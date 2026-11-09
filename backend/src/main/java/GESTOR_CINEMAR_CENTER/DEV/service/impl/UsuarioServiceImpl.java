@@ -73,16 +73,25 @@ public class UsuarioServiceImpl implements UsuarioService {
     }
 
     public String validarTelefono(String telefono) {
+        return validarTelefono(telefono, null);
+    }
+
+    public String validarTelefono(String telefono, String telefonoActualDelUsuario) {
         if (telefono == null || telefono.isBlank()) {
-            throw new ReglaNegocioException("El teléfono es obligatorio");
+            return null;
         }
 
         if (!TelefonoArgentinoValidatorImpl.esValido(telefono)) {
             throw new ReglaNegocioException(
-                    "El teléfono debe estar en formato internacional argentino. Ejemplo: +54 9 351 1234567");
+                    "Teléfono inválido. Usá código de área + número sin 15. Ejemplo: 0223 / 5678912");
         }
 
         String normalizado = TelefonoArgentinoValidatorImpl.normalizar(telefono);
+
+        if (telefonoActualDelUsuario != null
+                && telefonoActualDelUsuario.equals(normalizado)) {
+            return normalizado;
+        }
 
         if (usuarioRepository.existsByTelefono(normalizado)) {
             throw new ConflictoRecursoException("El teléfono ingresado ya se encuentra registrado");
@@ -198,6 +207,7 @@ public class UsuarioServiceImpl implements UsuarioService {
 
         usuario.setNombre(request.getNombre().trim());
         usuario.setApellido(request.getApellido().trim());
+        usuario.setTelefono(validarTelefono(request.getTelefono(), usuario.getTelefono()));
         return usuarioMapper.toDTO(usuarioRepository.save(usuario));
     }
 

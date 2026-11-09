@@ -16,7 +16,7 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface ValidTelefonoArgentino {
 
-    String message() default "El teléfono debe estar en formato internacional argentino. Ejemplo: +54 9 351 1234567";
+    String message() default "Teléfono inválido. Usá código de área + número sin 15. Ejemplo: 0223 / 5678912";
 
     Class<?>[] groups() default {};
 

@@ -8,6 +8,10 @@ public class ValidTelefonoArgentinoValidatorImpl implements ConstraintValidator<
 
     @Override
     public boolean isValid(String value, ConstraintValidatorContext context) {
+        // Vacío = válido a nivel de anotación; @NotBlank decide si es obligatorio.
+        if (value == null || value.isBlank()) {
+            return true;
+        }
         return TelefonoArgentinoValidatorImpl.esValido(value);
     }
 }

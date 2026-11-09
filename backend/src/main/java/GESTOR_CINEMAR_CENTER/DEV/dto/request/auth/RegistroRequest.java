@@ -42,8 +42,7 @@ public class RegistroRequest {
     @Size(min = 6, max = 100, message = "La contraseña debe tener entre 6 y 100 caracteres")
     private String password;
 
-    @Schema(description = "Teléfono de contacto", example = "+54 9 351 1234567")
-    @NotBlank(message = "El teléfono es obligatorio")
+    @Schema(description = "Teléfono nacional (área sin 0 + número sin 15). Ej. área 0223 + 5678912 → 2235678912", example = "2235678912")
     @Size(max = 30, message = "El teléfono no puede superar 30 caracteres")
     @ValidTelefonoArgentino
     private String telefono;

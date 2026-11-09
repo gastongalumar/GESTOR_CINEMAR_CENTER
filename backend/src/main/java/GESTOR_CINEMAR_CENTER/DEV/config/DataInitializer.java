@@ -74,7 +74,7 @@ public class DataInitializer implements CommandLineRunner {
                     "Admin",
                     "admin@mail.com",
                     passwordEncoder.encode("123123"),
-                    "+54 9 123456789"
+                    "2235678912"
                 );
                 admin.setEstado(EstadoUsuario.ACTIVO);
                 admin.setTipo(TipoUsuario.SUPERADMIN);
@@ -99,7 +99,7 @@ public class DataInitializer implements CommandLineRunner {
                     "Prueba",
                     "cliente@mail.com",
                     passwordEncoder.encode("123123"),
-                    "+54 9 987654321"
+                    "2231559876"
                 );
                 cliente.setEstado(EstadoUsuario.ACTIVO);
                 cliente.setTipo(TipoUsuario.CLIENTE);

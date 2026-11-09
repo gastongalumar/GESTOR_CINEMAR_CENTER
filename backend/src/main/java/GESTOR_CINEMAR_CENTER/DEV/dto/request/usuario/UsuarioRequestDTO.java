@@ -37,6 +37,6 @@ public class UsuarioRequestDTO {
 
     @NotBlank(message = "El teléfono es obligatorio")
     @ValidTelefonoArgentino
-    @Schema(description = "Teléfono del usuario", example = "+54 9 351 1234567", requiredMode = Schema.RequiredMode.REQUIRED)
+    @Schema(description = "Teléfono nacional. Ej. área 0223 + 5678912 → 2235678912", example = "2235678912", requiredMode = Schema.RequiredMode.REQUIRED)
     private String telefono;
 }
