@@ -1,8 +1,11 @@
 package GESTOR_CINEMAR_CENTER.DEV.service.impl;
 
+import GESTOR_CINEMAR_CENTER.DEV.dto.request.auth.ForgotPasswordRequest;
 import GESTOR_CINEMAR_CENTER.DEV.dto.request.auth.RegistroRequest;
+import GESTOR_CINEMAR_CENTER.DEV.dto.request.auth.ResetPasswordRequest;
 import GESTOR_CINEMAR_CENTER.DEV.dto.request.usuario.ActualizarNombreUsuarioRequestDTO;
 import GESTOR_CINEMAR_CENTER.DEV.dto.response.auth.AuthResponse;
+import GESTOR_CINEMAR_CENTER.DEV.dto.response.mensaje.MensajeResponse;
 import GESTOR_CINEMAR_CENTER.DEV.dto.response.usuario.UsuarioResponseDTO;
 import GESTOR_CINEMAR_CENTER.DEV.enums.EstadoUsuario;
 import GESTOR_CINEMAR_CENTER.DEV.enums.EstadoReserva;
@@ -21,6 +24,9 @@ import GESTOR_CINEMAR_CENTER.DEV.service.ImagenesService;
 import GESTOR_CINEMAR_CENTER.DEV.service.UsuarioService;
 import GESTOR_CINEMAR_CENTER.DEV.validation.impl.TelefonoArgentinoValidatorImpl;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -31,13 +37,21 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 
 @Service("usuarioService")
 @RequiredArgsConstructor
 public class UsuarioServiceImpl implements UsuarioService {
 
+    private static final Logger log = LoggerFactory.getLogger(UsuarioServiceImpl.class);
+
     /** Admin sembrado en DataInitializer: no se puede borrar ni dar de baja. */
     public static final String EMAIL_ADMIN_PROTEGIDO = "admin@mail.com";
+
+    private static final String MENSAJE_RECUPERACION_GENERICO =
+            "Si el correo está registrado, te enviamos el enlace de recuperación. En esta demo mirá la consola del backend.";
+
+    private static final int RESET_TOKEN_MINUTOS = 30;
 
     private final UsuarioRepository usuarioRepository;
     private final ReservaRepository reservaRepository;
@@ -46,6 +60,9 @@ public class UsuarioServiceImpl implements UsuarioService {
     private final AuthenticationManager authenticationManager;
     private final UsuarioMapper usuarioMapper;
     private final ImagenesService imagenesService;
+
+    @Value("${mercadopago.frontend-url:http://localhost:4200}")
+    private String frontendUrl;
 
     private static final List<EstadoReserva> ESTADOS_RESERVA_ACTIVA = List.of(
             EstadoReserva.PENDIENTE,
@@ -145,6 +162,64 @@ public class UsuarioServiceImpl implements UsuarioService {
 
         admin = usuarioRepository.save(admin);
         return usuarioMapper.toAuthResponse(admin, generarToken(admin));
+    }
+
+    @Override
+    @Transactional
+    public MensajeResponse solicitarRecuperacionPassword(ForgotPasswordRequest request) {
+        String emailNormalizado = normalizarEmail(request.getEmail());
+        usuarioRepository.findByEmailIgnoreCase(emailNormalizado).ifPresent(usuario -> {
+            if (usuario.getEstado() != EstadoUsuario.ACTIVO) {
+                return;
+            }
+            String token = UUID.randomUUID().toString().replace("-", "");
+            usuario.setResetToken(token);
+            usuario.setResetTokenExpira(LocalDateTime.now().plusMinutes(RESET_TOKEN_MINUTOS));
+            usuarioRepository.save(usuario);
+
+            String link = frontendUrl.replaceAll("/$", "") + "/reset-password?token=" + token;
+            log.info("[RESET] {} → {} (válido {} min)", emailNormalizado, link, RESET_TOKEN_MINUTOS);
+            System.out.println("======================================================");
+            System.out.println("[RESET PASSWORD] " + emailNormalizado);
+            System.out.println("Abrí este link (simula el mail):");
+            System.out.println(link);
+            System.out.println("Válido " + RESET_TOKEN_MINUTOS + " minutos.");
+            System.out.println("======================================================");
+        });
+
+        return new MensajeResponse(MENSAJE_RECUPERACION_GENERICO);
+    }
+
+    @Override
+    @Transactional
+    public MensajeResponse restablecerPassword(ResetPasswordRequest request) {
+        String token = request.getToken() == null ? "" : request.getToken().trim();
+        if (token.isBlank()) {
+            throw new ReglaNegocioException("El token es inválido o expiró");
+        }
+
+        Usuario usuario = usuarioRepository.findByResetToken(token)
+                .orElseThrow(() -> new ReglaNegocioException("El token es inválido o expiró"));
+
+        if (usuario.getResetTokenExpira() == null
+                || usuario.getResetTokenExpira().isBefore(LocalDateTime.now())) {
+            usuario.setResetToken(null);
+            usuario.setResetTokenExpira(null);
+            usuarioRepository.save(usuario);
+            throw new ReglaNegocioException("El token es inválido o expiró");
+        }
+
+        if (usuario.getEstado() != EstadoUsuario.ACTIVO) {
+            throw new DisabledException("La cuenta de usuario no está activa");
+        }
+
+        usuario.setPassword(passwordEncoder.encode(request.getPasswordNueva()));
+        usuario.setResetToken(null);
+        usuario.setResetTokenExpira(null);
+        usuario.setIntentosFallidos(0);
+        usuarioRepository.save(usuario);
+
+        return new MensajeResponse("Contraseña actualizada. Ya podés iniciar sesión.");
     }
 
     /** Solo ADMINISTRADOR o SUPERADMIN; default ADMINISTRADOR. */

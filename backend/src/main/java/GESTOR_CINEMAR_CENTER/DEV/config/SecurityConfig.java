@@ -121,6 +121,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/customizacion", "/api/customizacion/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/registro").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/auth/forgot-password").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/auth/reset-password").permitAll()
 
                         // 🔓 PÚBLICOS — catálogo de películas (listados y ficha)
                         .requestMatchers(HttpMethod.GET, "/api/peliculas").permitAll()

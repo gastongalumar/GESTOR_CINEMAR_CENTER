@@ -20,6 +20,8 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
     boolean existsByEmailIgnoreCase(String email);
     boolean existsByTelefono(String telefono);
 
+    Optional<Usuario> findByResetToken(String resetToken);
+
     @Query("SELECT c FROM Cliente c")
     List<Cliente> findAllClientes();
 

@@ -54,6 +54,12 @@ public abstract class Usuario {
     private LocalDateTime fechaUltimoAcceso;
     private Integer intentosFallidos = 0;
 
+    /** Token de recuperación de contraseña (simulado por consola en demos). */
+    @Column(length = 64)
+    private String resetToken;
+
+    private LocalDateTime resetTokenExpira;
+
     public Usuario(String nombre, String apellido, String email, String password, String telefono, TipoUsuario tipo) {
         this.nombre = nombre;
         this.apellido = apellido;

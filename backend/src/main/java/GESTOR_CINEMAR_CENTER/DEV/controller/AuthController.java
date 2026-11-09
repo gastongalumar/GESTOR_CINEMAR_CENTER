@@ -1,8 +1,11 @@
 package GESTOR_CINEMAR_CENTER.DEV.controller;
 
+import GESTOR_CINEMAR_CENTER.DEV.dto.request.auth.ForgotPasswordRequest;
 import GESTOR_CINEMAR_CENTER.DEV.dto.request.auth.LoginRequest;
 import GESTOR_CINEMAR_CENTER.DEV.dto.request.auth.RegistroRequest;
+import GESTOR_CINEMAR_CENTER.DEV.dto.request.auth.ResetPasswordRequest;
 import GESTOR_CINEMAR_CENTER.DEV.dto.response.auth.AuthResponse;
+import GESTOR_CINEMAR_CENTER.DEV.dto.response.mensaje.MensajeResponse;
 import GESTOR_CINEMAR_CENTER.DEV.service.UsuarioService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -91,5 +94,32 @@ public class AuthController {
     @PreAuthorize("hasAuthority('SUPERADMIN')")
     public ResponseEntity<AuthResponse> registroAdministrador(@Valid @RequestBody RegistroRequest request) {
         return ResponseEntity.ok(usuarioService.registrarAdministrador(request));
+    }
+
+    @Operation(
+            summary = "Solicitar recuperación de contraseña",
+            description = "Si el email existe, genera un token y lo imprime en la consola del backend (simula el mail)."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Mensaje genérico (no revela si el email existe)",
+                    content = @Content(schema = @Schema(implementation = MensajeResponse.class)))
+    })
+    @PostMapping("/forgot-password")
+    public ResponseEntity<MensajeResponse> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        return ResponseEntity.ok(usuarioService.solicitarRecuperacionPassword(request));
+    }
+
+    @Operation(
+            summary = "Restablecer contraseña con token",
+            description = "Usa el token del enlace de recuperación para definir una nueva contraseña."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Contraseña actualizada",
+                    content = @Content(schema = @Schema(implementation = MensajeResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Token inválido/expirado o datos inválidos")
+    })
+    @PostMapping("/reset-password")
+    public ResponseEntity<MensajeResponse> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        return ResponseEntity.ok(usuarioService.restablecerPassword(request));
     }
 }
