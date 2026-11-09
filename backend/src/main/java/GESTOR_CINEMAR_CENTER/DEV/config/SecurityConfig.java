@@ -123,6 +123,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/auth/registro").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/forgot-password").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/reset-password").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/candy-combos/activos").permitAll()
 
                         // 🔓 PÚBLICOS — catálogo de películas (listados y ficha)
                         .requestMatchers(HttpMethod.GET, "/api/peliculas").permitAll()
@@ -146,6 +147,7 @@ public class SecurityConfig {
                         // 👤 SOLO CLIENTE — holds de asientos
                         .requestMatchers(HttpMethod.POST, "/api/holds", "/api/holds/**").hasAuthority("CLIENTE")
                         .requestMatchers(HttpMethod.DELETE, "/api/holds", "/api/holds/**").hasAuthority("CLIENTE")
+                        .requestMatchers(HttpMethod.POST, "/api/codigos-descuento/validar").hasAuthority("CLIENTE")
 
                         // 👥 AUTENTICADO — consulta de salas
                         .requestMatchers(HttpMethod.GET, "/api/salas/**").authenticated()
@@ -178,6 +180,16 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/salas", "/api/salas/**").hasAnyAuthority("ADMINISTRADOR", "SUPERADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/salas", "/api/salas/**").hasAnyAuthority("ADMINISTRADOR", "SUPERADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/api/salas", "/api/salas/**").hasAnyAuthority("ADMINISTRADOR", "SUPERADMIN")
+
+                        .requestMatchers(HttpMethod.GET, "/api/candy-combos", "/api/candy-combos/**").hasAnyAuthority("ADMINISTRADOR", "SUPERADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/candy-combos", "/api/candy-combos/**").hasAnyAuthority("ADMINISTRADOR", "SUPERADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/candy-combos", "/api/candy-combos/**").hasAnyAuthority("ADMINISTRADOR", "SUPERADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/candy-combos", "/api/candy-combos/**").hasAnyAuthority("ADMINISTRADOR", "SUPERADMIN")
+
+                        .requestMatchers(HttpMethod.GET, "/api/codigos-descuento", "/api/codigos-descuento/**").hasAnyAuthority("ADMINISTRADOR", "SUPERADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/codigos-descuento", "/api/codigos-descuento/**").hasAnyAuthority("ADMINISTRADOR", "SUPERADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/codigos-descuento", "/api/codigos-descuento/**").hasAnyAuthority("ADMINISTRADOR", "SUPERADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/codigos-descuento", "/api/codigos-descuento/**").hasAnyAuthority("ADMINISTRADOR", "SUPERADMIN")
 
                         // 👑 SOLO ADMIN — personalización del sitio
                         .requestMatchers(HttpMethod.POST, "/api/customizacion", "/api/customizacion/**").hasAnyAuthority("ADMINISTRADOR", "SUPERADMIN")

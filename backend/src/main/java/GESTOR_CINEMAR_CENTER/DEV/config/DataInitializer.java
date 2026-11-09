@@ -1,9 +1,14 @@
 package GESTOR_CINEMAR_CENTER.DEV.config;
 
 import GESTOR_CINEMAR_CENTER.DEV.enums.EstadoUsuario;
+import GESTOR_CINEMAR_CENTER.DEV.enums.TipoDescuento;
 import GESTOR_CINEMAR_CENTER.DEV.enums.TipoUsuario;
 import GESTOR_CINEMAR_CENTER.DEV.model.Administrador;
+import GESTOR_CINEMAR_CENTER.DEV.model.CandyCombo;
 import GESTOR_CINEMAR_CENTER.DEV.model.Cliente;
+import GESTOR_CINEMAR_CENTER.DEV.model.CodigoDescuento;
+import GESTOR_CINEMAR_CENTER.DEV.repository.CandyComboRepository;
+import GESTOR_CINEMAR_CENTER.DEV.repository.CodigoDescuentoRepository;
 import GESTOR_CINEMAR_CENTER.DEV.repository.UsuarioRepository;
 import jakarta.persistence.EntityManager;
 import org.springframework.boot.CommandLineRunner;
@@ -19,11 +24,20 @@ public class DataInitializer implements CommandLineRunner {
     private final UsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
     private final EntityManager entityManager;
+    private final CandyComboRepository candyComboRepository;
+    private final CodigoDescuentoRepository codigoDescuentoRepository;
 
-    public DataInitializer(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder, EntityManager entityManager) {
+    public DataInitializer(
+            UsuarioRepository usuarioRepository,
+            PasswordEncoder passwordEncoder,
+            EntityManager entityManager,
+            CandyComboRepository candyComboRepository,
+            CodigoDescuentoRepository codigoDescuentoRepository) {
         this.usuarioRepository = usuarioRepository;
         this.passwordEncoder = passwordEncoder;
         this.entityManager = entityManager;
+        this.candyComboRepository = candyComboRepository;
+        this.codigoDescuentoRepository = codigoDescuentoRepository;
     }
 
     @Override
@@ -107,6 +121,33 @@ public class DataInitializer implements CommandLineRunner {
                 System.out.println("✓ Cliente por defecto creado: cliente@mail.com / 123123");
             }
         );
+
+        if (candyComboRepository.count() == 0) {
+            candyComboRepository.save(new CandyCombo(null, "Combo Clásico",
+                    "Balde mediano + gaseosa mediana", 4500.0, "local_drink", true));
+            candyComboRepository.save(new CandyCombo(null, "Combo Marcenter",
+                    "Balde grande + gaseosa grande + golosinas", 6900.0, "fastfood", true));
+            candyComboRepository.save(new CandyCombo(null, "Combo Duo",
+                    "2 baldes medianos + 2 gaseosas + 1 golosina", 8200.0, "groups", true));
+            candyComboRepository.save(new CandyCombo(null, "Combo Familiar",
+                    "Balde XL + 3 gaseosas + 2 golosinas", 11500.0, "celebration", true));
+            candyComboRepository.save(new CandyCombo(null, "Combo Nachos",
+                    "Nachos con cheddar + gaseosa mediana", 5200.0, "restaurant", true));
+            System.out.println("✓ Combos Candy Bar sembrados");
+        }
+
+        if (!codigoDescuentoRepository.existsByCodigoIgnoreCase("MARCENTER10")) {
+            CodigoDescuento codigo = new CodigoDescuento();
+            codigo.setCodigo("MARCENTER10");
+            codigo.setTipo(TipoDescuento.PORCENTAJE);
+            codigo.setValor(10.0);
+            codigo.setActivo(true);
+            codigo.setUsosMaximos(null);
+            codigo.setUsosActuales(0);
+            codigo.setDescripcion("10% off en tu compra (entradas + candy)");
+            codigoDescuentoRepository.save(codigo);
+            System.out.println("✓ Código MARCENTER10 sembrado (10%)");
+        }
     }
 }
 

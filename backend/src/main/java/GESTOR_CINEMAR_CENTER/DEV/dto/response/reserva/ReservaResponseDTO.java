@@ -47,6 +47,12 @@ public class ReservaResponseDTO {
     @Schema(description = "Monto total de la reserva", example = "7500")
     private Double montoTotal;
 
+    private Double subtotalEntradas;
+    private Double subtotalCandy;
+    private Double descuentoMonto;
+    private String codigoDescuentoAplicado;
+    private List<ReservaComboItemDTO> combos;
+
     @Schema(description = "Método de pago", example = "Tarjeta de crédito")
     private String metodoPago;
 

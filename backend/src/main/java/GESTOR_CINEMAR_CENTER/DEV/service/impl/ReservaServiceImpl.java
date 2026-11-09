@@ -1,6 +1,7 @@
 package GESTOR_CINEMAR_CENTER.DEV.service.impl;
 
 import GESTOR_CINEMAR_CENTER.DEV.dto.request.reserva.ActualizarMetodoPagoRequestDTO;
+import GESTOR_CINEMAR_CENTER.DEV.dto.request.reserva.ComboSeleccionadoDTO;
 import GESTOR_CINEMAR_CENTER.DEV.dto.request.reserva.CrearReservaRequestDTO;
 import GESTOR_CINEMAR_CENTER.DEV.dto.response.pago.PagoResponseDTO;
 import GESTOR_CINEMAR_CENTER.DEV.dto.response.reserva.ReservaResponseDTO;
@@ -13,6 +14,7 @@ import GESTOR_CINEMAR_CENTER.DEV.exception.ReglaNegocioException;
 import GESTOR_CINEMAR_CENTER.DEV.mapper.PagoMapper;
 import GESTOR_CINEMAR_CENTER.DEV.mapper.ReservaMapper;
 import GESTOR_CINEMAR_CENTER.DEV.model.*;
+import GESTOR_CINEMAR_CENTER.DEV.repository.CandyComboRepository;
 import GESTOR_CINEMAR_CENTER.DEV.repository.FuncionRepository;
 import GESTOR_CINEMAR_CENTER.DEV.repository.ReservaRepository;
 import GESTOR_CINEMAR_CENTER.DEV.service.*;
@@ -21,8 +23,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 @Service("reservaService")
@@ -45,6 +50,8 @@ public class ReservaServiceImpl implements ReservaService {
     private final ReservaMapper reservaMapper;
     private final PagoMapper pagoMapper;
     private final HoldService holdService;
+    private final CandyComboRepository candyComboRepository;
+    private final CodigoDescuentoService codigoDescuentoService;
 
     @Override
     @Transactional(readOnly = true)
@@ -136,8 +143,30 @@ public class ReservaServiceImpl implements ReservaService {
         reserva.setEstadoReserva(EstadoReserva.CONFIRMADA);
         reserva.setMetodoPago(metodoPago);
         reserva.setAsientos(asientosSeleccionados);
-        reserva.setMontoTotal(funcion.getPrecio() * asientosSeleccionados.size());
         reserva.setPagada(false);
+
+        double subtotalEntradas = funcion.getPrecio() * asientosSeleccionados.size();
+        List<ReservaComboItem> itemsCombo = armarCombos(request.getCombos(), reserva);
+        double subtotalCandy = itemsCombo.stream()
+                .mapToDouble(i -> i.getPrecioUnitario() * i.getCantidad())
+                .sum();
+        double subtotal = subtotalEntradas + subtotalCandy;
+
+        CodigoDescuento codigoAplicado = null;
+        double descuento = 0;
+        if (request.getCodigoDescuento() != null && !request.getCodigoDescuento().isBlank()) {
+            codigoAplicado = codigoDescuentoService.consumirSiValido(request.getCodigoDescuento(), subtotal);
+            descuento = codigoDescuentoService.calcularDescuento(codigoAplicado, subtotal);
+        }
+
+        double total = Math.max(0, subtotal - descuento);
+        reserva.setSubtotalEntradas(subtotalEntradas);
+        reserva.setSubtotalCandy(subtotalCandy);
+        reserva.setDescuentoMonto(descuento);
+        reserva.setCodigoDescuentoAplicado(codigoAplicado == null ? null : codigoAplicado.getCodigo());
+        reserva.setMontoTotal(total);
+        reserva.getCombos().clear();
+        reserva.getCombos().addAll(itemsCombo);
 
         try {
             reserva = reservaRepository.save(reserva);
@@ -149,6 +178,36 @@ public class ReservaServiceImpl implements ReservaService {
         pagoService.crearPago(reserva, reserva.getMontoTotal(), reserva.getMetodoPago());
 
         return reservaMapper.toResponse(reserva);
+    }
+
+    private List<ReservaComboItem> armarCombos(List<ComboSeleccionadoDTO> seleccionados, Reserva reserva) {
+        if (seleccionados == null || seleccionados.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        Map<Long, Integer> cantidades = new HashMap<>();
+        for (ComboSeleccionadoDTO sel : seleccionados) {
+            if (sel.getComboId() == null || sel.getCantidad() == null || sel.getCantidad() < 1) {
+                throw new ReglaNegocioException("Combo inválido en la reserva");
+            }
+            cantidades.merge(sel.getComboId(), sel.getCantidad(), Integer::sum);
+        }
+
+        List<ReservaComboItem> items = new ArrayList<>();
+        for (Map.Entry<Long, Integer> entry : cantidades.entrySet()) {
+            CandyCombo combo = candyComboRepository.findById(entry.getKey())
+                    .orElseThrow(() -> new RecursoNoEncontradoException("Combo candy", entry.getKey()));
+            if (!Boolean.TRUE.equals(combo.getActivo())) {
+                throw new ReglaNegocioException("El combo \"" + combo.getNombre() + "\" no está disponible");
+            }
+            ReservaComboItem item = new ReservaComboItem();
+            item.setReserva(reserva);
+            item.setCombo(combo);
+            item.setCantidad(entry.getValue());
+            item.setPrecioUnitario(combo.getPrecio());
+            items.add(item);
+        }
+        return items;
     }
 
     @Override

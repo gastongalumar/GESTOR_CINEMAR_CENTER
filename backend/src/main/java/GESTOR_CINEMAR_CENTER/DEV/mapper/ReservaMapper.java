@@ -27,18 +27,40 @@ public interface ReservaMapper {
     @Mapping(source = "funcion.horario", target = "horarioFuncion")
     @Mapping(source = "asientos", target = "asientosSeleccionados", qualifiedByName = "asientosAEtiquetas")
     @Mapping(source = "estadoReserva", target = "estadoReserva")
+    @Mapping(target = "combos", ignore = true)
     ReservaResponseDTO toResponse(Reserva reserva);
+
+    @AfterMapping
+    default void mapearCombos(Reserva reserva, @MappingTarget ReservaResponseDTO target) {
+        if (reserva.getCombos() == null || reserva.getCombos().isEmpty()) {
+            target.setCombos(java.util.List.of());
+            return;
+        }
+        target.setCombos(reserva.getCombos().stream()
+                .map(item -> new GESTOR_CINEMAR_CENTER.DEV.dto.response.reserva.ReservaComboItemDTO(
+                        item.getCombo().getId(),
+                        item.getCombo().getNombre(),
+                        item.getCantidad(),
+                        item.getPrecioUnitario(),
+                        item.getPrecioUnitario() * item.getCantidad()))
+                .toList());
+    }
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "numeroTicket", ignore = true)
     @Mapping(target = "codigoOR", ignore = true)
     @Mapping(target = "montoTotal", ignore = true)
+    @Mapping(target = "subtotalEntradas", ignore = true)
+    @Mapping(target = "subtotalCandy", ignore = true)
+    @Mapping(target = "descuentoMonto", ignore = true)
+    @Mapping(target = "codigoDescuentoAplicado", ignore = true)
     @Mapping(target = "fechaEmision", ignore = true)
     @Mapping(target = "fechaValidacion", ignore = true)
     @Mapping(target = "estadoReserva", ignore = true)
     @Mapping(target = "metodoPago", ignore = true)
     @Mapping(target = "pagada", ignore = true)
     @Mapping(target = "asientos", ignore = true)
+    @Mapping(target = "combos", ignore = true)
     @Mapping(source = "cliente", target = "cliente")
     @Mapping(source = "funcion", target = "funcion")
     Reserva toEntity(CrearReservaRequestDTO request, Cliente cliente, Funcion funcion);

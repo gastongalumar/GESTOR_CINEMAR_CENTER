@@ -41,6 +41,11 @@ public class Reserva {
     private Funcion funcion;
 
     private Double montoTotal;
+    private Double subtotalEntradas;
+    private Double subtotalCandy;
+    private Double descuentoMonto;
+    @Column(length = 40)
+    private String codigoDescuentoAplicado;
     private String metodoPago;
     private LocalDateTime fechaEmision;
     private LocalDateTime fechaValidacion;
@@ -61,6 +66,9 @@ public class Reserva {
             uniqueConstraints = @UniqueConstraint(columnNames = {"reserva_id", "asiento_id"})
     )
     private List<Asiento> asientos = new ArrayList<>();
+
+    @OneToMany(mappedBy = "reserva", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ReservaComboItem> combos = new ArrayList<>();
 
 
 

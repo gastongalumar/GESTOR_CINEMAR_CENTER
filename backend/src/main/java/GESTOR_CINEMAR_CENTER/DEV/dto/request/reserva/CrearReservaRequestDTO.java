@@ -10,6 +10,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import jakarta.validation.Valid;
+
+import java.util.ArrayList;
 import java.util.List;
 
 @Getter
@@ -37,4 +40,12 @@ public class CrearReservaRequestDTO {
     @Size(max = 20, message = "No se pueden reservar más de 20 asientos por operación")
     @UniqueElements(message = "No se pueden seleccionar asientos duplicados")
     private List<@ValidAsientoEtiqueta String> asientosSeleccionados;
+
+    @Schema(description = "Combos de Candy Bar opcionales")
+    @Size(max = 20)
+    private List<@Valid ComboSeleccionadoDTO> combos = new ArrayList<>();
+
+    @Schema(description = "Código de descuento opcional", example = "MARCENTER10")
+    @Size(max = 40)
+    private String codigoDescuento;
 }
