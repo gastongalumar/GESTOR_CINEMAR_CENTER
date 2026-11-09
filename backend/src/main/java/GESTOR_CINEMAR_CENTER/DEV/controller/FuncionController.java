@@ -1,11 +1,13 @@
 package GESTOR_CINEMAR_CENTER.DEV.controller;
 
 import GESTOR_CINEMAR_CENTER.DEV.dto.response.mensaje.MensajeResponse;
+import GESTOR_CINEMAR_CENTER.DEV.dto.response.asiento.EstadoAsientosResponseDTO;
 import GESTOR_CINEMAR_CENTER.DEV.dto.request.funcion.ActualizarHorarioFuncionRequestDTO;
 import GESTOR_CINEMAR_CENTER.DEV.dto.request.funcion.CrearFuncionRequestDTO;
 import GESTOR_CINEMAR_CENTER.DEV.dto.request.funcion.CrearFuncionesPorRangoRequestDTO;
 import GESTOR_CINEMAR_CENTER.DEV.dto.response.funcion.FuncionResponseDTO;
 import GESTOR_CINEMAR_CENTER.DEV.service.FuncionService;
+import GESTOR_CINEMAR_CENTER.DEV.service.HoldService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -30,6 +32,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.Authentication;
 
 import java.util.List;
 
@@ -42,6 +45,7 @@ import java.util.List;
 public class FuncionController {
 
     private final FuncionService funcionService;
+    private final HoldService holdService;
 
     @Operation(summary = "Listar todas las funciones", description = "Retorna todas las funciones registradas en el sistema")
     @ApiResponse(responseCode = "200", description = "Listado obtenido correctamente",
@@ -87,6 +91,14 @@ public class FuncionController {
     public ResponseEntity<List<String>> obtenerAsientosOcupados(
             @Parameter(description = "ID de la función", required = true) @Positive @PathVariable Long funcionId) {
         return ResponseEntity.ok(funcionService.obtenerAsientosOcupados(funcionId));
+    }
+
+    @Operation(summary = "Obtener el estado de los asientos", description = "Retorna reservas y holds vigentes para una función")
+    @GetMapping("/{funcionId}/estado-asientos")
+    public ResponseEntity<EstadoAsientosResponseDTO> obtenerEstadoAsientos(
+            @Parameter(description = "ID de la función", required = true) @Positive @PathVariable Long funcionId,
+            Authentication authentication) {
+        return ResponseEntity.ok(holdService.obtenerEstadoAsientos(funcionId, authentication.getName()));
     }
 
     @Operation(summary = "Obtener asientos libres", description = "Retorna los asientos disponibles para reservar en una función")

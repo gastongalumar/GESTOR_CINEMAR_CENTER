@@ -44,6 +44,7 @@ public class ReservaServiceImpl implements ReservaService {
     private final AsientoService asientoService;
     private final ReservaMapper reservaMapper;
     private final PagoMapper pagoMapper;
+    private final HoldService holdService;
 
     @Override
     @Transactional(readOnly = true)
@@ -125,6 +126,8 @@ public class ReservaServiceImpl implements ReservaService {
             }
         }
 
+        holdService.validarSinHoldsAjenos(funcion, asientosSeleccionados, cliente.getId());
+
         Reserva reserva = reservaMapper.toEntity(request, cliente, funcion);
 
         reserva.setNumeroTicket("TK" + System.currentTimeMillis());
@@ -142,6 +145,7 @@ public class ReservaServiceImpl implements ReservaService {
             throw new ConflictoRecursoException("Uno o más asientos ya no están disponibles");
         }
 
+        holdService.eliminarHoldsDeAsientos(funcion, asientosSeleccionados);
         pagoService.crearPago(reserva, reserva.getMontoTotal(), reserva.getMetodoPago());
 
         return reservaMapper.toResponse(reserva);

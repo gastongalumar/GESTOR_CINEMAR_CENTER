@@ -141,6 +141,10 @@ public class SecurityConfig {
                         // 👥 AUTENTICADO — consulta detalle de funciones (por id, por película, ocupados)
                         .requestMatchers(HttpMethod.GET, "/api/funciones/**").authenticated()
 
+                        // 👤 SOLO CLIENTE — holds de asientos
+                        .requestMatchers(HttpMethod.POST, "/api/holds", "/api/holds/**").hasAuthority("CLIENTE")
+                        .requestMatchers(HttpMethod.DELETE, "/api/holds", "/api/holds/**").hasAuthority("CLIENTE")
+
                         // 👥 AUTENTICADO — consulta de salas
                         .requestMatchers(HttpMethod.GET, "/api/salas/**").authenticated()
 

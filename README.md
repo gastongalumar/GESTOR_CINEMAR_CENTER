@@ -153,6 +153,7 @@ Spring Security aplica reglas en orden. Rutas no listadas explícitamente devuel
 
 | Método | Ruta |
 |--------|------|
+| POST/DELETE | `/api/holds`, `/api/holds/**` |
 | POST | `/api/reservas` |
 | GET | `/api/reservas/mis` |
 | GET | `/api/pagos/mis` |
@@ -760,6 +761,38 @@ Retorna todos los asientos de la sala de la función, excluyendo los ocupados se
 
 ---
 
+### Holds temporales de asientos — `/api/holds`
+
+Los holds evitan que dos clientes seleccionen la misma butaca durante el flujo de compra. Cada hold vence a los 3 minutos y se renueva al consultar el estado de asientos. Los vencidos se eliminan cada 30 segundos.
+
+#### POST `/api/holds`
+
+| | |
+|---|---|
+| **Rol** | CLIENTE |
+| **Body** | `{ "funcionId": 5, "etiqueta": "A1" }` |
+| **Response 200** | `{ "id": 1, "funcionId": 5, "etiqueta": "A1", "expiresAt": "2026-11-08T20:22:00" }` |
+| **Errores** | 400 si la función comenzó o el usuario no es cliente; 409 si está reservado o retenido por otro cliente |
+
+#### DELETE `/api/holds`
+
+Libera el hold del asiento indicado por `{ "funcionId": 5, "etiqueta": "A1" }`. Solo elimina holds pertenecientes al cliente autenticado.
+
+#### DELETE `/api/holds/funcion/{funcionId}`
+
+Libera todos los holds de ese cliente para la función indicada.
+
+#### GET `/api/funciones/{funcionId}/estado-asientos`
+
+| | |
+|---|---|
+| **Rol** | Autenticado |
+| **Response 200** | `{ "ocupados": ["A1"], "bloqueados": ["B3"], "misBloqueados": ["C5"] }` |
+
+`ocupados` son reservas activas; `bloqueados`, holds de otros clientes; `misBloqueados`, holds del cliente autenticado. Este endpoint renueva los holds propios vigentes y no reemplaza el endpoint legacy `/ocupados`.
+
+---
+
 #### POST `/api/funciones`
 
 | | |
@@ -1032,9 +1065,10 @@ Retorna todos los asientos de la sala de la función, excluyendo los ocupados se
 **Efecto:**
 1. Lock pesimista de la función.
 2. Valida asientos no ocupados.
-3. Crea reserva `CONFIRMADA` con ticket `TK` + timestamp.
-4. Crea pago automáticamente.
-5. `montoTotal = precio función × cantidad asientos`.
+3. Rechaza asientos retenidos por otro cliente.
+4. Crea reserva `CONFIRMADA` con ticket `TK` + timestamp y elimina los holds asociados a esos asientos.
+5. Crea pago automáticamente.
+6. `montoTotal = precio función × cantidad asientos`.
 
 **Errores:**
 - 400: `"Solo los clientes pueden realizar reservas"`, `"No se pueden reservar funciones que ya comenzaron o finalizaron"`, `"Método de pago no permitido: ..."`
