@@ -1,4 +1,4 @@
-﻿package GESTOR_CINEMAR_CENTER.DEV.controller;
+package GESTOR_CINEMAR_CENTER.DEV.controller;
 
 import GESTOR_CINEMAR_CENTER.DEV.dto.request.usuario.ActualizarNombreUsuarioRequestDTO;
 import GESTOR_CINEMAR_CENTER.DEV.dto.response.mensaje.MensajeResponse;
@@ -50,7 +50,7 @@ public class UsuarioController {
             @ApiResponse(responseCode = "403", description = "Cuenta inactiva")
     })
     @PutMapping("/mi-nombre")
-    @PreAuthorize("hasAnyAuthority('CLIENTE', 'ADMINISTRADOR')")
+    @PreAuthorize("hasAnyAuthority('CLIENTE', 'ADMINISTRADOR', 'SUPERADMIN')")
     public ResponseEntity<UsuarioResponseDTO> actualizarMiNombre(
             Authentication authentication,
             @Valid @RequestBody ActualizarNombreUsuarioRequestDTO request) {
@@ -61,7 +61,7 @@ public class UsuarioController {
     @ApiResponse(responseCode = "200", description = "Perfil obtenido",
             content = @Content(schema = @Schema(implementation = UsuarioResponseDTO.class)))
     @GetMapping("/me")
-    @PreAuthorize("hasAnyAuthority('CLIENTE', 'ADMINISTRADOR')")
+    @PreAuthorize("hasAnyAuthority('CLIENTE', 'ADMINISTRADOR', 'SUPERADMIN')")
     public ResponseEntity<UsuarioResponseDTO> miPerfil(Authentication authentication) {
         return ResponseEntity.ok(usuarioService.obtenerMiPerfil(authentication.getName()));
     }
@@ -70,7 +70,7 @@ public class UsuarioController {
     @ApiResponse(responseCode = "200", description = "Foto actualizada",
             content = @Content(schema = @Schema(implementation = UsuarioResponseDTO.class)))
     @PostMapping(value = "/me/foto", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasAnyAuthority('CLIENTE', 'ADMINISTRADOR')")
+    @PreAuthorize("hasAnyAuthority('CLIENTE', 'ADMINISTRADOR', 'SUPERADMIN')")
     public ResponseEntity<UsuarioResponseDTO> subirFotoPerfil(
             Authentication authentication,
             @RequestParam("foto") MultipartFile foto) {
@@ -81,7 +81,7 @@ public class UsuarioController {
     @ApiResponse(responseCode = "200", description = "Foto eliminada",
             content = @Content(schema = @Schema(implementation = UsuarioResponseDTO.class)))
     @DeleteMapping("/me/foto")
-    @PreAuthorize("hasAnyAuthority('CLIENTE', 'ADMINISTRADOR')")
+    @PreAuthorize("hasAnyAuthority('CLIENTE', 'ADMINISTRADOR', 'SUPERADMIN')")
     public ResponseEntity<UsuarioResponseDTO> eliminarFotoPerfil(Authentication authentication) {
         return ResponseEntity.ok(usuarioService.eliminarFotoPerfil(authentication.getName()));
     }
@@ -90,7 +90,7 @@ public class UsuarioController {
     @ApiResponse(responseCode = "200", description = "Listado obtenido correctamente",
             content = @Content(array = @ArraySchema(schema = @Schema(implementation = UsuarioResponseDTO.class))))
     @GetMapping
-    @PreAuthorize("hasAuthority('ADMINISTRADOR')")
+    @PreAuthorize("hasAnyAuthority('ADMINISTRADOR', 'SUPERADMIN')")
     public ResponseEntity<List<UsuarioResponseDTO>> listarTodos() {
         return ResponseEntity.ok(usuarioService.listarTodos());
     }
@@ -102,7 +102,7 @@ public class UsuarioController {
             @ApiResponse(responseCode = "404", description = "Usuario no encontrado")
     })
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('ADMINISTRADOR')")
+    @PreAuthorize("hasAnyAuthority('ADMINISTRADOR', 'SUPERADMIN')")
     public ResponseEntity<UsuarioResponseDTO> buscarPorId(
             @Parameter(description = "ID del usuario", required = true) @Positive @PathVariable Long id) {
         return ResponseEntity.ok(usuarioService.buscarPorId(id));
@@ -112,20 +112,20 @@ public class UsuarioController {
     @ApiResponse(responseCode = "200", description = "Usuarios filtrados correctamente",
             content = @Content(array = @ArraySchema(schema = @Schema(implementation = UsuarioResponseDTO.class))))
     @GetMapping("/buscar")
-    @PreAuthorize("hasAuthority('ADMINISTRADOR')")
+    @PreAuthorize("hasAnyAuthority('ADMINISTRADOR', 'SUPERADMIN')")
     public ResponseEntity<List<UsuarioResponseDTO>> buscarPorNombre(
             @Parameter(description = "Nombre o apellido a buscar", required = true) @RequestParam String nombre) {
         return ResponseEntity.ok(usuarioService.buscarPorNombre(nombre));
     }
 
-    @Operation(summary = "Listar usuarios por rol", description = "Retorna el listado de usuarios que poseen un rol determinado (CLIENTE o ADMINISTRADOR)")
+    @Operation(summary = "Listar usuarios por rol", description = "Retorna el listado de usuarios que poseen un rol determinado (CLIENTE, ADMINISTRADOR o SUPERADMIN)")
     @ApiResponse(responseCode = "200", description = "Usuarios filtrados por rol correctamente",
             content = @Content(array = @ArraySchema(schema = @Schema(implementation = UsuarioResponseDTO.class))))
     @GetMapping("/rol/{rol}")
-    @PreAuthorize("hasAuthority('ADMINISTRADOR')")
+    @PreAuthorize("hasAnyAuthority('ADMINISTRADOR', 'SUPERADMIN')")
     public ResponseEntity<List<UsuarioResponseDTO>> listarPorRol(
-            @Parameter(description = "Rol del usuario (CLIENTE o ADMINISTRADOR)", required = true)
-            @Pattern(regexp = "CLIENTE|ADMINISTRADOR", message = "Rol inválido")
+            @Parameter(description = "Rol del usuario (CLIENTE, ADMINISTRADOR o SUPERADMIN)", required = true)
+            @Pattern(regexp = "CLIENTE|ADMINISTRADOR|SUPERADMIN", message = "Rol inválido")
             @PathVariable String rol) {
         TipoUsuario tipo = TipoUsuario.valueOf(rol.toUpperCase());
         return ResponseEntity.ok(usuarioService.listarPorRol(tipo));
@@ -138,7 +138,7 @@ public class UsuarioController {
             @ApiResponse(responseCode = "400", description = "Acción no permitida")
     })
     @PutMapping("/{id}/baja")
-    @PreAuthorize("hasAuthority('ADMINISTRADOR')")
+    @PreAuthorize("hasAnyAuthority('ADMINISTRADOR', 'SUPERADMIN')")
     public ResponseEntity<UsuarioResponseDTO> darDeBaja(
             @Parameter(description = "ID del usuario", required = true) @Positive @PathVariable Long id,
             Authentication authentication) {
@@ -149,24 +149,25 @@ public class UsuarioController {
     @ApiResponse(responseCode = "200", description = "Usuario reactivado",
             content = @Content(schema = @Schema(implementation = UsuarioResponseDTO.class)))
     @PutMapping("/{id}/activar")
-    @PreAuthorize("hasAuthority('ADMINISTRADOR')")
+    @PreAuthorize("hasAnyAuthority('ADMINISTRADOR', 'SUPERADMIN')")
     public ResponseEntity<UsuarioResponseDTO> reactivar(
             @Parameter(description = "ID del usuario", required = true) @Positive @PathVariable Long id,
             Authentication authentication) {
         return ResponseEntity.ok(usuarioService.reactivar(id, authentication.getName()));
     }
 
-    @Operation(summary = "Eliminar administrador", description = "Borra un administrador. El admin del sistema (admin@mail.com) no puede eliminarse.")
+    @Operation(summary = "Eliminar administrador o superadmin", description = "Solo SUPERADMIN. El usuario del sistema (admin@mail.com) no puede eliminarse.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Administrador eliminado"),
-            @ApiResponse(responseCode = "400", description = "Acción no permitida")
+            @ApiResponse(responseCode = "200", description = "Cuenta eliminada"),
+            @ApiResponse(responseCode = "400", description = "Acción no permitida"),
+            @ApiResponse(responseCode = "403", description = "Solo SUPERADMIN puede eliminar staff")
     })
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('ADMINISTRADOR')")
+    @PreAuthorize("hasAuthority('SUPERADMIN')")
     public ResponseEntity<MensajeResponse> eliminar(
-            @Parameter(description = "ID del administrador", required = true) @Positive @PathVariable Long id,
+            @Parameter(description = "ID del administrador o superadmin", required = true) @Positive @PathVariable Long id,
             Authentication authentication) {
         usuarioService.eliminarUsuario(id, authentication.getName());
-        return ResponseEntity.ok(new MensajeResponse("Administrador eliminado correctamente"));
+        return ResponseEntity.ok(new MensajeResponse("Cuenta eliminada correctamente"));
     }
 }

@@ -126,7 +126,7 @@ public class FuncionController {
             @ApiResponse(responseCode = "403", description = "Acceso denegado")
     })
     @PostMapping
-    @PreAuthorize("hasAuthority('ADMINISTRADOR')")
+    @PreAuthorize("hasAnyAuthority('ADMINISTRADOR', 'SUPERADMIN')")
     public ResponseEntity<FuncionResponseDTO> crear(@Valid @RequestBody CrearFuncionRequestDTO request) {
         return ResponseEntity.ok(funcionService.crear(request));
     }
@@ -149,7 +149,7 @@ public class FuncionController {
             @ApiResponse(responseCode = "403", description = "Acceso denegado")
     })
     @PostMapping("/por-rango")
-    @PreAuthorize("hasAuthority('ADMINISTRADOR')")
+    @PreAuthorize("hasAnyAuthority('ADMINISTRADOR', 'SUPERADMIN')")
     public ResponseEntity<List<FuncionResponseDTO>> crearFuncionesPorRango(
             @Valid @RequestBody CrearFuncionesPorRangoRequestDTO request) {
         return ResponseEntity.ok(funcionService.crearFuncionesPorRango(request));
@@ -172,7 +172,7 @@ public class FuncionController {
             @ApiResponse(responseCode = "404", description = "Función no encontrada")
     })
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('ADMINISTRADOR')")
+    @PreAuthorize("hasAnyAuthority('ADMINISTRADOR', 'SUPERADMIN')")
     public ResponseEntity<FuncionResponseDTO> actualizarHorario(
             @Parameter(description = "ID de la función", required = true) @Positive @PathVariable Long id,
             @Valid @RequestBody ActualizarHorarioFuncionRequestDTO request) {
@@ -188,7 +188,7 @@ public class FuncionController {
             @ApiResponse(responseCode = "403", description = "Acceso denegado")
     })
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('ADMINISTRADOR')")
+    @PreAuthorize("hasAnyAuthority('ADMINISTRADOR', 'SUPERADMIN')")
     public ResponseEntity<MensajeResponse> eliminar(
             @Parameter(description = "ID de la función", required = true) @Positive @PathVariable Long id) {
         funcionService.eliminar(id);

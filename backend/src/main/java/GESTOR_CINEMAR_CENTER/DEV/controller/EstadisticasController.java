@@ -22,38 +22,38 @@ public class EstadisticasController {
 
     // El rol real lo controla SecurityConfig
     @GetMapping("/dashboard/resumen")
-    @PreAuthorize("hasAuthority('ADMINISTRADOR')")
+    @PreAuthorize("hasAnyAuthority('ADMINISTRADOR', 'SUPERADMIN')")
     public ResponseEntity<DashboardResumenDTO> obtenerResumen() {
         return ResponseEntity.ok(estadisticasService.obtenerResumen());
     }
 
     @GetMapping("/reservas/por-fecha")
-    @PreAuthorize("hasAuthority('ADMINISTRADOR')")
+    @PreAuthorize("hasAnyAuthority('ADMINISTRADOR', 'SUPERADMIN')")
     public ResponseEntity<List<VentaDiariaDTO>> ventasPorFecha(
             @Min(1) @Max(365) @RequestParam(defaultValue = "30") int dias) {
         return ResponseEntity.ok(estadisticasService.ventasDiarias(dias));
     }
 
     @GetMapping("/ocupacion/pelicula")
-    @PreAuthorize("hasAuthority('ADMINISTRADOR')")
+    @PreAuthorize("hasAnyAuthority('ADMINISTRADOR', 'SUPERADMIN')")
     public ResponseEntity<List<VentaPeliculaDTO>> ventasPorPelicula() {
         return ResponseEntity.ok(estadisticasService.ventasPorPelicula());
     }
 
     @GetMapping("/ocupacion/sala")
-    @PreAuthorize("hasAuthority('ADMINISTRADOR')")
+    @PreAuthorize("hasAnyAuthority('ADMINISTRADOR', 'SUPERADMIN')")
     public ResponseEntity<List<VentaSalaDTO>> ventasPorSala() {
         return ResponseEntity.ok(estadisticasService.ventasPorSala());
     }
 
     @GetMapping("/ocupacion/funcion")
-    @PreAuthorize("hasAuthority('ADMINISTRADOR')")
+    @PreAuthorize("hasAnyAuthority('ADMINISTRADOR', 'SUPERADMIN')")
     public ResponseEntity<List<OcupacionFuncionDTO>> ocupacionFunciones(@RequestParam(defaultValue = "false") boolean soloVigentes) {
         return ResponseEntity.ok(estadisticasService.ocupacionFunciones(soloVigentes));
     }
 
     @GetMapping("/ingresos/metodos-pago")
-    @PreAuthorize("hasAuthority('ADMINISTRADOR')")
+    @PreAuthorize("hasAnyAuthority('ADMINISTRADOR', 'SUPERADMIN')")
     public ResponseEntity<List<MetodoPagoDTO>> metodosPago() {
         return ResponseEntity.ok(estadisticasService.metodosPago());
     }

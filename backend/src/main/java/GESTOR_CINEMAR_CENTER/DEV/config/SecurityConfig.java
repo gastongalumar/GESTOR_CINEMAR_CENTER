@@ -132,8 +132,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/funciones").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/funciones/vigentes").permitAll()
 
-                        // 👑 SOLO ADMIN — registro de administradores
-                        .requestMatchers(HttpMethod.POST, "/api/auth/registro-admin").hasAuthority("ADMINISTRADOR")
+                        // 👑 SOLO SUPERADMIN — registro de administradores / superadmins
+                        .requestMatchers(HttpMethod.POST, "/api/auth/registro-admin").hasAuthority("SUPERADMIN")
 
                         // 👥 AUTENTICADO — filtros de películas
                         .requestMatchers(HttpMethod.GET, "/api/peliculas/**").authenticated()
@@ -155,56 +155,57 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/pagos/**").hasAuthority("CLIENTE")
 
                         // 👥 CLIENTE o ADMIN — reservas propias y tickets
-                        .requestMatchers(HttpMethod.GET, "/api/reservas/mis").hasAnyAuthority("CLIENTE", "ADMINISTRADOR")
-                        .requestMatchers(HttpMethod.GET, "/api/reservas/ticket/**").hasAnyAuthority("CLIENTE", "ADMINISTRADOR")
-                        .requestMatchers(HttpMethod.PUT, "/api/reservas/ticket/**").hasAnyAuthority("CLIENTE", "ADMINISTRADOR")
-                        .requestMatchers(HttpMethod.DELETE, "/api/reservas/ticket/**").hasAnyAuthority("CLIENTE", "ADMINISTRADOR")
-                        .requestMatchers(HttpMethod.GET, "/api/pagos/ticket/*/pago").hasAnyAuthority("CLIENTE", "ADMINISTRADOR")
-                        .requestMatchers(HttpMethod.GET, "/api/pagos/mis").hasAnyAuthority("CLIENTE", "ADMINISTRADOR")
+                        .requestMatchers(HttpMethod.GET, "/api/reservas/mis").hasAnyAuthority("CLIENTE", "ADMINISTRADOR", "SUPERADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/reservas/ticket/**").hasAnyAuthority("CLIENTE", "ADMINISTRADOR", "SUPERADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/reservas/ticket/**").hasAnyAuthority("CLIENTE", "ADMINISTRADOR", "SUPERADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/reservas/ticket/**").hasAnyAuthority("CLIENTE", "ADMINISTRADOR", "SUPERADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/pagos/ticket/*/pago").hasAnyAuthority("CLIENTE", "ADMINISTRADOR", "SUPERADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/pagos/mis").hasAnyAuthority("CLIENTE", "ADMINISTRADOR", "SUPERADMIN")
 
                         // 👑 SOLO ADMIN — CRUD películas (incluye POST /{id}/imagen)
-                        .requestMatchers(HttpMethod.POST, "/api/peliculas", "/api/peliculas/**").hasAuthority("ADMINISTRADOR")
-                        .requestMatchers(HttpMethod.PUT, "/api/peliculas", "/api/peliculas/**").hasAuthority("ADMINISTRADOR")
-                        .requestMatchers(HttpMethod.DELETE, "/api/peliculas", "/api/peliculas/**").hasAuthority("ADMINISTRADOR")
+                        .requestMatchers(HttpMethod.POST, "/api/peliculas", "/api/peliculas/**").hasAnyAuthority("ADMINISTRADOR", "SUPERADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/peliculas", "/api/peliculas/**").hasAnyAuthority("ADMINISTRADOR", "SUPERADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/peliculas", "/api/peliculas/**").hasAnyAuthority("ADMINISTRADOR", "SUPERADMIN")
 
                         // 👑 SOLO ADMIN — CRUD funciones
-                        .requestMatchers(HttpMethod.POST, "/api/funciones", "/api/funciones/**").hasAuthority("ADMINISTRADOR")
-                        .requestMatchers(HttpMethod.PUT, "/api/funciones", "/api/funciones/**").hasAuthority("ADMINISTRADOR")
-                        .requestMatchers(HttpMethod.DELETE, "/api/funciones", "/api/funciones/**").hasAuthority("ADMINISTRADOR")
+                        .requestMatchers(HttpMethod.POST, "/api/funciones", "/api/funciones/**").hasAnyAuthority("ADMINISTRADOR", "SUPERADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/funciones", "/api/funciones/**").hasAnyAuthority("ADMINISTRADOR", "SUPERADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/funciones", "/api/funciones/**").hasAnyAuthority("ADMINISTRADOR", "SUPERADMIN")
 
                         // 👑 SOLO ADMIN — CRUD salas
-                        .requestMatchers(HttpMethod.POST, "/api/salas", "/api/salas/**").hasAuthority("ADMINISTRADOR")
-                        .requestMatchers(HttpMethod.PUT, "/api/salas", "/api/salas/**").hasAuthority("ADMINISTRADOR")
-                        .requestMatchers(HttpMethod.DELETE, "/api/salas", "/api/salas/**").hasAuthority("ADMINISTRADOR")
+                        .requestMatchers(HttpMethod.POST, "/api/salas", "/api/salas/**").hasAnyAuthority("ADMINISTRADOR", "SUPERADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/salas", "/api/salas/**").hasAnyAuthority("ADMINISTRADOR", "SUPERADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/salas", "/api/salas/**").hasAnyAuthority("ADMINISTRADOR", "SUPERADMIN")
 
                         // 👑 SOLO ADMIN — personalización del sitio
-                        .requestMatchers(HttpMethod.POST, "/api/customizacion", "/api/customizacion/**").hasAuthority("ADMINISTRADOR")
-                        .requestMatchers(HttpMethod.PUT, "/api/customizacion", "/api/customizacion/**").hasAuthority("ADMINISTRADOR")
-                        .requestMatchers(HttpMethod.DELETE, "/api/customizacion", "/api/customizacion/**").hasAuthority("ADMINISTRADOR")
+                        .requestMatchers(HttpMethod.POST, "/api/customizacion", "/api/customizacion/**").hasAnyAuthority("ADMINISTRADOR", "SUPERADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/customizacion", "/api/customizacion/**").hasAnyAuthority("ADMINISTRADOR", "SUPERADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/customizacion", "/api/customizacion/**").hasAnyAuthority("ADMINISTRADOR", "SUPERADMIN")
 
                         // 👑 SOLO ADMIN — moderación de reservas
-                        .requestMatchers(HttpMethod.GET, "/api/reservas/admin/todas").hasAuthority("ADMINISTRADOR")
-                        .requestMatchers(HttpMethod.GET, "/api/reservas/admin/**").hasAuthority("ADMINISTRADOR")
-                        .requestMatchers(HttpMethod.GET, "/api/reservas/cliente/**").hasAuthority("ADMINISTRADOR")
-                        .requestMatchers(HttpMethod.POST, "/api/reservas/validar/**").hasAuthority("ADMINISTRADOR")
+                        .requestMatchers(HttpMethod.GET, "/api/reservas/admin/todas").hasAnyAuthority("ADMINISTRADOR", "SUPERADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/reservas/admin/**").hasAnyAuthority("ADMINISTRADOR", "SUPERADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/reservas/cliente/**").hasAnyAuthority("ADMINISTRADOR", "SUPERADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/reservas/validar/**").hasAnyAuthority("ADMINISTRADOR", "SUPERADMIN")
 
                         // 👑 SOLO ADMIN — estadísticas
-                        .requestMatchers(HttpMethod.GET, "/api/estadisticas", "/api/estadisticas/**").hasAuthority("ADMINISTRADOR")
+                        .requestMatchers(HttpMethod.GET, "/api/estadisticas", "/api/estadisticas/**").hasAnyAuthority("ADMINISTRADOR", "SUPERADMIN")
 
                         // 👑 SOLO ADMIN — consulta de pagos
-                        .requestMatchers(HttpMethod.GET, "/api/pagos", "/api/pagos/**").hasAuthority("ADMINISTRADOR")
+                        .requestMatchers(HttpMethod.GET, "/api/pagos", "/api/pagos/**").hasAnyAuthority("ADMINISTRADOR", "SUPERADMIN")
 
                         // 👤 Perfil propio (cliente o admin)
-                        .requestMatchers(HttpMethod.PUT, "/api/usuarios/mi-nombre").hasAnyAuthority("CLIENTE", "ADMINISTRADOR")
-                        .requestMatchers(HttpMethod.GET, "/api/usuarios/me").hasAnyAuthority("CLIENTE", "ADMINISTRADOR")
-                        .requestMatchers(HttpMethod.POST, "/api/usuarios/me/foto").hasAnyAuthority("CLIENTE", "ADMINISTRADOR")
-                        .requestMatchers(HttpMethod.DELETE, "/api/usuarios/me/foto").hasAnyAuthority("CLIENTE", "ADMINISTRADOR")
+                        .requestMatchers(HttpMethod.PUT, "/api/usuarios/mi-nombre").hasAnyAuthority("CLIENTE", "ADMINISTRADOR", "SUPERADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/usuarios/me").hasAnyAuthority("CLIENTE", "ADMINISTRADOR", "SUPERADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/usuarios/me/foto").hasAnyAuthority("CLIENTE", "ADMINISTRADOR", "SUPERADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/usuarios/me/foto").hasAnyAuthority("CLIENTE", "ADMINISTRADOR", "SUPERADMIN")
 
                         // 👑 SOLO ADMIN — gestión de usuarios
-                        .requestMatchers(HttpMethod.GET, "/api/usuarios", "/api/usuarios/**").hasAuthority("ADMINISTRADOR")
-                        .requestMatchers(HttpMethod.POST, "/api/usuarios", "/api/usuarios/**").hasAuthority("ADMINISTRADOR")
-                        .requestMatchers(HttpMethod.PUT, "/api/usuarios", "/api/usuarios/**").hasAuthority("ADMINISTRADOR")
-                        .requestMatchers(HttpMethod.DELETE, "/api/usuarios", "/api/usuarios/**").hasAuthority("ADMINISTRADOR")
+                        .requestMatchers(HttpMethod.GET, "/api/usuarios", "/api/usuarios/**").hasAnyAuthority("ADMINISTRADOR", "SUPERADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/usuarios", "/api/usuarios/**").hasAnyAuthority("ADMINISTRADOR", "SUPERADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/usuarios", "/api/usuarios/**").hasAnyAuthority("ADMINISTRADOR", "SUPERADMIN")
+                        // 👑 SOLO SUPERADMIN — eliminar administradores / superadmins
+                        .requestMatchers(HttpMethod.DELETE, "/api/usuarios", "/api/usuarios/**").hasAuthority("SUPERADMIN")
 
                         // 🚫 CUALQUIER OTRA RUTA
                         .anyRequest().denyAll()

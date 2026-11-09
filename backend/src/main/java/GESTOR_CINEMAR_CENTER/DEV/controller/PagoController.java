@@ -40,7 +40,7 @@ public class PagoController {
     @ApiResponse(responseCode = "200", description = "Listado obtenido correctamente",
             content = @Content(array = @ArraySchema(schema = @Schema(implementation = PagoResponseDTO.class))))
     @GetMapping
-    @PreAuthorize("hasAuthority('ADMINISTRADOR')")
+    @PreAuthorize("hasAnyAuthority('ADMINISTRADOR', 'SUPERADMIN')")
     public ResponseEntity<List<PagoResponseDTO>> listarTodos() {
         return ResponseEntity.ok(pagoService.listarTodos());
     }
@@ -61,7 +61,7 @@ public class PagoController {
             @ApiResponse(responseCode = "403", description = "Acceso denegado")
     })
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('ADMINISTRADOR')")
+    @PreAuthorize("hasAnyAuthority('ADMINISTRADOR', 'SUPERADMIN')")
     public ResponseEntity<PagoResponseDTO> buscarPorId(
             @Parameter(description = "ID del pago", required = true) @Positive @PathVariable Long id) {
         return ResponseEntity.ok(pagoService.buscarPorId(id));
@@ -75,7 +75,7 @@ public class PagoController {
             @ApiResponse(responseCode = "403", description = "Acceso denegado")
     })
     @GetMapping("/ticket/{numeroTicket}/pago")
-    @PreAuthorize("hasAuthority('CLIENTE') or hasAuthority('ADMINISTRADOR')")
+    @PreAuthorize("hasAuthority('CLIENTE') or hasAnyAuthority('ADMINISTRADOR', 'SUPERADMIN')")
     public ResponseEntity<PagoResponseDTO> buscarPorTicket(
             @Parameter(description = "Número de ticket de la reserva", required = true)
             @NotBlank @Pattern(regexp = "^TK\\d+$", message = "Formato de ticket inválido")

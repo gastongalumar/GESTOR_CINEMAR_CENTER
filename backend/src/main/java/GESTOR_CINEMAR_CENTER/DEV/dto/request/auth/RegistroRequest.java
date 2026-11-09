@@ -1,5 +1,6 @@
 package GESTOR_CINEMAR_CENTER.DEV.dto.request.auth;
 
+import GESTOR_CINEMAR_CENTER.DEV.enums.TipoUsuario;
 import GESTOR_CINEMAR_CENTER.DEV.validation.interfaces.ValidEmailFormato;
 import GESTOR_CINEMAR_CENTER.DEV.validation.interfaces.ValidNombrePersona;
 import GESTOR_CINEMAR_CENTER.DEV.validation.interfaces.ValidTelefonoArgentino;
@@ -46,4 +47,11 @@ public class RegistroRequest {
     @Size(max = 30, message = "El teléfono no puede superar 30 caracteres")
     @ValidTelefonoArgentino
     private String telefono;
+
+    @Schema(
+            description = "Rol a crear en registro-admin (ADMINISTRADOR o SUPERADMIN). Ignorado en registro de cliente.",
+            example = "ADMINISTRADOR",
+            allowableValues = {"ADMINISTRADOR", "SUPERADMIN"}
+    )
+    private TipoUsuario tipo;
 }

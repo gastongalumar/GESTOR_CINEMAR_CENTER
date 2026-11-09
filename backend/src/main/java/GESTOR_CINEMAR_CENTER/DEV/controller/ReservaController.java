@@ -75,7 +75,7 @@ public class ReservaController {
     @ApiResponse(responseCode = "200", description = "Listado obtenido correctamente",
             content = @Content(array = @ArraySchema(schema = @Schema(implementation = ReservaResponseDTO.class))))
     @GetMapping("/cliente/{clienteId}")
-    @PreAuthorize("hasAuthority('ADMINISTRADOR')")
+    @PreAuthorize("hasAnyAuthority('ADMINISTRADOR', 'SUPERADMIN')")
     public ResponseEntity<List<ReservaResponseDTO>> listarPorCliente(
             @Parameter(description = "ID del cliente", required = true) @Positive @PathVariable Long clienteId) {
         return ResponseEntity.ok(reservaService.listarPorCliente(clienteId));
@@ -120,7 +120,7 @@ public class ReservaController {
             @ApiResponse(responseCode = "401", description = "No autenticado")
     })
     @DeleteMapping("/ticket/{numeroTicket}")
-    @PreAuthorize("hasAuthority('CLIENTE') or hasAuthority('ADMINISTRADOR')")
+    @PreAuthorize("hasAuthority('CLIENTE') or hasAnyAuthority('ADMINISTRADOR', 'SUPERADMIN')")
     public ResponseEntity<MensajeResponse> cancelar(
             @Parameter(description = "Número de ticket de la reserva", required = true)
             @NotBlank @Pattern(regexp = "^TK\\d+$", message = "Formato de ticket inválido")
@@ -134,7 +134,7 @@ public class ReservaController {
     @ApiResponse(responseCode = "200", description = "Listado obtenido correctamente",
             content = @Content(array = @ArraySchema(schema = @Schema(implementation = ReservaResponseDTO.class))))
     @GetMapping("/admin/todas")
-    @PreAuthorize("hasAuthority('ADMINISTRADOR')")
+    @PreAuthorize("hasAnyAuthority('ADMINISTRADOR', 'SUPERADMIN')")
     public ResponseEntity<List<ReservaResponseDTO>> listarTodasReservas() {
         return ResponseEntity.ok(reservaService.listarTodasReservas());
     }
@@ -144,7 +144,7 @@ public class ReservaController {
     @ApiResponse(responseCode = "200", description = "Listado obtenido correctamente",
             content = @Content(array = @ArraySchema(schema = @Schema(implementation = ReservaResponseDTO.class))))
     @GetMapping("/admin/funcion/{funcionId}")
-    @PreAuthorize("hasAuthority('ADMINISTRADOR')")
+    @PreAuthorize("hasAnyAuthority('ADMINISTRADOR', 'SUPERADMIN')")
     public ResponseEntity<List<ReservaResponseDTO>> filtrarPorFuncion(
             @Parameter(description = "ID de la función", required = true) @Positive @PathVariable Long funcionId) {
         return ResponseEntity.ok(reservaService.filtrarReservasPorFuncion(funcionId));
@@ -155,7 +155,7 @@ public class ReservaController {
     @ApiResponse(responseCode = "200", description = "Listado obtenido correctamente",
             content = @Content(array = @ArraySchema(schema = @Schema(implementation = ReservaResponseDTO.class))))
     @GetMapping("/admin/sala/{salaId}")
-    @PreAuthorize("hasAuthority('ADMINISTRADOR')")
+    @PreAuthorize("hasAnyAuthority('ADMINISTRADOR', 'SUPERADMIN')")
     public ResponseEntity<List<ReservaResponseDTO>> filtrarPorSala(
             @Parameter(description = "ID de la sala", required = true) @Positive @PathVariable Long salaId) {
         return ResponseEntity.ok(reservaService.filtrarReservasPorSala(salaId));
@@ -166,7 +166,7 @@ public class ReservaController {
     @ApiResponse(responseCode = "200", description = "Listado obtenido correctamente",
             content = @Content(array = @ArraySchema(schema = @Schema(implementation = ReservaResponseDTO.class))))
     @GetMapping("/admin/fechas")
-    @PreAuthorize("hasAuthority('ADMINISTRADOR')")
+    @PreAuthorize("hasAnyAuthority('ADMINISTRADOR', 'SUPERADMIN')")
     public ResponseEntity<List<ReservaResponseDTO>> filtrarPorFecha(
             @Parameter(description = "Fecha y hora inicial (ISO 8601)", required = true) @RequestParam LocalDateTime desde,
             @Parameter(description = "Fecha y hora final (ISO 8601)", required = true) @RequestParam LocalDateTime hasta) {

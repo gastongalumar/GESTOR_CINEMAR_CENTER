@@ -120,6 +120,8 @@ public class UsuarioServiceImpl implements UsuarioService {
             throw new ConflictoRecursoException("El email ya está registrado");
         }
 
+        TipoUsuario rolStaff = resolverRolStaff(request.getTipo());
+
         String telefonoNormalizado = validarTelefono(request.getTelefono());
         String passwordHash = passwordEncoder.encode(request.getPassword());
 
@@ -129,15 +131,28 @@ public class UsuarioServiceImpl implements UsuarioService {
         admin.setEmail(emailNormalizado);
         admin.setPassword(passwordHash);
         admin.setTelefono(telefonoNormalizado);
-        admin.setTipo(TipoUsuario.ADMINISTRADOR);
+        admin.setTipo(rolStaff);
         admin.setEstado(EstadoUsuario.ACTIVO);
 
         admin = usuarioRepository.save(admin);
         return usuarioMapper.toAuthResponse(admin, generarToken(admin));
     }
 
+    /** Solo ADMINISTRADOR o SUPERADMIN; default ADMINISTRADOR. */
+    private TipoUsuario resolverRolStaff(TipoUsuario solicitado) {
+        if (solicitado == null || solicitado == TipoUsuario.ADMINISTRADOR) {
+            return TipoUsuario.ADMINISTRADOR;
+        }
+        if (solicitado == TipoUsuario.SUPERADMIN) {
+            return TipoUsuario.SUPERADMIN;
+        }
+        throw new ReglaNegocioException("Solo se pueden crear roles ADMINISTRADOR o SUPERADMIN");
+    }
+
     private String generarToken(Usuario usuario) {
-        String tipoStr = usuario.getTipo() != null ? usuario.getTipo().name() : (usuario instanceof Administrador ? "ADMINISTRADOR" : "CLIENTE");
+        String tipoStr = usuario.getTipo() != null
+                ? usuario.getTipo().name()
+                : (usuario instanceof Administrador ? "ADMINISTRADOR" : "CLIENTE");
         return jwtUtil.generateToken(
                 usuario.getEmail(),
                 tipoStr,
@@ -193,8 +208,9 @@ public class UsuarioServiceImpl implements UsuarioService {
         validarNoEsAdminProtegido(usuario);
         validarNoEsUnoMismo(usuario, emailAdminAutenticado);
 
-        if (usuario.getTipo() != TipoUsuario.ADMINISTRADOR) {
-            throw new ReglaNegocioException("Solo se pueden eliminar cuentas de administrador. Para clientes usá dar de baja.");
+        if (!esStaff(usuario.getTipo())) {
+            throw new ReglaNegocioException(
+                    "Solo se pueden eliminar cuentas de administrador o superadmin. Para clientes usá dar de baja.");
         }
 
         usuarioRepository.delete(usuario);
@@ -206,6 +222,11 @@ public class UsuarioServiceImpl implements UsuarioService {
         Usuario usuario = findById(id);
         validarNoEsAdminProtegido(usuario);
         validarNoEsUnoMismo(usuario, emailAdminAutenticado);
+
+        if (esStaff(usuario.getTipo())) {
+            throw new ReglaNegocioException(
+                    "No se puede dar de baja a administradores o superadmins. Usá eliminar (solo SUPERADMIN).");
+        }
 
         if (usuario.getEstado() == EstadoUsuario.INACTIVO) {
             throw new ReglaNegocioException("El usuario ya está dado de baja");
@@ -219,6 +240,10 @@ public class UsuarioServiceImpl implements UsuarioService {
 
         usuario.setEstado(EstadoUsuario.INACTIVO);
         return usuarioMapper.toDTO(usuarioRepository.save(usuario));
+    }
+
+    private static boolean esStaff(TipoUsuario tipo) {
+        return tipo == TipoUsuario.ADMINISTRADOR || tipo == TipoUsuario.SUPERADMIN;
     }
 
     @Override

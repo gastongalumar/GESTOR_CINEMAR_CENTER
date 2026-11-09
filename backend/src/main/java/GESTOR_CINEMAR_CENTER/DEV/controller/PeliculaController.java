@@ -99,7 +99,7 @@ public class PeliculaController {
             @ApiResponse(responseCode = "403", description = "Acceso denegado")
     })
     @PostMapping
-    @PreAuthorize("hasAuthority('ADMINISTRADOR')")
+    @PreAuthorize("hasAnyAuthority('ADMINISTRADOR', 'SUPERADMIN')")
     public ResponseEntity<PeliculaResponseDTO> crear(@Valid @RequestBody CrearPeliculaRequestDTO request) {
         return ResponseEntity.ok(peliculaService.crear(request));
     }
@@ -120,7 +120,7 @@ public class PeliculaController {
             @ApiResponse(responseCode = "403", description = "Acceso denegado")
     })
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('ADMINISTRADOR')")
+    @PreAuthorize("hasAnyAuthority('ADMINISTRADOR', 'SUPERADMIN')")
     public ResponseEntity<PeliculaResponseDTO> actualizar(
             @Parameter(description = "ID de la película", required = true) @Positive @PathVariable Long id,
             @Valid @RequestBody ActualizarPeliculaRequestDTO request) {
@@ -136,7 +136,7 @@ public class PeliculaController {
             @ApiResponse(responseCode = "403", description = "Acceso denegado")
     })
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('ADMINISTRADOR')")
+    @PreAuthorize("hasAnyAuthority('ADMINISTRADOR', 'SUPERADMIN')")
     public ResponseEntity<MensajeResponse> eliminar(
             @Parameter(description = "ID de la película", required = true) @Positive @PathVariable Long id) {
         peliculaService.eliminar(id);
@@ -146,7 +146,7 @@ public class PeliculaController {
     @Operation(summary = "Subir imagen de película", description = "Guarda una imagen para una película. Requiere rol ADMINISTRADOR",
             security = @SecurityRequirement(name = "bearerAuth"))
     @PostMapping(value = "/{id}/imagen", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasAuthority('ADMINISTRADOR')")
+    @PreAuthorize("hasAnyAuthority('ADMINISTRADOR', 'SUPERADMIN')")
     public ResponseEntity<MensajeResponse> subirImagen(
             @Parameter(description = "ID de la película", required = true) @Positive @PathVariable Long id,
             @Parameter(description = "Archivo de imagen (JPEG, PNG, WEBP. Máx 5MB)") @RequestParam("file") MultipartFile file) {

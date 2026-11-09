@@ -82,7 +82,7 @@ public class SalaController {
             @ApiResponse(responseCode = "401", description = "No autenticado")
     })
     @PostMapping
-    @PreAuthorize("hasAuthority('ADMINISTRADOR')")
+    @PreAuthorize("hasAnyAuthority('ADMINISTRADOR', 'SUPERADMIN')")
     public ResponseEntity<SalaResponseDTO> crear(@Valid @RequestBody CrearSalaRequestDTO request) {
         return ResponseEntity.ok(salaService.crear(request));
     }
@@ -103,7 +103,7 @@ public class SalaController {
             @ApiResponse(responseCode = "401", description = "No autenticado")
     })
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('ADMINISTRADOR')")
+    @PreAuthorize("hasAnyAuthority('ADMINISTRADOR', 'SUPERADMIN')")
     public ResponseEntity<SalaResponseDTO> actualizar(
             @Parameter(description = "ID de la sala", required = true) @Positive @PathVariable Long id,
             @Valid @RequestBody ActualizarSalaRequestDTO request) {
@@ -119,7 +119,7 @@ public class SalaController {
             @ApiResponse(responseCode = "401", description = "No autenticado")
     })
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('ADMINISTRADOR')")
+    @PreAuthorize("hasAnyAuthority('ADMINISTRADOR', 'SUPERADMIN')")
     public ResponseEntity<MensajeResponse> eliminar(
             @Parameter(description = "ID de la sala", required = true) @Positive @PathVariable Long id) {
         salaService.eliminar(id);

@@ -84,11 +84,11 @@ public class AuthController {
             @ApiResponse(responseCode = "200", description = "Administrador creado exitosamente",
                     content = @Content(schema = @Schema(implementation = AuthResponse.class))),
             @ApiResponse(responseCode = "400", description = "Datos de registro inválidos"),
-            @ApiResponse(responseCode = "403", description = "Acceso denegado - solo administradores pueden crear administradores"),
+            @ApiResponse(responseCode = "403", description = "Acceso denegado - solo SUPERADMIN puede crear administradores o superadmins"),
             @ApiResponse(responseCode = "409", description = "El email ya está registrado")
     })
     @PostMapping("/registro-admin")
-    @PreAuthorize("hasAuthority('ADMINISTRADOR')")
+    @PreAuthorize("hasAuthority('SUPERADMIN')")
     public ResponseEntity<AuthResponse> registroAdministrador(@Valid @RequestBody RegistroRequest request) {
         return ResponseEntity.ok(usuarioService.registrarAdministrador(request));
     }
