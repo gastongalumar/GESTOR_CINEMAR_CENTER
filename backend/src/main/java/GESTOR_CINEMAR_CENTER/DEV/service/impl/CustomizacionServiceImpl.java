@@ -2,6 +2,7 @@ package GESTOR_CINEMAR_CENTER.DEV.service.impl;
 
 import GESTOR_CINEMAR_CENTER.DEV.dto.request.customizacion.CustomizacionRequest;
 import GESTOR_CINEMAR_CENTER.DEV.dto.response.customizacion.CustomizacionResponse;
+import GESTOR_CINEMAR_CENTER.DEV.enums.EfectoFestivo;
 import GESTOR_CINEMAR_CENTER.DEV.exception.ReglaNegocioException;
 import GESTOR_CINEMAR_CENTER.DEV.mapper.CustomizacionMapper;
 import GESTOR_CINEMAR_CENTER.DEV.model.Customizacion;
@@ -48,6 +49,7 @@ public class CustomizacionServiceImpl implements CustomizacionService {
     public CustomizacionResponse guardar(CustomizacionRequest request) {
         Customizacion custom = obtenerEntidad();
         customizacionMapper.updateEntity(request, custom);
+        custom.setEfectoFestivo(EfectoFestivo.normalizar(request.getEfectoFestivo()));
         // Asegurar que si viene una URL absoluta (ej: http://localhost:8080/uploads/...), guardamos la ruta relativa
         if (custom.getLogoUrl() != null && custom.getLogoUrl().contains("/uploads/")) {
             custom.setLogoUrl(custom.getLogoUrl().substring(custom.getLogoUrl().indexOf("/uploads/")));
@@ -151,6 +153,10 @@ public class CustomizacionServiceImpl implements CustomizacionService {
         Customizacion custom = customizacionRepository.findFirst();
         if (custom == null) {
             custom = new Customizacion();
+            custom.setEfectoFestivo(EfectoFestivo.DEFAULT);
+            custom = customizacionRepository.save(custom);
+        } else if (custom.getEfectoFestivo() == null || custom.getEfectoFestivo().isBlank()) {
+            custom.setEfectoFestivo(EfectoFestivo.DEFAULT);
             custom = customizacionRepository.save(custom);
         }
         return custom;

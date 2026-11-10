@@ -39,4 +39,10 @@ public class CustomizacionRequest {
 
     @Pattern(regexp = "^([0-9]|[1-9][0-9]|100)$", message = "La opacidad debe ser un valor entre 0 y 100")
     private String globalOpacity;
+
+    @Pattern(
+            regexp = "ninguno|navidad|halloween|ano-nuevo",
+            message = "efectoFestivo debe ser ninguno, navidad, halloween o ano-nuevo"
+    )
+    private String efectoFestivo;
 }

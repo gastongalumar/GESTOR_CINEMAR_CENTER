@@ -27,4 +27,6 @@ public class CustomizacionResponse {
     private String logoOpacity;
     // Configuración global
     private String globalOpacity;
+    // Efecto festivo
+    private String efectoFestivo;
 }

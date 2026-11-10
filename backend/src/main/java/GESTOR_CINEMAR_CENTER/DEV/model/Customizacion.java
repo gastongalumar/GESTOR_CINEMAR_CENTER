@@ -39,4 +39,7 @@ public class Customizacion {
 
     // Configuración global
     private String globalOpacity;
+
+    /** Preset festivo: ninguno | navidad | halloween | ano-nuevo */
+    private String efectoFestivo = "ninguno";
 }
