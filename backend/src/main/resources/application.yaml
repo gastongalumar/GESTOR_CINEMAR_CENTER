@@ -1,13 +1,16 @@
 spring:
+  # Permite cargar variables locales desde .env (no se sube a git).
+  config:
+    import: optional:file:.env[.properties]
   datasource:
     url: ${DB_URL:jdbc:mysql://localhost:3306/cine_db2?createDatabaseIfNotExist=true}
-    username: ${DB_USERNAME:root}
+    username: ${DB_USERNAME:${DB_USER:root}}
     password: ${DB_PASSWORD:}
-    driver-class-name: com.mysql.cj.jdbc.Driver
+    driver-class-name: ${DB_DRIVER:com.mysql.cj.jdbc.Driver}
   jpa:
     hibernate:
-      ddl-auto: update
-    show-sql: true
+      ddl-auto: ${JPA_DDL_AUTO:update}
+    show-sql: ${JPA_SHOW_SQL:true}
     properties:
       hibernate:
         format_sql: true
@@ -26,14 +29,14 @@ spring:
             scope: email, profile
 
 server:
-  port: 8080
+  port: ${SERVER_PORT:8080}
   tomcat:
     max-swallow-size: 60MB
     connection-timeout: 5m
 
 jwt:
   secret: ${JWT_SECRET:}
-  expiration: 86400000  # 24 horas en milisegundos
+  expiration: ${JWT_EXPIRATION:86400000}  # 24 horas en milisegundos
 
 springdoc:
   api-docs:
@@ -46,12 +49,14 @@ springdoc:
   use-fqn: true
 
 file:
-  upload-dir: uploads
+  upload-dir: ${UPLOAD_DIR:uploads}
 
 mercadopago:
   access-token: ${MERCADOPAGO_ACCESS_TOKEN:}
   notification-url: ${MERCADOPAGO_NOTIFICATION_URL:}
   frontend-url: ${MERCADOPAGO_FRONTEND_URL:http://localhost:4200}
+  # Forzar checkout sandbox aunque el token no empiece con TEST-.
+  test-mode: ${MERCADOPAGO_TEST_MODE:false}
 
 app:
   oauth2:

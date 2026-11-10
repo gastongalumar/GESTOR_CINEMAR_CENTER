@@ -33,6 +33,7 @@ build/
 .vscode/
 
 ### Local secrets / uploads ###
+.env
 **/application-local.yaml
 uploads/fondos/
 uploads/logos/

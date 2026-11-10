@@ -26,6 +26,9 @@ public class MercadoPagoConfiguration {
     @Value("${mercadopago.frontend-url:http://localhost:4200}")
     private String frontendUrl;
 
+    @Value("${mercadopago.test-mode:false}")
+    private boolean testMode;
+
     @PostConstruct
     public void init() {
         if (accessToken != null && !accessToken.isBlank()) {
@@ -50,8 +53,11 @@ public class MercadoPagoConfiguration {
         return url.endsWith("/") ? url.substring(0, url.length() - 1) : url;
     }
 
-    /** Las credenciales de prueba empiezan con TEST-. */
+    /**
+     * Modo prueba: se puede forzar con MERCADOPAGO_TEST_MODE=true (útil cuando
+     * el access token pertenece a un usuario de prueba pero no empieza con TEST-).
+     */
     public boolean isTestMode() {
-        return accessToken != null && accessToken.startsWith("TEST-");
+        return testMode || (accessToken != null && accessToken.startsWith("TEST-"));
     }
 }
