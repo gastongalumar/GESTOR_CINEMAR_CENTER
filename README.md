@@ -91,6 +91,23 @@ Todas las rutas se sirven vía `GET /uploads/**` sin autenticación.
 2. En cada request protegido, enviar: `Authorization: Bearer <token>`.
 3. El token expira en **24 horas** (`jwt.expiration: 86400000` ms).
 
+### Sesión única por cuenta
+
+Solo puede haber **una sesión activa por usuario** a la vez.
+
+- Cada login exitoso (password, registro o Google OAuth) incrementa un contador `sessionVersion` en el usuario y lo incluye en el JWT como claim `sv`.
+- Si la misma cuenta inicia sesión en otro dispositivo/navegador, el token anterior deja de ser válido.
+- En el próximo request protegido con el token viejo, la API responde **401** con:
+  `"Sesión cerrada: iniciaste sesión en otro dispositivo"`.
+- Restablecer contraseña también incrementa `sessionVersion` e invalida tokens previos (hay que volver a loguearse).
+
+**Cómo probarlo**
+
+1. Login en navegador A con una cuenta.
+2. Login en navegador B (u otro perfil/incógnito) con la misma cuenta.
+3. Desde A, hacer cualquier request autenticado (perfil, holds, reservas, etc.).
+4. Esperado: A recibe **401** y el frontend debe limpiar el token / redirigir al login.
+
 ### AuthResponse
 
 ```json
@@ -121,6 +138,8 @@ El claim de rol en el JWT es `ADMINISTRADOR` o `CLIENTE` (usado internamente por
 |--------|-----------|----------------|
 | 401 | Credenciales incorrectas | `"Email o contraseña incorrectos"` |
 | 401 | Sin token en ruta protegida | Mensaje del entry point JSON |
+| 401 | Token inválido o expirado | `"Token inválido o expirado"` |
+| 401 | Sesión reemplazada por otro login | `"Sesión cerrada: iniciaste sesión en otro dispositivo"` |
 | 403 | Cuenta inactiva/bloqueada | `"La cuenta de usuario no está activa"` |
 | 403 | Rol insuficiente | Mensaje en español según rol y endpoint |
 
@@ -195,7 +214,7 @@ Estas rutas están autorizadas en `SecurityConfig` pero **no tienen controller**
 
 | Código | Significado | Cuándo ocurre |
 |--------|-------------|---------------|
-| **401** Unauthorized | No autenticado o token inválido | Sin header `Authorization`, token expirado/malformado, credenciales incorrectas en login |
+| **401** Unauthorized | No autenticado o token inválido | Sin header `Authorization`, token expirado/malformado, credenciales incorrectas en login, o sesión reemplazada por otro login de la misma cuenta |
 | **403** Forbidden | Autenticado pero sin permiso | Token válido pero el rol no alcanza para ese endpoint |
 
 Un token JWT válido con rol `CLIENTE` que intenta `POST /api/funciones` recibe **403**, no 401.
@@ -1449,6 +1468,8 @@ Redirigir según `tipo` en `AuthResponse` (`CLIENTE` o `ADMINISTRADOR`):
 - `ADMINISTRADOR` → panel de administración
 
 Incluir `Authorization: Bearer <token>` en todas las requests protegidas.
+
+**Sesión única:** si llega un **401** con mensaje `"Sesión cerrada: iniciaste sesión en otro dispositivo"`, limpiar el token local y redirigir al login (mismo manejo que token expirado). No hace falta lógica extra de “detectar otro dispositivo”: el backend invalida el JWT anterior al nuevo login.
 
 ### 9.3 Compra de entrada (CLIENTE)
 
