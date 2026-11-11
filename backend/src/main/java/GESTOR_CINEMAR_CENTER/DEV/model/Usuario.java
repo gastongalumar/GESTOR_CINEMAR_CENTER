@@ -54,6 +54,10 @@ public abstract class Usuario {
     private LocalDateTime fechaUltimoAcceso;
     private Integer intentosFallidos = 0;
 
+    /** Versión de sesión activa: cada login la incrementa e invalida JWTs anteriores. */
+    @Column(nullable = false, columnDefinition = "INT NOT NULL DEFAULT 0")
+    private Integer sessionVersion = 0;
+
     /** Token de recuperación de contraseña (simulado por consola en demos). */
     @Column(length = 64)
     private String resetToken;

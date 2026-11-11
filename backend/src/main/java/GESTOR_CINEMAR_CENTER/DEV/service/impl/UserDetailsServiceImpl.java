@@ -3,10 +3,10 @@ package GESTOR_CINEMAR_CENTER.DEV.service.impl;
 import GESTOR_CINEMAR_CENTER.DEV.enums.EstadoUsuario;
 import GESTOR_CINEMAR_CENTER.DEV.model.Usuario;
 import GESTOR_CINEMAR_CENTER.DEV.repository.UsuarioRepository;
+import GESTOR_CINEMAR_CENTER.DEV.security.UsuarioPrincipal;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -33,10 +33,11 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
         String rol = usuario.getTipo() != null ? usuario.getTipo().name() : (usuario instanceof GESTOR_CINEMAR_CENTER.DEV.model.Administrador ? "ADMINISTRADOR" : "CLIENTE");
 
-        return new User(
+        return new UsuarioPrincipal(
                 usuario.getEmail(),
                 usuario.getPassword(),
-                Collections.singletonList(new SimpleGrantedAuthority(rol))
+                Collections.singletonList(new SimpleGrantedAuthority(rol)),
+                usuario.getSessionVersion()
         );
     }
 }

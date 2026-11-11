@@ -73,13 +73,18 @@ public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccess
                 ? usuario.getTipo().name()
                 : (usuario instanceof Administrador ? "ADMINISTRADOR" : "CLIENTE");
 
+        int sv = usuario.getSessionVersion() == null ? 0 : usuario.getSessionVersion();
+        usuario.setSessionVersion(sv + 1);
+        usuario = usuarioRepository.save(usuario);
+
         String token = jwtUtil.generateToken(
                 usuario.getEmail(),
                 tipo,
                 usuario.getId(),
                 usuario.getNombre(),
                 usuario.getApellido(),
-                usuario.getFotoPerfilUrl()
+                usuario.getFotoPerfilUrl(),
+                usuario.getSessionVersion()
         );
 
         if (log.isDebugEnabled()) {

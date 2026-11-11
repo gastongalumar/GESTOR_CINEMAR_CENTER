@@ -17,9 +17,13 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Objects;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
+
+    private static final String MSG_SESION_REEMPLAZADA =
+            "Sesión cerrada: iniciaste sesión en otro dispositivo";
 
     private final JwtUtil jwtUtil;
     private final UserDetailsService userDetailsService;
@@ -54,6 +58,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
 
                 if (jwtUtil.validateToken(jwt, userDetails)) {
+                    if (!sesionActiva(jwt, userDetails)) {
+                        escritorError.write(response, request, HttpStatus.UNAUTHORIZED, MSG_SESION_REEMPLAZADA);
+                        return;
+                    }
+
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                             userDetails,
                             null,
@@ -77,5 +86,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    private boolean sesionActiva(String jwt, UserDetails userDetails) {
+        if (!(userDetails instanceof UsuarioPrincipal principal)) {
+            return false;
+        }
+        Integer svToken = jwtUtil.extractSessionVersion(jwt);
+        if (svToken == null) {
+            return false;
+        }
+        return Objects.equals(svToken, principal.getSessionVersion());
     }
 }

@@ -85,8 +85,7 @@ public class UsuarioServiceImpl implements UsuarioService {
 
         usuario.setFechaUltimoAcceso(LocalDateTime.now());
         usuario.setIntentosFallidos(0);
-        usuarioRepository.save(usuario);
-        return usuarioMapper.toAuthResponse(usuario, generarToken(usuario));
+        return usuarioMapper.toAuthResponse(usuario, rotarSesionYGenerarToken(usuario));
     }
 
     public String validarTelefono(String telefono) {
@@ -136,7 +135,7 @@ public class UsuarioServiceImpl implements UsuarioService {
         cliente.setTipo(TipoUsuario.CLIENTE);
         cliente.setEstado(EstadoUsuario.ACTIVO);
         cliente = usuarioRepository.save(cliente);
-        return usuarioMapper.toAuthResponse(cliente, generarToken(cliente));
+        return usuarioMapper.toAuthResponse(cliente, rotarSesionYGenerarToken(cliente));
     }
 
     public AuthResponse registrarAdministrador(RegistroRequest request) {
@@ -161,7 +160,7 @@ public class UsuarioServiceImpl implements UsuarioService {
         admin.setEstado(EstadoUsuario.ACTIVO);
 
         admin = usuarioRepository.save(admin);
-        return usuarioMapper.toAuthResponse(admin, generarToken(admin));
+        return usuarioMapper.toAuthResponse(admin, rotarSesionYGenerarToken(admin));
     }
 
     @Override
@@ -217,6 +216,7 @@ public class UsuarioServiceImpl implements UsuarioService {
         usuario.setResetToken(null);
         usuario.setResetTokenExpira(null);
         usuario.setIntentosFallidos(0);
+        incrementarSessionVersion(usuario);
         usuarioRepository.save(usuario);
 
         return new MensajeResponse("Contraseña actualizada. Ya podés iniciar sesión.");
@@ -233,17 +233,31 @@ public class UsuarioServiceImpl implements UsuarioService {
         throw new ReglaNegocioException("Solo se pueden crear roles ADMINISTRADOR o SUPERADMIN");
     }
 
+    /** Incrementa sessionVersion, persiste y emite un JWT con el claim sv actualizado. */
+    private String rotarSesionYGenerarToken(Usuario usuario) {
+        incrementarSessionVersion(usuario);
+        usuarioRepository.save(usuario);
+        return generarToken(usuario);
+    }
+
+    private void incrementarSessionVersion(Usuario usuario) {
+        int actual = usuario.getSessionVersion() == null ? 0 : usuario.getSessionVersion();
+        usuario.setSessionVersion(actual + 1);
+    }
+
     private String generarToken(Usuario usuario) {
         String tipoStr = usuario.getTipo() != null
                 ? usuario.getTipo().name()
                 : (usuario instanceof Administrador ? "ADMINISTRADOR" : "CLIENTE");
+        int sv = usuario.getSessionVersion() == null ? 0 : usuario.getSessionVersion();
         return jwtUtil.generateToken(
                 usuario.getEmail(),
                 tipoStr,
                 usuario.getId(),
                 usuario.getNombre(),
                 usuario.getApellido(),
-                usuario.getFotoPerfilUrl()
+                usuario.getFotoPerfilUrl(),
+                sv
         );
     }
 

@@ -30,14 +30,19 @@ public class JwtUtil {
     }
 
     public String generateToken(String email, String tipo, Long id) {
-        return generateToken(email, tipo, id, null, null, null);
+        return generateToken(email, tipo, id, null, null, null, 0);
     }
 
     public String generateToken(String email, String tipo, Long id, String nombre, String apellido) {
-        return generateToken(email, tipo, id, nombre, apellido, null);
+        return generateToken(email, tipo, id, nombre, apellido, null, 0);
     }
 
     public String generateToken(String email, String tipo, Long id, String nombre, String apellido, String fotoPerfilUrl) {
+        return generateToken(email, tipo, id, nombre, apellido, fotoPerfilUrl, 0);
+    }
+
+    public String generateToken(String email, String tipo, Long id, String nombre, String apellido,
+                                String fotoPerfilUrl, Integer sessionVersion) {
         String nombreLimpio = nombre != null ? nombre.trim() : "";
         String apellidoLimpio = apellido != null ? apellido.trim() : "";
         String nombreCompleto = (nombreLimpio + " " + apellidoLimpio).trim();
@@ -45,13 +50,16 @@ public class JwtUtil {
             nombreCompleto = email != null ? email : "";
         }
 
+        int sv = sessionVersion != null ? sessionVersion : 0;
+
         var builder = Jwts.builder()
                 .setSubject(email)
                 .claim("tipo", tipo)
                 .claim("userId", id)
                 .claim("nombre", nombreLimpio.isBlank() ? nombreCompleto : nombreLimpio)
                 .claim("apellido", apellidoLimpio)
-                .claim("nombreCompleto", nombreCompleto);
+                .claim("nombreCompleto", nombreCompleto)
+                .claim("sv", sv);
 
         if (fotoPerfilUrl != null && !fotoPerfilUrl.isBlank()) {
             builder.claim("fotoPerfilUrl", fotoPerfilUrl.trim());
@@ -71,6 +79,28 @@ public class JwtUtil {
                 .parseClaimsJws(token)
                 .getBody()
                 .getSubject();
+    }
+
+    /**
+     * Extrae la versión de sesión del claim {@code sv}.
+     * @return null si el claim no existe o no es un número (token inválido para sesión única)
+     */
+    public Integer extractSessionVersion(String token) {
+        Object raw = extractAllClaims(token).get("sv");
+        if (raw == null) {
+            return null;
+        }
+        if (raw instanceof Integer i) {
+            return i;
+        }
+        if (raw instanceof Number n) {
+            return n.intValue();
+        }
+        try {
+            return Integer.parseInt(raw.toString());
+        } catch (NumberFormatException ex) {
+            return null;
+        }
     }
 
     public Claims extractAllClaims(String token) {
