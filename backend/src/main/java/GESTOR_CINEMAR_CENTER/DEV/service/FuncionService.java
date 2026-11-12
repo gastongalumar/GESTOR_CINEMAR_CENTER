@@ -3,6 +3,7 @@ package GESTOR_CINEMAR_CENTER.DEV.service;
 import GESTOR_CINEMAR_CENTER.DEV.dto.request.funcion.ActualizarHorarioFuncionRequestDTO;
 import GESTOR_CINEMAR_CENTER.DEV.dto.request.funcion.CrearFuncionRequestDTO;
 import GESTOR_CINEMAR_CENTER.DEV.dto.request.funcion.CrearFuncionesPorRangoRequestDTO;
+import GESTOR_CINEMAR_CENTER.DEV.dto.response.funcion.DisponibilidadFuncionResponseDTO;
 import GESTOR_CINEMAR_CENTER.DEV.dto.response.funcion.FuncionResponseDTO;
 import GESTOR_CINEMAR_CENTER.DEV.model.Funcion;
 import GESTOR_CINEMAR_CENTER.DEV.model.Sala;
@@ -15,6 +16,7 @@ public interface FuncionService {
     Funcion obtenerFuncion(Long id);
     List<FuncionResponseDTO> listarPorPelicula(Long peliculaId);
     FuncionResponseDTO buscarPorId(Long id);
+    DisponibilidadFuncionResponseDTO obtenerDisponibilidad(Long funcionId);
     FuncionResponseDTO crear(CrearFuncionRequestDTO request);
     List<FuncionResponseDTO> crearFuncionesPorRango(CrearFuncionesPorRangoRequestDTO request);
     FuncionResponseDTO actualizarHorario(Long id, ActualizarHorarioFuncionRequestDTO request);

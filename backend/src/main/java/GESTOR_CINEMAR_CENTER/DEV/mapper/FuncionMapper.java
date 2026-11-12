@@ -24,6 +24,10 @@ public interface FuncionMapper {
     @Mapping(source = "sala.columnas", target = "salaColumnas")
     @Mapping(source = "pelicula.id", target = "peliculaId")
     @Mapping(source = "pelicula.nombre", target = "peliculaNombre")
+    @Mapping(target = "capacidad", ignore = true)
+    @Mapping(target = "asientosOcupados", ignore = true)
+    @Mapping(target = "asientosEnHold", ignore = true)
+    @Mapping(target = "asientosDisponibles", ignore = true)
     FuncionResponseDTO toResponse(Funcion funcion);
 
     List<FuncionResponseDTO> toResponseList(List<Funcion> funciones);

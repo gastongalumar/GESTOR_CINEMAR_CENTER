@@ -250,8 +250,16 @@ public class ReservaServiceImpl implements ReservaService {
 
     @Override
     @Transactional(readOnly = true)
-    public ReservaResponseDTO buscarReservaPorTicket(String numeroTicket) {
-        return reservaMapper.toResponse(findByTicketEntity(numeroTicket));
+    public Reserva obtenerTicketSiAutorizado(String numeroTicket, String emailAutenticado, boolean esStaff) {
+        Reserva reserva = findByTicketEntity(numeroTicket);
+        asegurarDuenoOStaff(reserva, emailAutenticado, esStaff);
+        return reserva;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ReservaResponseDTO buscarReservaPorTicket(String numeroTicket, String emailAutenticado, boolean esStaff) {
+        return reservaMapper.toResponse(obtenerTicketSiAutorizado(numeroTicket, emailAutenticado, esStaff));
     }
 
     @Override
@@ -281,8 +289,8 @@ public class ReservaServiceImpl implements ReservaService {
 
     @Override
     @Transactional
-    public void cancelar(String numeroTicket) {
-        Reserva reserva = findByTicketEntity(numeroTicket);
+    public void cancelar(String numeroTicket, String emailAutenticado, boolean esStaff) {
+        Reserva reserva = obtenerTicketSiAutorizado(numeroTicket, emailAutenticado, esStaff);
 
         if (reserva.getEstadoReserva() == EstadoReserva.CANCELADA) {
             throw new ReglaNegocioException("La reserva ya está cancelada");
@@ -299,6 +307,21 @@ public class ReservaServiceImpl implements ReservaService {
 
         reserva.setEstadoReserva(EstadoReserva.CANCELADA);
         reservaRepository.save(reserva);
+    }
+
+    /**
+     * CLIENTE solo ve/cancela su ticket. Staff pasa. Ajeno → 404 (no revelar existencia).
+     */
+    private void asegurarDuenoOStaff(Reserva reserva, String emailAutenticado, boolean esStaff) {
+        if (esStaff) {
+            return;
+        }
+        String emailCliente = reserva.getCliente() != null ? reserva.getCliente().getEmail() : null;
+        if (emailAutenticado == null
+                || emailCliente == null
+                || !emailCliente.equalsIgnoreCase(emailAutenticado.trim())) {
+            throw new RecursoNoEncontradoException("No encontramos ese ticket.");
+        }
     }
 
     @Override

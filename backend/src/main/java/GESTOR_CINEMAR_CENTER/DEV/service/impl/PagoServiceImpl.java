@@ -61,8 +61,8 @@ public class PagoServiceImpl implements PagoService {
     }
 
     @Override
-    public PagoResponseDTO buscarPorReserva(String numeroTicket) {
-        Reserva reserva = reservaService.findByTicketEntity(numeroTicket);
+    public PagoResponseDTO buscarPorReserva(String numeroTicket, String emailAutenticado, boolean esStaff) {
+        Reserva reserva = reservaService.obtenerTicketSiAutorizado(numeroTicket, emailAutenticado, esStaff);
         return pagoMapper.toDTO(buscarPagoPorReserva(reserva));
     }
 

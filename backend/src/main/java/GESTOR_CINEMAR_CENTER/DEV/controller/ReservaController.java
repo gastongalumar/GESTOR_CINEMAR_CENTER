@@ -22,6 +22,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -81,18 +82,23 @@ public class ReservaController {
         return ResponseEntity.ok(reservaService.listarPorCliente(clienteId));
     }
 
-    @Operation(summary = "Buscar reserva por número de ticket", description = "Obtiene los detalles de una reserva a partir de su ticket")
+    @Operation(summary = "Buscar reserva por número de ticket",
+            description = "CLIENTE solo puede ver su propio ticket. Staff puede ver cualquiera. Ajeno → 404.",
+            security = @SecurityRequirement(name = "bearerAuth"))
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Reserva encontrada",
                     content = @Content(schema = @Schema(implementation = ReservaResponseDTO.class))),
-            @ApiResponse(responseCode = "404", description = "Ticket no encontrado")
+            @ApiResponse(responseCode = "404", description = "Ticket no encontrado"),
+            @ApiResponse(responseCode = "401", description = "No autenticado")
     })
     @GetMapping("/ticket/{numeroTicket}")
     public ResponseEntity<ReservaResponseDTO> buscarPorTicket(
+            Authentication authentication,
             @Parameter(description = "Número de ticket de la reserva", required = true)
             @NotBlank @Pattern(regexp = "^TK\\d+$", message = "Formato de ticket inválido")
             @PathVariable String numeroTicket) {
-        return ResponseEntity.ok(reservaService.buscarReservaPorTicket(numeroTicket));
+        return ResponseEntity.ok(reservaService.buscarReservaPorTicket(
+                numeroTicket, authentication.getName(), esStaff(authentication)));
     }
 
     @Operation(summary = "Validar ticket de entrada", description = "Verifica la validez de un ticket y opcionalmente lo marca como usado")
@@ -122,11 +128,25 @@ public class ReservaController {
     @DeleteMapping("/ticket/{numeroTicket}")
     @PreAuthorize("hasAuthority('CLIENTE') or hasAnyAuthority('ADMINISTRADOR', 'SUPERADMIN')")
     public ResponseEntity<MensajeResponse> cancelar(
+            Authentication authentication,
             @Parameter(description = "Número de ticket de la reserva", required = true)
             @NotBlank @Pattern(regexp = "^TK\\d+$", message = "Formato de ticket inválido")
             @PathVariable String numeroTicket) {
-        reservaService.cancelar(numeroTicket);
+        reservaService.cancelar(numeroTicket, authentication.getName(), esStaff(authentication));
         return ResponseEntity.ok(new MensajeResponse("Reserva cancelada correctamente"));
+    }
+
+    private static boolean esStaff(Authentication authentication) {
+        if (authentication == null) {
+            return false;
+        }
+        for (GrantedAuthority authority : authentication.getAuthorities()) {
+            String role = authority.getAuthority();
+            if ("ADMINISTRADOR".equals(role) || "SUPERADMIN".equals(role)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Operation(summary = "Listar todas las reservas", description = "Retorna todas las reservas registradas en el sistema",

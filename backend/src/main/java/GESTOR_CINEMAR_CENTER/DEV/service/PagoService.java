@@ -10,7 +10,7 @@ public interface PagoService {
     List<PagoResponseDTO> listarTodos();
     List<PagoResponseDTO> listarMisPagos(String email);
     PagoResponseDTO buscarPorId(Long id);
-    PagoResponseDTO buscarPorReserva(String numeroTicket);
+    PagoResponseDTO buscarPorReserva(String numeroTicket, String emailAutenticado, boolean esStaff);
     Pago buscarPagoPorReserva(Reserva reserva);
     Pago crearPago(Reserva reserva, double monto, String metodoPago);
     void actualizarMetodoPago(Reserva reserva, String metodoPago);

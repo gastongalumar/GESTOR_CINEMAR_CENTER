@@ -5,6 +5,7 @@ import GESTOR_CINEMAR_CENTER.DEV.dto.response.asiento.EstadoAsientosResponseDTO;
 import GESTOR_CINEMAR_CENTER.DEV.dto.request.funcion.ActualizarHorarioFuncionRequestDTO;
 import GESTOR_CINEMAR_CENTER.DEV.dto.request.funcion.CrearFuncionRequestDTO;
 import GESTOR_CINEMAR_CENTER.DEV.dto.request.funcion.CrearFuncionesPorRangoRequestDTO;
+import GESTOR_CINEMAR_CENTER.DEV.dto.response.funcion.DisponibilidadFuncionResponseDTO;
 import GESTOR_CINEMAR_CENTER.DEV.dto.response.funcion.FuncionResponseDTO;
 import GESTOR_CINEMAR_CENTER.DEV.service.FuncionService;
 import GESTOR_CINEMAR_CENTER.DEV.service.HoldService;
@@ -82,6 +83,19 @@ public class FuncionController {
     public ResponseEntity<FuncionResponseDTO> obtenerPorId(
             @Parameter(description = "ID de la función", required = true) @Positive @PathVariable Long id) {
         return ResponseEntity.ok(funcionService.buscarPorId(id));
+    }
+
+    @Operation(summary = "Obtener disponibilidad de asientos",
+            description = "Retorna capacidad, ocupados, holds y disponibles de una función (sin etiquetas ni datos de sesión)")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Disponibilidad obtenida",
+                    content = @Content(schema = @Schema(implementation = DisponibilidadFuncionResponseDTO.class))),
+            @ApiResponse(responseCode = "404", description = "Función no encontrada")
+    })
+    @GetMapping("/{funcionId}/disponibilidad")
+    public ResponseEntity<DisponibilidadFuncionResponseDTO> obtenerDisponibilidad(
+            @Parameter(description = "ID de la función", required = true) @Positive @PathVariable Long funcionId) {
+        return ResponseEntity.ok(funcionService.obtenerDisponibilidad(funcionId));
     }
 
     @Operation(summary = "Obtener asientos ocupados", description = "Retorna los asientos ya reservados para una función")

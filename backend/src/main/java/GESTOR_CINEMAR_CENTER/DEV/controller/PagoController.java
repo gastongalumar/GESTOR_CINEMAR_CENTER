@@ -14,6 +14,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.constraints.NotBlank;
@@ -67,7 +68,8 @@ public class PagoController {
         return ResponseEntity.ok(pagoService.buscarPorId(id));
     }
 
-    @Operation(summary = "Buscar pago por número de ticket", description = "Obtiene el pago asociado a una reserva por su ticket")
+    @Operation(summary = "Buscar pago por número de ticket",
+            description = "CLIENTE solo puede ver el pago de su propio ticket. Staff puede ver cualquiera.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Pago encontrado",
                     content = @Content(schema = @Schema(implementation = PagoResponseDTO.class))),
@@ -77,9 +79,24 @@ public class PagoController {
     @GetMapping("/ticket/{numeroTicket}/pago")
     @PreAuthorize("hasAuthority('CLIENTE') or hasAnyAuthority('ADMINISTRADOR', 'SUPERADMIN')")
     public ResponseEntity<PagoResponseDTO> buscarPorTicket(
+            Authentication authentication,
             @Parameter(description = "Número de ticket de la reserva", required = true)
             @NotBlank @Pattern(regexp = "^TK\\d+$", message = "Formato de ticket inválido")
             @PathVariable String numeroTicket) {
-        return ResponseEntity.ok(pagoService.buscarPorReserva(numeroTicket));
+        return ResponseEntity.ok(pagoService.buscarPorReserva(
+                numeroTicket, authentication.getName(), esStaff(authentication)));
+    }
+
+    private static boolean esStaff(Authentication authentication) {
+        if (authentication == null) {
+            return false;
+        }
+        for (GrantedAuthority authority : authentication.getAuthorities()) {
+            String role = authority.getAuthority();
+            if ("ADMINISTRADOR".equals(role) || "SUPERADMIN".equals(role)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

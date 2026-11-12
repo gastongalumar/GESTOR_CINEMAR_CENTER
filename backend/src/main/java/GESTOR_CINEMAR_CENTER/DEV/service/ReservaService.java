@@ -15,9 +15,16 @@ public interface ReservaService {
     List<ReservaResponseDTO> listarPorCliente(Long clienteId);
     List<ReservaResponseDTO> listarReservasPorEmail(String email);
     Reserva findByTicketEntity(String numeroTicket);
-    ReservaResponseDTO buscarReservaPorTicket(String numeroTicket);
+
+    /**
+     * Devuelve la reserva del ticket si el usuario puede verla.
+     * CLIENTE: solo dueño (si no, 404 uniforme). Staff: siempre.
+     */
+    Reserva obtenerTicketSiAutorizado(String numeroTicket, String emailAutenticado, boolean esStaff);
+
+    ReservaResponseDTO buscarReservaPorTicket(String numeroTicket, String emailAutenticado, boolean esStaff);
     ValidacionTicketResponseDTO validarTicket(String numeroTicket, boolean marcarUsado);
-    void cancelar(String numeroTicket);
+    void cancelar(String numeroTicket, String emailAutenticado, boolean esStaff);
     
     // Métodos para filtrado de reservas (admin)
     List<ReservaResponseDTO> listarTodasReservas();
