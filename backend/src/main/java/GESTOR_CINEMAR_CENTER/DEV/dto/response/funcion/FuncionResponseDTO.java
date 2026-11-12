@@ -41,4 +41,16 @@ public class FuncionResponseDTO {
 
     @Schema(description = "Precio de la entrada", example = "2500")
     private Double precio;
+
+    @Schema(description = "Capacidad total de la sala", example = "150")
+    private Integer capacidad;
+
+    @Schema(description = "Asientos con reserva activa", example = "12")
+    private Integer asientosOcupados;
+
+    @Schema(description = "Asientos con hold vigente", example = "3")
+    private Integer asientosEnHold;
+
+    @Schema(description = "Asientos seleccionables (capacidad - ocupados - holds)", example = "135")
+    private Integer asientosDisponibles;
 }

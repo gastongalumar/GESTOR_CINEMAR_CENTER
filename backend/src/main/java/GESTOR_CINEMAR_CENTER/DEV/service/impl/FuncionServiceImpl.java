@@ -3,15 +3,18 @@ package GESTOR_CINEMAR_CENTER.DEV.service.impl;
 import GESTOR_CINEMAR_CENTER.DEV.dto.request.funcion.ActualizarHorarioFuncionRequestDTO;
 import GESTOR_CINEMAR_CENTER.DEV.dto.request.funcion.CrearFuncionRequestDTO;
 import GESTOR_CINEMAR_CENTER.DEV.dto.request.funcion.CrearFuncionesPorRangoRequestDTO;
+import GESTOR_CINEMAR_CENTER.DEV.dto.response.funcion.DisponibilidadFuncionResponseDTO;
 import GESTOR_CINEMAR_CENTER.DEV.dto.response.funcion.FuncionResponseDTO;
 import GESTOR_CINEMAR_CENTER.DEV.enums.EstadoReserva;
 import GESTOR_CINEMAR_CENTER.DEV.exception.RecursoNoEncontradoException;
 import GESTOR_CINEMAR_CENTER.DEV.exception.ReglaNegocioException;
 import GESTOR_CINEMAR_CENTER.DEV.mapper.FuncionMapper;
 import GESTOR_CINEMAR_CENTER.DEV.model.Asiento;
+import GESTOR_CINEMAR_CENTER.DEV.model.AsientoHold;
 import GESTOR_CINEMAR_CENTER.DEV.model.Funcion;
 import GESTOR_CINEMAR_CENTER.DEV.model.Pelicula;
 import GESTOR_CINEMAR_CENTER.DEV.model.Sala;
+import GESTOR_CINEMAR_CENTER.DEV.repository.AsientoHoldRepository;
 import GESTOR_CINEMAR_CENTER.DEV.repository.FuncionRepository;
 import GESTOR_CINEMAR_CENTER.DEV.repository.ReservaRepository;
 import GESTOR_CINEMAR_CENTER.DEV.service.AsientoService;
@@ -29,6 +32,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service("funcionService")
 @RequiredArgsConstructor
@@ -36,6 +40,7 @@ public class FuncionServiceImpl implements FuncionService {
 
     private final FuncionRepository funcionRepository;
     private final ReservaRepository reservaRepository;
+    private final AsientoHoldRepository asientoHoldRepository;
     private final PeliculaService peliculaService;
     private final SalaService salaService;
     private final AsientoService asientoService;
@@ -57,25 +62,48 @@ public class FuncionServiceImpl implements FuncionService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<FuncionResponseDTO> listarTodas() {
-        return funcionMapper.toResponseList(funcionRepository.findByActivaTrue());
+        return funcionRepository.findByActivaTrue().stream()
+                .map(this::toResponseConDisponibilidad)
+                .toList();
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<FuncionResponseDTO> listarVigentes() {
-        return funcionMapper.toResponseList(
-                funcionRepository.findByActivaTrueAndHorarioAfter(LocalDateTime.now()));
+        return funcionRepository.findByActivaTrueAndHorarioAfter(LocalDateTime.now()).stream()
+                .map(this::toResponseConDisponibilidad)
+                .toList();
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<FuncionResponseDTO> listarPorPelicula(Long peliculaId) {
         Pelicula pelicula = peliculaService.obtenerPelicula(peliculaId);
-        return funcionMapper.toResponseList(funcionRepository.findByActivaTrueAndPelicula(pelicula));
+        return funcionRepository.findByActivaTrueAndPelicula(pelicula).stream()
+                .map(this::toResponseConDisponibilidad)
+                .toList();
     }
 
     @Override
+    @Transactional(readOnly = true)
     public FuncionResponseDTO buscarPorId(Long id) {
-        return funcionMapper.toResponse(obtenerFuncion(id));
+        return toResponseConDisponibilidad(obtenerFuncion(id));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public DisponibilidadFuncionResponseDTO obtenerDisponibilidad(Long funcionId) {
+        Funcion funcion = obtenerFuncion(funcionId);
+        Cupos cupos = calcularCupos(funcion);
+        return new DisponibilidadFuncionResponseDTO(
+                funcion.getId(),
+                cupos.capacidad(),
+                cupos.asientosOcupados(),
+                cupos.asientosEnHold(),
+                cupos.asientosDisponibles()
+        );
     }
 
     @Override
@@ -103,7 +131,7 @@ public class FuncionServiceImpl implements FuncionService {
 
         Funcion funcion = funcionMapper.toEntity(request, sala, pelicula);
         funcion.setActiva(true);
-        return funcionMapper.toResponse(funcionRepository.save(funcion));
+        return toResponseConDisponibilidad(funcionRepository.save(funcion));
     }
 
     @Override
@@ -161,7 +189,9 @@ public class FuncionServiceImpl implements FuncionService {
                 })
                 .toList();
 
-        return funcionMapper.toResponseList(funcionRepository.saveAll(funcionesNuevas));
+        return funcionRepository.saveAll(funcionesNuevas).stream()
+                .map(this::toResponseConDisponibilidad)
+                .toList();
     }
 
     private void validarFechaDentroDeCartelera(LocalDate fecha, Pelicula pelicula) {
@@ -291,7 +321,7 @@ public class FuncionServiceImpl implements FuncionService {
         }
 
         funcion.setHorario(inicioNuevo);
-        return funcionMapper.toResponse(funcionRepository.save(funcion));
+        return toResponseConDisponibilidad(funcionRepository.save(funcion));
     }
 
     // No borramos de la base, solo la marcamos inactiva
@@ -319,14 +349,7 @@ public class FuncionServiceImpl implements FuncionService {
     @Override
     @Transactional(readOnly = true)
     public List<String> obtenerAsientosOcupados(Long funcionId) {
-        Funcion funcion = obtenerFuncion(funcionId);
-
-        return reservaRepository.findByFuncionAndEstadoReservaIn(funcion, ESTADOS_RESERVA_ACTIVA)
-                .stream()
-                .flatMap(reserva -> reserva.getAsientos().stream())
-                .map(Asiento::getEtiqueta)
-                .distinct()
-                .toList();
+        return etiquetasOcupadas(obtenerFuncion(funcionId));
     }
 
     @Override
@@ -335,11 +358,67 @@ public class FuncionServiceImpl implements FuncionService {
         Funcion funcion = obtenerFuncion(funcionId);
         salaService.asegurarAsientosDeSala(funcion.getSala());
 
-        Set<String> ocupados = new HashSet<>(obtenerAsientosOcupados(funcionId));
+        Set<String> noSeleccionables = new HashSet<>(etiquetasOcupadas(funcion));
+        noSeleccionables.addAll(etiquetasEnHold(funcion));
 
         return asientoService.obtenerPorSala(funcion.getSala()).stream()
                 .map(Asiento::getEtiqueta)
-                .filter(etiqueta -> !ocupados.contains(etiqueta))
+                .filter(etiqueta -> !noSeleccionables.contains(etiqueta))
                 .toList();
+    }
+
+    private FuncionResponseDTO toResponseConDisponibilidad(Funcion funcion) {
+        FuncionResponseDTO dto = funcionMapper.toResponse(funcion);
+        enriquecerDisponibilidad(funcion, dto);
+        return dto;
+    }
+
+    private void enriquecerDisponibilidad(Funcion funcion, FuncionResponseDTO dto) {
+        Cupos cupos = calcularCupos(funcion);
+        dto.setCapacidad(cupos.capacidad());
+        dto.setAsientosOcupados(cupos.asientosOcupados());
+        dto.setAsientosEnHold(cupos.asientosEnHold());
+        dto.setAsientosDisponibles(cupos.asientosDisponibles());
+    }
+
+    private Cupos calcularCupos(Funcion funcion) {
+        int capacidad = resolverCapacidad(funcion.getSala());
+        int ocupados = etiquetasOcupadas(funcion).size();
+        int enHold = etiquetasEnHold(funcion).size();
+        int disponibles = Math.max(0, capacidad - ocupados - enHold);
+        return new Cupos(capacidad, ocupados, enHold, disponibles);
+    }
+
+    private int resolverCapacidad(Sala sala) {
+        if (sala.getCapacidad() != null && sala.getCapacidad() > 0) {
+            return sala.getCapacidad();
+        }
+        int filas = sala.getFilas() != null ? sala.getFilas() : 0;
+        int columnas = sala.getColumnas() != null ? sala.getColumnas() : 0;
+        return filas * columnas;
+    }
+
+    private List<String> etiquetasOcupadas(Funcion funcion) {
+        return reservaRepository.findByFuncionAndEstadoReservaIn(funcion, ESTADOS_RESERVA_ACTIVA)
+                .stream()
+                .flatMap(reserva -> reserva.getAsientos().stream())
+                .map(Asiento::getEtiqueta)
+                .distinct()
+                .toList();
+    }
+
+    private Set<String> etiquetasEnHold(Funcion funcion) {
+        return asientoHoldRepository.findVigentesByFuncion(funcion, LocalDateTime.now()).stream()
+                .map(AsientoHold::getAsiento)
+                .map(Asiento::getEtiqueta)
+                .collect(Collectors.toSet());
+    }
+
+    private record Cupos(
+            int capacidad,
+            int asientosOcupados,
+            int asientosEnHold,
+            int asientosDisponibles
+    ) {
     }
 }

@@ -131,9 +131,12 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/peliculas/proximamente").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/peliculas/{id:\\d+}").permitAll()
 
-                        // 🔓 PÚBLICOS — catálogo de funciones (listados)
+                        // 🔓 PÚBLICOS — catálogo de funciones (listados, detalle y cupos)
                         .requestMatchers(HttpMethod.GET, "/api/funciones").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/funciones/vigentes").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/funciones/pelicula/{peliculaId}").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/funciones/{id:\\d+}").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/funciones/{id:\\d+}/disponibilidad").permitAll()
 
                         // 👑 SOLO SUPERADMIN — registro de administradores / superadmins
                         .requestMatchers(HttpMethod.POST, "/api/auth/registro-admin").hasAuthority("SUPERADMIN")
@@ -141,7 +144,7 @@ public class SecurityConfig {
                         // 👥 AUTENTICADO — filtros de películas
                         .requestMatchers(HttpMethod.GET, "/api/peliculas/**").authenticated()
 
-                        // 👥 AUTENTICADO — consulta detalle de funciones (por id, por película, ocupados)
+                        // 👥 AUTENTICADO — consulta de asientos de funciones (ocupados, libres, estado)
                         .requestMatchers(HttpMethod.GET, "/api/funciones/**").authenticated()
 
                         // 👤 SOLO CLIENTE — holds de asientos
