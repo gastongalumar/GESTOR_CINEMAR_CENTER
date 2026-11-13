@@ -47,6 +47,7 @@ public class FuncionServiceImpl implements FuncionService {
     private final FuncionMapper funcionMapper;
 
     private static final int MAX_DURACION_PELICULA_MINUTOS = 600;
+    private static final int GAP_ENTRE_FUNCIONES_MINUTOS = 30;
 
     private static final List<EstadoReserva> ESTADOS_RESERVA_ACTIVA = List.of(
             EstadoReserva.PENDIENTE,
@@ -230,7 +231,7 @@ public class FuncionServiceImpl implements FuncionService {
                     break;
                 }
                 horarios.add(inicio);
-                inicio = fin;
+                inicio = fin.plusMinutes(GAP_ENTRE_FUNCIONES_MINUTOS);
             }
 
             dia = dia.plusDays(1);
@@ -246,8 +247,9 @@ public class FuncionServiceImpl implements FuncionService {
             Long excluirFuncionId) {
 
         LocalDateTime ventanaInicio = inicio.minusMinutes(MAX_DURACION_PELICULA_MINUTOS);
+        LocalDateTime ventanaFin = fin.plusMinutes(GAP_ENTRE_FUNCIONES_MINUTOS);
         List<Funcion> candidatas = funcionRepository.findByActivaTrueAndSalaAndHorarioBetween(
-                sala, ventanaInicio, fin);
+                sala, ventanaInicio, ventanaFin);
 
         if (excluirFuncionId == null) {
             return candidatas;
@@ -268,12 +270,16 @@ public class FuncionServiceImpl implements FuncionService {
             LocalDateTime finExistente = inicioExistente.plusMinutes(
                     funcionExistente.getPelicula().getDuracionMinutos());
 
-            if (inicioNueva.isBefore(finExistente) && finNueva.isAfter(inicioExistente)) {
+            LocalDateTime finExistenteConGap = finExistente.plusMinutes(GAP_ENTRE_FUNCIONES_MINUTOS);
+            LocalDateTime finNuevaConGap = finNueva.plusMinutes(GAP_ENTRE_FUNCIONES_MINUTOS);
+
+            if (inicioNueva.isBefore(finExistenteConGap) && finNuevaConGap.isAfter(inicioExistente)) {
                 throw new ReglaNegocioException(
                         "Conflicto de horario en la sala: ya existe la función de '"
                                 + funcionExistente.getPelicula().getNombre()
                                 + "' de " + formatearRangoHorario(inicioExistente, finExistente)
-                                + ". No se creó ninguna función del rango.");
+                                + ". Debe haber al menos " + GAP_ENTRE_FUNCIONES_MINUTOS
+                                + " minutos libres entre el fin de una función y el inicio de otra.");
             }
         }
     }
